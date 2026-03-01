@@ -1,0 +1,63 @@
+using Microsoft.EntityFrameworkCore;
+using backend.Data;
+
+var builder = WebApplication.CreateBuilder(args);
+
+// 1. Cấu hình CORS
+builder.Services.AddCors(options => {
+    options.AddPolicy("AllowReactApp", policy => {
+        policy.WithOrigins("http://localhost:3000") // Thay AllowAnyOrigin bằng domain cụ thể để bảo mật hơn
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
+// 2. Lấy chuỗi kết nối
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+// 3. Thiết lập kết nối MySQL
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+);
+
+builder.Services.AddControllers();
+
+// 4. Cấu hình Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Quản Lý Trung Tâm API",
+        Version = "v1",
+        Description = "API cho hệ thống quản lý trung tâm giáo dục",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "Support Team"
+        }
+    });
+});
+
+var app = builder.Build();
+
+// --- THỨ TỰ MIDDLEWARE RẤT QUAN TRỌNG ---
+
+// 5. Kích hoạt Swagger (cho cả Development và Production)
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "Quản Lý Trung Tâm API v1");
+    options.RoutePrefix = "swagger"; // Truy cập tại: http://localhost:PORT/swagger
+});
+
+// 6. Kích hoạt CORS (Phải nằm ở đầu để xử lý các request Pre-flight)
+app.UseCors("AllowReactApp");
+
+// Thêm cái này nếu bạn có dùng Authentication/Authorization sau này
+app.UseRouting(); 
+app.UseAuthorization();
+
+// 7. Cấu hình Route
+app.MapControllers();
+
+app.Run();
