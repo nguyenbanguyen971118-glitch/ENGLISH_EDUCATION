@@ -6,7 +6,7 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. Cấu hình CORS
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowReactApp", policy => {
-        policy.WithOrigins("http://localhost:3000") // Thay AllowAnyOrigin bằng domain cụ thể để bảo mật hơn
+        policy.WithOrigins("http://localhost:3000") 
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
@@ -30,7 +30,6 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "Quản Lý Trung Tâm API",
         Version = "v1",
-        Description = "API cho hệ thống quản lý trung tâm giáo dục",
         Contact = new Microsoft.OpenApi.Models.OpenApiContact
         {
             Name = "Support Team"
@@ -39,8 +38,7 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
-
-// --- THỨ TỰ MIDDLEWARE RẤT QUAN TRỌNG ---
+// --- THỨ TỰ MIDDLEWARE RẤT QUAN TRỌNG ---S
 
 // 5. Kích hoạt Swagger (cho cả Development và Production)
 app.UseSwagger();
@@ -53,7 +51,7 @@ app.UseSwaggerUI(options =>
 // 6. Kích hoạt CORS (Phải nằm ở đầu để xử lý các request Pre-flight)
 app.UseCors("AllowReactApp");
 
-// Thêm cái này nếu bạn có dùng Authentication/Authorization sau này
+
 app.UseRouting(); 
 app.UseAuthorization();
 
