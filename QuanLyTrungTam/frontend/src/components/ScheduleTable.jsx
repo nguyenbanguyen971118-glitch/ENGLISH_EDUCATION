@@ -19,6 +19,7 @@ const ScheduleTable = ({ data = [], currentViewDate }) => {
         });
     }, [currentViewDate]);
 
+    
     const sessions = ['Sáng', 'Chiều', 'Tối'];
 
     return (
