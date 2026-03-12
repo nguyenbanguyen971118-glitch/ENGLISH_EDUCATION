@@ -24,7 +24,7 @@ const Login = () => {
 
         try {
             // 1. Gọi API đăng nhập thực tế từ Backend
-            const response = await fetch('http://localhost:5000/api/Auth/login', {
+            const response = await fetch('http://localhost:64179/api/Auth/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password }),

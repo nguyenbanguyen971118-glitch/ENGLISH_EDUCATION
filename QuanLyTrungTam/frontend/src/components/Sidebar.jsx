@@ -11,7 +11,6 @@ const Sidebar = () => {
                    : user?.role === 'Phu_Huynh' ? 'parent' 
                    : 'admin';
 
-                   
     const handleLogout = () => {
         logout();
         navigate('/login');
@@ -69,7 +68,6 @@ const Sidebar = () => {
             </div>
 
             {/* --- PHẦN GIỮA CÓ THỂ CUỘN (MENU) --- */}
-            {/* flex-grow-1 giúp chiếm hết khoảng trống, overflow-y-auto tạo thanh cuộn khi menu Admin quá dài */}
             <div className="flex-grow-1 overflow-y-auto custom-scrollbar px-1">
                 <ul className="nav nav-pills flex-column shadow-none">
                     <li className="nav-item">
@@ -78,47 +76,97 @@ const Sidebar = () => {
                         </NavLink>
                     </li>
                     
-                    {/* Menu cho từng Role (vẫn giữ nguyên logic cũ của bạn) */}
-                    {rolePath === 'teacher' && (
-                        <>
-                            <li className="nav-item"><NavLink to="/teacher/schedule" className={getNavLinkClass}><i className="bi bi-calendar-event me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Lịch dạy</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/teacher/classes" className={getNavLinkClass}><i className="bi bi-people me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý lớp học</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/teacher/homework" className={getNavLinkClass}><i className="bi bi-pencil-square me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Bài tập & Chấm điểm</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/teacher/materials" className={getNavLinkClass}><i className="bi bi-folder-symlink me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Kho học liệu</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/teacher/communication" className={getNavLinkClass}><i className="bi bi-chat-quote me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Trao đổi phụ huynh</span></NavLink></li>
-                        </>
-                    )}
-
-                    {rolePath === 'parent' && (
-                        <>
-                            <li className="nav-item"><NavLink to="/parent/schedule" className={getNavLinkClass}><i className="bi bi-calendar3 me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Lịch học của con</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/parent/progress" className={getNavLinkClass}><i className="bi bi-graph-up-arrow me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Tiến độ của con</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/parent/results" className={getNavLinkClass}><i className="bi bi-clipboard-data me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Kết quả học tập</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/parent/feedback" className={getNavLinkClass}><i className="bi bi-chat-left-dots me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Phản hồi giáo viên</span></NavLink></li>
-                        </>
-                    )}
-
-                    {rolePath === 'student' && (
-                        <>
-                            <li className="nav-item"><NavLink to="/student/schedule" className={getNavLinkClass}><i className="bi bi-calendar3 me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Lịch học</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/student/results" className={getNavLinkClass}><i className="bi bi-journal-check me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Kết quả học tập</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/student/homework-list" className={getNavLinkClass}><i className="bi bi-pencil-square me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Bài tập về nhà</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/student/homework" className={getNavLinkClass}><i className="bi bi-laptop me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Học chủ động</span></NavLink></li>
-                        </>
-                    )}
-
+                    {/* --- MENU CHO ADMIN --- */}
                     {rolePath === 'admin' && (
                         <>
+                            <li className="nav-item"><NavLink to="/admin/functions" className={getNavLinkClass}><i className="bi bi-toggle-on me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý chức năng</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/admin/users" className={getNavLinkClass}><i className="bi bi-person-badge-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý người dùng</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/admin/courses" className={getNavLinkClass}><i className="bi bi-journal-bookmark-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý khóa học</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/admin/classes" className={getNavLinkClass}><i className="bi bi-collection-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý lớp học</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/admin/schedules" className={getNavLinkClass}><i className="bi bi-calendar-check-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Lịch dạy & học</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/admin/schedules" className={getNavLinkClass}><i className="bi bi-calendar-check-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Lịch dạy và học</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/admin/content" className={getNavLinkClass}><i className="bi bi-file-earmark-richtext-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Nội dung học tập</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/admin/finances" className={getNavLinkClass}><i className="bi bi-cash-stack me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Học phí & Tài chính</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/admin/reports" className={getNavLinkClass}><i className="bi bi-pie-chart-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Báo cáo & Thống kê</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/admin/notifications" className={getNavLinkClass}><i className="bi bi-send-check-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Thông báo & Liên lạc</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/admin/exams" className={getNavLinkClass}><i className="bi bi-journal-code me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Bài tập - Đề thi</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/admin/attendance" className={getNavLinkClass}><i className="bi bi-clipboard-check-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý Điểm danh</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/admin/reports" className={getNavLinkClass}><i className="bi bi-pie-chart-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Báo cáo và thống kê</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/admin/notifications" className={getNavLinkClass}><i className="bi bi-send-check-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý Thông báo</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/admin/messages" className={getNavLinkClass}><i className="bi bi-chat-dots-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý Nhắn tin</span></NavLink></li>
                         </>
                     )}
+
+                    {/* --- MENU CHO PHỤ HUYNH --- */}
+                    {rolePath === 'parent' && (
+                        <>
+                            <li className="nav-item"><NavLink to="/parent/schedule" className={getNavLinkClass}><i className="bi bi-calendar3 me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Xem lịch học</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/parent/attendance" className={getNavLinkClass}><i className="bi bi-clipboard2-check me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Xem điểm danh</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/parent/messages" className={getNavLinkClass}><i className="bi bi-chat-dots me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý nhắn tin</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/parent/reports" className={getNavLinkClass}><i className="bi bi-bar-chart-line me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Báo cáo thống kê</span></NavLink></li>
+                        </>
+                    )}
+
+                    {/* --- MENU CHO HỌC SINH --- */}
+                    {rolePath === 'student' && (
+                        <>
+                            <li className="nav-item"><NavLink to="/student/schedule" className={getNavLinkClass}><i className="bi bi-calendar3 me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý lịch học</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/student/homework-list" className={getNavLinkClass}><i className="bi bi-pencil-square me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Bài tập/bài thi</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/student/reports" className={getNavLinkClass}><i className="bi bi-pie-chart-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Báo cáo thống kê</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/student/homework" className={getNavLinkClass}><i className="bi bi-laptop me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Học chủ động</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/student/notifications" className={getNavLinkClass}><i className="bi bi-bell-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Thông báo</span></NavLink></li>
+                        </>
+                    )}
+
+                    {/* --- MENU CHO GIÁO VIÊN --- */}
+                    {rolePath === 'teacher' && (
+                    <>
+                        <li className="nav-item">
+                            <NavLink to="/teacher/schedule" className={getNavLinkClass}>
+                                <i className="bi bi-calendar-event me-3 fs-5"></i> 
+                                <span style={{ fontSize: '14px' }}>Quản lý lịch dạy</span>
+                            </NavLink>
+                        </li>
+                        <li className="nav-item">
+                            <NavLink to="/teacher/classes" className={getNavLinkClass}>
+                                <i className="bi bi-people me-3 fs-5"></i> 
+                                <span style={{ fontSize: '14px' }}>Quản lý lớp học</span>
+                            </NavLink>
+                        </li>
+                        <li className="nav-item">
+                            <NavLink to="/teacher/exams" className={getNavLinkClass}>
+                                <i className="bi bi-file-earmark-text me-3 fs-5"></i> 
+                                <span style={{ fontSize: '14px' }}>Quản lý bài tập - Đề thi</span>
+                            </NavLink>
+                        </li>
+                        <li className="nav-item">
+                            <NavLink to="/teacher/grading" className={getNavLinkClass}>
+                                <i className="bi bi-pencil-square me-3 fs-5"></i> 
+                                <span style={{ fontSize: '14px' }}>Chấm điểm</span>
+                            </NavLink>
+                        </li>
+                        <li className="nav-item">
+                            <NavLink to="/teacher/content" className={getNavLinkClass}>
+                                <i className="bi bi-book me-3 fs-5"></i> 
+                                <span style={{ fontSize: '14px' }}>Nội dung học tập</span>
+                            </NavLink>
+                        </li>
+                        <li className="nav-item">
+                            <NavLink to="/teacher/messages" className={getNavLinkClass}>
+                                <i className="bi bi-chat-dots me-3 fs-5"></i> 
+                                <span style={{ fontSize: '14px' }}>Quản lý nhắn tin</span>
+                            </NavLink>
+                        </li>
+                        <li className="nav-item">
+                            <NavLink to="/teacher/attendance" className={getNavLinkClass}>
+                                <i className="bi bi-clipboard2-check me-3 fs-5"></i> 
+                                <span style={{ fontSize: '14px' }}>Điểm danh</span>
+                            </NavLink>
+                        </li>
+                        <li className="nav-item">
+                            <NavLink to="/teacher/reports" className={getNavLinkClass}>
+                                <i className="bi bi-bar-chart-line me-3 fs-5"></i> 
+                                <span style={{ fontSize: '14px' }}>Báo cáo và thống kê</span>
+                            </NavLink>
+                        </li>
+                    </>
+                )}
                 </ul>
             </div>
 
@@ -127,7 +175,6 @@ const Sidebar = () => {
                 <button onClick={handleLogout} className="btn w-100 text-danger fw-bold py-2.5 rounded-4 border-0 shadow-sm d-flex align-items-center justify-content-center btn-logout" style={{ backgroundColor: '#FFF0F0', transition: '0.3s', fontSize: '14px' }}>
                     <i className="bi bi-power me-2 fs-5"></i> Đăng xuất
                 </button>
-                <p className="text-center text-muted mt-3 mb-0 fw-medium" style={{ fontSize: '10px', opacity: 0.5 }}>Active App v2.10.38</p>
             </div>
 
             <style>{`
@@ -144,3 +191,4 @@ const Sidebar = () => {
 };
 
 export default Sidebar;
+// ngày chỉnh sửa 10:03 ngày 6/3/2026 nội dung chỉnh sửa: Bổ sung các chức năng trên thanh slidebar cho giống vs file excel

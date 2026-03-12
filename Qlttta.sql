@@ -403,3 +403,112 @@ VALUES (
 -- 3. Đưa tài khoản này vào bảng Hồ sơ Học Sinh (Cho sẵn 150 điểm Apos)
 SET @idNguoiDung = LAST_INSERT_ID();
 INSERT INTO hocSinh (maNguoiDung, diemTongApos) VALUES (@idNguoiDung, 150);
+
+USE QuanLyTrungTam;
+
+-- 1. Tạo vai trò Phụ Huynh (Giả sử mã vai trò là 3)
+INSERT IGNORE INTO vaiTro (maVaiTro, tenVaiTro) VALUES (3, 'Phu_Huynh');
+
+-- 2. Tạo tài khoản đăng nhập cho Phụ huynh (Pass: nhan1234@)
+INSERT INTO nguoiDung (tenDangNhap, email, matKhau, salt, hoTen, maVaiTro, trangThai)
+VALUES (
+    'ph01', 
+    'ph01@gmail.com', 
+    'nhan1234@', 
+    'salt456', 
+    'Nguyễn Văn Hùng', 
+    3, 
+    'Hoat_Dong'
+);
+
+-- 3. Lưu ID người dùng vừa tạo và đưa vào bảng phuHuynh
+INSERT INTO nguoiDung (tenDangNhap, email, matKhau, salt, hoTen, maVaiTro, trangThai)
+VALUES ('ph01', 'ph01@gmail.com', 'nhan1234@', 'salt456', 'Nguyễn Văn Hùng', 3, 'Hoat_Dong');
+
+-- Bước 2: Lấy ID vừa tạo và đưa vào bảng phụ huynh ngay lập tức
+SET @idPH = LAST_INSERT_ID();
+
+INSERT INTO phuHuynh (maNguoiDung, soDienThoai, diaChi) 
+VALUES (@idPH, '0901234567', '123 Đường ABC, Hà Nội');
+
+-- Bước 3: Liên kết với học sinh 'Nguyễn Văn Học'
+SET @maPhuHuynhVuaTao = LAST_INSERT_ID();
+
+UPDATE hocSinh 
+SET maPhuHuynh = @maPhuHuynhVuaTao 
+WHERE maNguoiDung = (SELECT maNguoiDung FROM nguoiDung WHERE tenDangNhap = 'hs01');
+
+
+-- 1. Đảm bảo vai trò Giáo viên tồn tại (Mã vai trò thường gán là 2)
+INSERT IGNORE INTO vaiTro (maVaiTro, tenVaiTro) VALUES (2, 'Giao_Vien');
+
+-- 2. Tạo tài khoản đăng nhập cho Giáo viên
+-- Tài khoản: gv_lananh
+-- Mật khẩu: nhan1234@ (Theo logic mật khẩu bạn đang test)
+INSERT INTO nguoiDung (tenDangNhap, email, matKhau, salt, hoTen, maVaiTro, trangThai)
+VALUES (
+    'gv_lananh', 
+    'lananh.teacher@apollo.edu.vn', 
+    'nhan1234@', 
+    'salt789', 
+    'Nguyễn Thị Lan Anh', 
+    2, 
+    'Hoat_Dong'
+);
+
+-- 3. Lấy ID người dùng vừa tạo và đưa vào bảng hồ sơ giáo viên (giaoVien)
+SET @idGiaoVienND = LAST_INSERT_ID();
+
+INSERT INTO giaoVien (maNguoiDung, chuyenMon, quocTich, tieuSu) 
+VALUES (
+    @idGiaoVienND, 
+    'IELTS Master - 8.5 Overall', 
+    'Việt Nam', 
+    '10 năm kinh nghiệm giảng dạy tiếng Anh học thuật.'
+);
+
+-- 4. Gán giáo viên này vào một lớp học để test Dashboard
+-- Giả sử lớp HNI-PRI4-006 đã tồn tại hoặc tạo mới
+SET @maGV = LAST_INSERT_ID();
+
+-- Cập nhật giáo viên cho lớp học (Nếu bạn đã có dữ liệu lớp học)
+UPDATE lopHoc 
+SET maGiaoVien = @maGV 
+WHERE maLopHienThi = 'HNI-PRI4-006';
+
+-- 1. Đảm bảo vai trò Admin tồn tại (Mã vai trò thường gán là 1)
+INSERT IGNORE INTO vaiTro (maVaiTro, tenVaiTro) VALUES (1, 'Admin');
+
+-- 2. Tạo tài khoản đăng nhập cho Admin
+-- Tài khoản: admin01
+-- Mật khẩu: nhan1234@
+INSERT INTO nguoiDung (tenDangNhap, email, matKhau, salt, hoTen, maVaiTro, trangThai)
+VALUES (
+    'admin01', 
+    'admin@apollo.edu.vn', 
+    'nhan1234@', 
+    'salt_admin_999', 
+    'Hệ Thống Admin', 
+    1, 
+    'Hoat_Dong'
+);
+
+-- 3. Lấy ID người dùng vừa tạo và đưa vào bảng hồ sơ Quản trị viên (quanTriVien)
+SET @idAdminND = LAST_INSERT_ID();
+
+INSERT INTO quanTriVien (maNguoiDung, phongBan) 
+VALUES (
+    @idAdminND, 
+    'Ban Điều Hành'
+);
+
+/* =============================================================
+   KIỂM TRA LẠI DỮ LIỆU SAU KHI TẠO
+============================================================= */
+SELECT n.maNguoiDung, n.tenDangNhap, v.tenVaiTro, n.hoTen, q.phongBan
+FROM nguoiDung n
+JOIN vaiTro v ON n.maVaiTro = v.maVaiTro
+LEFT JOIN quanTriVien q ON n.maNguoiDung = q.maNguoiDung
+WHERE n.tenDangNhap = 'admin01';
+
+select *from nguoiDung

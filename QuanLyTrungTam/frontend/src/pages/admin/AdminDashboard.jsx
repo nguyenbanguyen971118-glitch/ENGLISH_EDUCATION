@@ -11,7 +11,6 @@ const AdminDashboard = () => {
         { title: "Lớp học hôm nay", count: "12", icon: "bi-calendar-check", color: "linear-gradient(45deg, #e74c3c, #ff7675)" }
     ];
 
-    // Dữ liệu mẫu các lớp đang học
     const ongoingClasses = [
         { id: "HNI-PRI4-006", course: "IELTS Reading: Multiple Choice", teacher: "Nguyễn Thị Lan Anh", room: "Lab 1", time: "07:00 - 09:40", status: "Đang học" },
         { id: "IELTS-SPK", course: "IELTS Speaking: Part 3", teacher: "Mr. Steven Dang", room: "A302", time: "07:55 - 10:35", status: "Đang học" },
@@ -21,16 +20,33 @@ const AdminDashboard = () => {
 
     return (
         <div className="p-4 animate__animated animate__fadeIn">
-            {/* --- WELCOME HEADER --- */}
+            {/* --- HEADER: ĐÃ BỔ SUNG NÚT THÔNG BÁO & HỌC KỲ ĐỂ ĐỒNG BỘ --- */}
             <div className="mb-4 d-flex justify-content-between align-items-center">
                 <div>
                     <h2 className="fw-bold text-dark mb-1 text-uppercase">Bảng điều khiển quản trị</h2>
                     <p className="text-muted small mb-0">Chào mừng trở lại, <span className="fw-bold text-primary">{user?.hoTen || "Quản trị viên"}</span>.</p>
                 </div>
-                <div className="text-end">
-                    <span className="badge bg-primary-subtle text-primary rounded-pill px-3 py-2 fw-bold">
-                        <i className="bi bi-clock-history me-2"></i>26/02/2026
-                    </span>
+                
+                <div className="d-flex align-items-center gap-3">
+                    {/* 1. School Tag: Học kỳ (Đồng bộ với Teacher Dashboard) */}
+                    <div className="bg-white p-2 px-3 rounded-4 shadow-sm border d-flex align-items-center d-none d-md-flex">
+                        <div className="bg-primary-subtle p-2 rounded-3 me-3">
+                            <i className="bi bi-calendar-check text-primary"></i>
+                        </div>
+                        <div className="text-start">
+                            <span className="small text-muted d-block fw-bold" style={{fontSize: '9px', letterSpacing: '1px'}}>HỌC KỲ</span>
+                            <span className="fw-bold text-dark" style={{fontSize: '14px'}}>HK1 <span className="text-primary">2026</span></span>
+                        </div>
+                    </div>
+
+                    {/* 2. Nút thông báo hình chuông (Đồng bộ với các trang khác) */}
+                    <div className="position-relative hover-up bg-white shadow-sm border rounded-circle d-flex align-items-center justify-content-center" 
+                         style={{ width: '45px', height: '45px', cursor: 'pointer' }}>
+                        <i className="bi bi-bell-fill text-secondary fs-5"></i>
+                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" style={{fontSize: '10px'}}>
+                            5
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -55,7 +71,7 @@ const AdminDashboard = () => {
             </div>
 
             <div className="row g-4">
-                {/* --- DANH SÁCH LỚP ĐANG HỌC (THAY THẾ THỜI KHÓA BIỂU) --- */}
+                {/* --- DANH SÁCH LỚP ĐANG HỌC --- */}
                 <div className="col-lg-8">
                     <div className="card border-0 shadow-sm rounded-5 p-4 h-100">
                         <div className="d-flex justify-content-between align-items-center mb-4">
@@ -111,39 +127,57 @@ const AdminDashboard = () => {
                     </div>
                 </div>
 
-                {/* --- THÔNG BÁO HỆ THỐNG --- */}
+                {/* --- CẢNH BÁO & THÔNG BÁO CHI TIẾT --- */}
                 <div className="col-lg-4">
                     <div className="card border-0 shadow-sm rounded-5 p-4 h-100">
                         <h5 className="fw-bold mb-4 text-dark"><i className="bi bi-bell-fill me-2 text-warning"></i>Cảnh báo & Thông báo</h5>
                         <div className="d-flex flex-column gap-3">
                             <div className="p-3 bg-danger-subtle rounded-4 border-start border-4 border-danger">
                                 <div className="d-flex justify-content-between">
-                                    <small className="fw-bold text-danger">CẢNH BÁO NGHỈ HỌC</small>
+                                    <small className="fw-bold text-danger">ĐỀ XUẤT ĐỔI LỊCH</small>
                                     <small className="text-muted">10:20</small>
                                 </div>
-                                <p className="mb-0 small fw-bold mt-1">Lớp HNI-PRI4-006 có 3 học sinh vắng không phép.</p>
+                                <p className="mb-0 small fw-bold mt-1">Giảng viên Bùi Khánh Linh yêu cầu đổi lịch dạy lớp IELTS-SPK.</p>
                             </div>
                             
                             <div className="p-3 bg-info-subtle rounded-4 border-start border-4 border-info">
                                 <div className="d-flex justify-content-between">
-                                    <small className="fw-bold text-info">HỌC PHÍ MỚI</small>
+                                    <small className="fw-bold text-info">SỰ KIỆN 8/3</small>
                                     <small className="text-muted">09:15</small>
                                 </div>
-                                <p className="mb-0 small fw-bold mt-1">Phụ huynh Nguyễn Văn Hùng đã nộp học phí cho HS Nguyễn Văn Học.</p>
+                                <p className="mb-0 small fw-bold mt-1">Đã gửi thông báo chúc mừng tới toàn bộ nhân viên nữ.</p>
                             </div>
 
                             <div className="p-3 bg-warning-subtle rounded-4 border-start border-4 border-warning">
                                 <div className="d-flex justify-content-between">
-                                    <small className="fw-bold text-warning">YÊU CẦU GIÁO VIÊN</small>
+                                    <small className="fw-bold text-warning">YÊU CẦU HỖ TRỢ</small>
                                     <small className="text-muted">08:00</small>
                                 </div>
                                 <p className="mb-0 small fw-bold mt-1">GV Lan Anh yêu cầu hỗ trợ kỹ thuật tại Phòng Lab 1.</p>
                             </div>
                         </div>
-                        <button className="btn btn-light w-100 mt-auto rounded-pill fw-bold border text-muted">Xem tất cả log</button>
+                        <button className="btn btn-light w-100 mt-auto rounded-pill fw-bold border text-muted shadow-sm">Xem tất cả nhật ký</button>
                     </div>
                 </div>
             </div>
+
+            <style>{`
+                .shadow-hover:hover {
+                    transform: translateY(-5px);
+                    box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+                }
+                .hover-up:hover {
+                    transform: scale(1.05);
+                    transition: 0.2s;
+                    cursor: pointer;
+                }
+                .transition-all {
+                    transition: all 0.3s ease;
+                }
+                table tr:hover {
+                    background-color: #f8f9fa;
+                }
+            `}</style>
         </div>
     );
 };
