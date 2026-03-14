@@ -22,6 +22,8 @@ import AdminCreateCourse from "./pages/admin/AdminCreateCourse";
 import AdminAssignStudent from "./pages/admin/AdminAssignStudent";
 import AdminMessages from './pages/admin/AdminMessages'; // Đã import component nhắn tin
 
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminCreateUser from "./pages/admin/AdminCreateUser";
 // Component Placeholder để tránh lỗi khi chưa có file trang cụ thể
 const Placeholder = ({ title }) => (
   <div className="p-4 animate__animated animate__fadeIn">
@@ -59,8 +61,7 @@ function App() {
             {/* --- NHÓM QUẢN TRỊ (ADMIN) --- */}
             <Route path="/admin" element={<PrivateRoute allowedRoles={['Admin']}><AdminDashboard /></PrivateRoute>} />
             <Route path="/admin/functions" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Quản lý chức năng" /></PrivateRoute>} />
-            <Route path="/admin/users" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Quản lý người dùng" /></PrivateRoute>} />
-            
+            <Route path="/admin/Susers" element={<PrivateRoute allowedRoles={['Admin']}>{<AdminUsers />}</PrivateRoute>} />
             <Route path="/admin/courses" element={<PrivateRoute allowedRoles={['Admin']}><AdminCourses /></PrivateRoute>} />
             <Route path="/admin/courses/create" element={<PrivateRoute allowedRoles={['Admin']}><AdminCreateCourse /></PrivateRoute>} />
             
@@ -80,6 +81,26 @@ function App() {
             
             <Route path="/admin/profile" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Hồ sơ cá nhân" /></PrivateRoute>} />
 
+            <Route
+path="/admin/classes/create"
+element={<AdminCreateClass />}
+/>
+            <Route
+path="/admin/courses/create"
+element={<AdminCreateCourse />}
+/>
+            <Route
+path="/admin/classes/assign-students"
+element={<AdminAssignStudent />}
+/>
+<Route
+path="/admin/users/create"
+element={
+<PrivateRoute allowedRoles={['Admin']}>
+<AdminCreateUser />
+</PrivateRoute>
+}
+/>
             {/* --- NHÓM GIÁO VIÊN (TEACHER) --- */}
             <Route path="/teacher" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherDashboard /></PrivateRoute>} />
             <Route path="/teacher/schedule" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherSchedule /></PrivateRoute>} />
