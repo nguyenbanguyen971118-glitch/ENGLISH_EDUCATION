@@ -89,7 +89,7 @@ onChange={(e)=>setCourse({...course,level:e.target.value})}
 <div className="mb-3">
 
 <label className="form-label">
-Học phí *
+Học phí 
 </label>
 
 <input
@@ -103,21 +103,38 @@ onChange={(e)=>setCourse({...course,price:e.target.value})}
 
 {/* DURATION */}
 
-<div className="mb-3">
+<div className="mb-3 ">
 
 <label className="form-label">
-Thời lượng (tuần)
+Đơn vị thời gian 
 </label>
 
+<select
+className="form-select"
+onChange={(e)=>setCourse({...course,level:e.target.value})}
+>
+
+<option>Chọn đơn vị</option>
+<option>GIờ</option>
+<option>Tuần</option>
+<option>Tiết</option>
+
+</select>
+
+</div>
+
+<div className="mb-3 ">
+
+<label className="form-label ">
+Thời lượng (tuần)
+</label>
 <input
 type="number"
 className="form-control"
 placeholder="Ví dụ: 12 tuần"
 onChange={(e)=>setCourse({...course,duration:e.target.value})}
 />
-
 </div>
-
 {/* DESCRIPTION */}
 
 <div className="mb-3">

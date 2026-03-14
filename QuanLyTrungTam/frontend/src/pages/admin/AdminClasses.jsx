@@ -7,7 +7,7 @@ const AdminClasses = () => {
     {
       id: 1,
       name: "Nguyễn Thùy Linh",
-      teacher: "Giáo viên Lan",
+      teacher: "003 - Giáo viên Lan",
       schedule: "Thứ 2, Thứ 3",
       time: "14:59 - 18:59",
       students: 1,
@@ -16,7 +16,7 @@ const AdminClasses = () => {
     {
       id: 2,
       name: "Tobico_Ieltstar",
-      teacher: "Giáo viên Lan",
+      teacher: "009 - Giáo viên Tùng",
       schedule: "Thứ 2, Thứ 3, Thứ 4",
       time: "07:58 - 09:58",
       students: 1,
@@ -66,6 +66,12 @@ Thêm lớp học
             <div className="col-md-3">
               <select className="form-select">
                 <option>Tất cả giáo viên</option>
+              </select>
+            </div>
+
+            <div className="col-md-3">
+              <select className="form-select">
+                <option>Tất cả khóa học</option>
               </select>
             </div>
 

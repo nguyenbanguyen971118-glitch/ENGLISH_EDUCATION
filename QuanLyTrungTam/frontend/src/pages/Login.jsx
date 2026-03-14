@@ -3,11 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 // Import tài nguyên ảnh
-import anhNen1 from '../assets/anh_nen.jpg'; 
-import anhNen2 from '../assets/anh2.jpg'; 
+import anhNen1 from '../assets/avtLogin2.jpg'; 
+import anhNen2 from '../assets/avtLogin3.jpg'; 
 import anhNen3 from '../assets/anh3.jpg'; 
 import logoApollo from '../assets/anh4.png'; 
-
+import avtLogin from '../assets/avtLogin.jpg';
 const Login = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -16,7 +16,7 @@ const Login = () => {
     const { login } = useAuth();
     const navigate = useNavigate();
 
-    const bannerImages = [anhNen1, anhNen2, anhNen3];
+    const bannerImages = [avtLogin,anhNen1, anhNen2, anhNen3];
 
     const handleLogin = async (e) => {
         e.preventDefault();
