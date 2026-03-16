@@ -2,6 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Plus, Trash2, Edit } from "lucide-react"; // Đảm bảo bạn đã cài lucide-react
 
+/**
+ * Chức năng: Tạo lớp học mới cho admin
+ * Creatby: Nguyễn Thùy Linh - 14/3/2026
+ * Updateby: Nguyễn Thùy Linh - 14/3/2026
+ */
 export default function AdminCreateClass() {
   const navigate = useNavigate();
 
@@ -35,11 +40,22 @@ export default function AdminCreateClass() {
   ];
 
   // Logic xử lý lịch học
+  /**
+   * Chức năng: Thêm lịch học mới vào form
+   * Creatby: Nguyễn Thùy Linh - 14/3/2026
+   * Updateby: Nguyễn Thùy Linh - 14/3/2026
+   */
   const addSchedule = () => {
     const newSchedule = { id: Date.now(), day: "", shift: "" };
     setForm({ ...form, schedules: [...form.schedules, newSchedule] });
   };
 
+  /**
+   * Chức năng: Xóa lịch học khỏi form
+   * Creatby: Nguyễn Thùy Linh - 14/3/2026
+   * Updateby: Nguyễn Thùy Linh - 14/3/2026
+   * @param {number} id - ID của lịch học cần xóa
+   */
   const deleteSchedule = (id) => {
     setForm({
       ...form,
@@ -47,6 +63,14 @@ export default function AdminCreateClass() {
     });
   };
 
+  /**
+   * Chức năng: Cập nhật thông tin lịch học
+   * Creatby: Nguyễn Thùy Linh - 14/3/2026
+   * Updateby: Nguyễn Thùy Linh - 14/3/2026
+   * @param {number} id - ID của lịch học
+   * @param {string} field - Trường cần cập nhật (day hoặc shift)
+   * @param {string} value - Giá trị mới
+   */
   const updateSchedule = (id, field, value) => {
     const updatedSchedules = form.schedules.map((s) =>
       s.id === id ? { ...s, [field]: value } : s
@@ -54,6 +78,12 @@ export default function AdminCreateClass() {
     setForm({ ...form, schedules: updatedSchedules });
   };
 
+  /**
+   * Chức năng: Xử lý submit form tạo lớp học
+   * Creatby: Nguyễn Thùy Linh - 14/3/2026
+   * Updateby: Nguyễn Thùy Linh - 14/3/2026
+   * @param {Event} e - Sự kiện submit form
+   */
   const handleSubmit = (e) => {
     e.preventDefault();
     console.log("Dữ liệu gửi đi:", form);

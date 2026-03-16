@@ -1,5 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+
+/**
+ * Chức năng: Hiển thị và quản lý danh sách người dùng cho admin
+ * Creatby: Nguyễn Thùy Linh - 14/3/2026
+ * Updateby: Nguyễn Thùy Linh - 14/3/2026
+ */
 const AdminUsers = () => {
 const navigate = useNavigate();
 
@@ -38,6 +44,13 @@ status:"Hoạt động"
 }
 ];
 
+ /**
+  * Chức năng: Trả về class màu sắc cho vai trò người dùng
+  * Creatby: Nguyễn Thùy Linh - 14/3/2026
+  * Updateby: Nguyễn Thùy Linh - 14/3/2026
+  * @param {string} role - Vai trò của người dùng (Admin, Teacher, Student)
+  * @returns {string} Class Bootstrap cho màu sắc
+  */
 const roleColor = (role)=>{
 if(role==="Admin") return "bg-danger";
 if(role==="Teacher") return "bg-success";

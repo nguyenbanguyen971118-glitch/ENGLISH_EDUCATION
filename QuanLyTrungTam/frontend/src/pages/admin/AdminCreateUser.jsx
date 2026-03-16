@@ -1,6 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-
+/**
+ * Chức năng: Trang tạo mới người dùng dành cho Admin, bao gồm các thông tin cá nhân (họ tên, SĐT, email) và thông tin tài khoản (vai trò, mật khẩu).
+ * Creatby: Nguyễn Thùy Linh - 14/3/2026
+ * Updateby: Nguyễn Thùy Linh - 14/3/2026
+ * @returns {JSX.Element} Giao diện form tạo người dùng
+ */
 const AdminCreateUser = () => {
 
 const navigate = useNavigate();

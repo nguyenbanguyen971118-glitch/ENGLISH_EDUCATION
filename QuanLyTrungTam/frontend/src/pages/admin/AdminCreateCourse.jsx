@@ -1,6 +1,11 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * Chức năng: Tạo khóa học mới cho admin
+ * Creatby: Nguyễn Thùy Linh - 14/3/2026
+ * Updateby: Nguyễn Thùy Linh - 14/3/2026
+ */
 export default function AdminCreateCourse() {
 
 const navigate = useNavigate();
@@ -13,6 +18,12 @@ duration:"",
 description:""
 });
 
+/**
+ * Chức năng: Xử lý submit form tạo khóa học mới
+ * Creatby: Nguyễn Thùy Linh - 14/3/2026
+ * Updateby: Nguyễn Thùy Linh - 14/3/2026
+ * @param {Event} e - Sự kiện submit form
+ */
 const handleSubmit = (e)=>{
 e.preventDefault();
 console.log(course);
