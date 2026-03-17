@@ -1,6 +1,11 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * Chức năng: Hiển thị và quản lý danh sách khóa học cho admin
+ * Creatby: Nguyễn Thùy Linh - 14/3/2026
+ * Updateby: Nguyễn Thùy Linh - 14/3/2026
+ */
 const AdminCourses = () => {
   const navigate = useNavigate();
   return (
@@ -44,7 +49,7 @@ Thêm khóa học
                   </button>
 
                   <button className="btn btn-danger btn-sm">
-                    Xóa
+                    Xóa 
                   </button>
                 </td>
               </tr>

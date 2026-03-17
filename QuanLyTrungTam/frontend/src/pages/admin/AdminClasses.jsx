@@ -1,6 +1,12 @@
 import React from "react";
 
 import { useNavigate } from "react-router-dom";
+
+/**
+ * Chức năng: Hiển thị và quản lý danh sách lớp học cho admin
+ * Creatby: Nguyễn Thùy Linh - 14/3/2026
+ * Updateby: Nguyễn Thùy Linh - 14/3/2026
+ */
 const AdminClasses = () => {
 
   const classes = [

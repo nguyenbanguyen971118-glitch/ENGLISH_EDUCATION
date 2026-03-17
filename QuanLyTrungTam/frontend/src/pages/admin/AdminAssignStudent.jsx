@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+/**
+ * Chức năng: Gán học viên cho lớp học
+ * Creatby: Nguyễn Thùy Linh - 14/3/2026
+ * Updateby: Nguyễn Thùy Linh - 14/3/2026
+ */
 const AdminAssignStudent = () => {
 
 const navigate = useNavigate();
@@ -17,6 +22,12 @@ status:"Nghỉ"
 
 const [selected,setSelected] = useState([]);
 
+/**
+ * Chức năng: Chọn hoặc bỏ chọn học viên
+ * Creatby: Nguyễn Thùy Linh - 14/3/2026
+ * Updateby: Nguyễn Thùy Linh - 14/3/2026
+ * @param {number} id - ID của học viên
+ */
 const toggleStudent = (id)=>{
 
 if(selected.includes(id)){
