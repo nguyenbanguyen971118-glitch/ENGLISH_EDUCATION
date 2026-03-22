@@ -3,20 +3,28 @@ using System.Collections.Generic;
 
 namespace backend.Models;
 
-public partial class Hocsinhlophoc
+public partial class Nopbai
 {
-    public Guid MaLopHoc { get; set; }
+    public Guid MaNopBai { get; set; }
+
+    public Guid MaSuKien { get; set; }
 
     public Guid MaHocSinh { get; set; }
+
+    public DateTime? ThoiGianBatDau { get; set; }
+
+    public DateTime? ThoiGianNop { get; set; }
+
+    public string? NhanXetGiaoVien { get; set; }
+
+    public decimal? DiemSo { get; set; }
+
+    public int? LanNop { get; set; }
 
     /// <summary>
     /// Trỏ về ChiTietDanhMuc
     /// </summary>
     public int? MaTrangThai { get; set; }
-
-    public DateOnly? NgayThamGia { get; set; }
-
-    public DateOnly? NgayRoiLop { get; set; }
 
     public Guid? NguoiTao { get; set; }
 
@@ -30,9 +38,13 @@ public partial class Hocsinhlophoc
 
     public bool? DaXoa { get; set; }
 
+    public virtual ICollection<Chitietnopbai> Chitietnopbais { get; set; } = new List<Chitietnopbai>();
+
+    public virtual ICollection<Dinhkemnopbai> Dinhkemnopbais { get; set; } = new List<Dinhkemnopbai>();
+
     public virtual Hocsinh MaHocSinhNavigation { get; set; } = null!;
 
-    public virtual Lophoc MaLopHocNavigation { get; set; } = null!;
+    public virtual Sukienlophoc MaSuKienNavigation { get; set; } = null!;
 
     public virtual Chitietdanhmuc? MaTrangThaiNavigation { get; set; }
 }

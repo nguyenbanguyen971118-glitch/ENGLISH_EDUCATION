@@ -3,19 +3,31 @@ using System.Collections.Generic;
 
 namespace backend.Models;
 
-public partial class PhuHuynh
+public partial class Phuhuynh
 {
-    public int MaPhuHuynh { get; set; }
+    public Guid MaPhuHuynh { get; set; }
 
-    public int MaNguoiDung { get; set; }
+    public Guid MaNguoiDung { get; set; }
 
-    public string? SoDienThoai { get; set; }
+    public string SoDienThoai { get; set; } = null!;
 
-    public string? DiaChi { get; set; }
+    public string? DiaChiLienHe { get; set; }
 
-    public virtual ICollection<BaoCaoPhuHuynh> BaoCaoPhuHuynhs { get; set; } = new List<BaoCaoPhuHuynh>();
+    public string? NgheNghiep { get; set; }
 
-    public virtual ICollection<HocSinh> HocSinhs { get; set; } = new List<HocSinh>();
+    public Guid? NguoiTao { get; set; }
 
-    public virtual NguoiDung MaNguoiDungNavigation { get; set; } = null!;
+    public DateTime? ThoiGianTao { get; set; }
+
+    public Guid? NguoiSua { get; set; }
+
+    public DateTime? ThoiGianSua { get; set; }
+
+    public bool? TrangThai { get; set; }
+
+    public bool? DaXoa { get; set; }
+
+    public virtual Nguoidung MaNguoiDungNavigation { get; set; } = null!;
+
+    public virtual ICollection<Phuhuynhhocsinh> Phuhuynhhocsinhs { get; set; } = new List<Phuhuynhhocsinh>();
 }

@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using backend.Data;
+using backend.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,6 +21,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
 );
 
+builder.Services.AddScoped<PermissionBootstrapService>();
+
 builder.Services.AddControllers();
 
 // 4. Cấu hình Swagger
@@ -38,6 +41,12 @@ builder.Services.AddSwaggerGen(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var bootstrapService = scope.ServiceProvider.GetRequiredService<PermissionBootstrapService>();
+    await bootstrapService.EnsureInitializedAsync();
+}
 // --- THỨ TỰ MIDDLEWARE RẤT QUAN TRỌNG ---S
 
 // 5. Kích hoạt Swagger (cho cả Development và Production)

@@ -3,27 +3,45 @@ using System.Collections.Generic;
 
 namespace backend.Models;
 
-public partial class BuoiHoc
+public partial class Buoihoc
 {
-    public int MaBuoiHoc { get; set; }
+    public Guid MaBuoiHoc { get; set; }
 
-    public int MaLop { get; set; }
+    public Guid MaLopHoc { get; set; }
+
+    public Guid? MaPhongHoc { get; set; }
 
     public DateOnly NgayHoc { get; set; }
 
-    public TimeOnly GioBatDau { get; set; }
+    public int MaTietBatDau { get; set; }
 
-    public TimeOnly GioKetThuc { get; set; }
+    public int MaTietKetThuc { get; set; }
 
-    public int MaGiaoVien { get; set; }
+    public string? TieuDe { get; set; }
 
-    public string? TrangThaiGiaoVien { get; set; }
+    public string? NoiDung { get; set; }
 
-    public string? GhiChu { get; set; }
+    public Guid? NguoiTao { get; set; }
 
-    public virtual ICollection<DiemDanh> DiemDanhs { get; set; } = new List<DiemDanh>();
+    public DateTime? ThoiGianTao { get; set; }
 
-    public virtual GiaoVien MaGiaoVienNavigation { get; set; } = null!;
+    public Guid? NguoiSua { get; set; }
 
-    public virtual LopHoc MaLopNavigation { get; set; } = null!;
+    public DateTime? ThoiGianSua { get; set; }
+
+    public bool? TrangThai { get; set; }
+
+    public bool? DaXoa { get; set; }
+
+    public virtual ICollection<Diemdanh> Diemdanhs { get; set; } = new List<Diemdanh>();
+
+    public virtual Lophoc MaLopHocNavigation { get; set; } = null!;
+
+    public virtual Phonghoc? MaPhongHocNavigation { get; set; }
+
+    public virtual Tiethoc MaTietBatDauNavigation { get; set; } = null!;
+
+    public virtual Tiethoc MaTietKetThucNavigation { get; set; } = null!;
+
+    public virtual ICollection<Yeucaulichday> Yeucaulichdays { get; set; } = new List<Yeucaulichday>();
 }

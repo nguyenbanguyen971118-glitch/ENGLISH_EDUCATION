@@ -20,19 +20,24 @@ namespace QuanLyTrungTam.Controllers
         }
 
         [HttpGet("child-summary/{userId}")]
-        public async Task<IActionResult> GetChildSummary(int userId)
+        public async Task<IActionResult> GetChildSummary(string userId)
         {
+            if (!Guid.TryParse(userId, out var parsedUserId))
+            {
+                return BadRequest("userId không hợp lệ.");
+            }
+
             // Logic lấy dữ liệu con cái từ _context
-            var data = await (from hs in _context.HocSinhs
-                              join nd in _context.NguoiDungs on hs.MaNguoiDung equals nd.MaNguoiDung
-                              where nd.MaNguoiDung == userId // Giả sử query theo userId
+            var data = await (from hs in _context.Hocsinhs
+                              join nd in _context.Nguoidungs on hs.MaNguoiDung equals nd.MaNguoiDung
+                              where nd.MaNguoiDung == parsedUserId
                               select new ChildSummaryDto
                               {
-                                  MaHocSinh = hs.MaHocSinh,
+                                  MaHocSinh = hs.MaHocSinh.ToString(),
                                   TenCon = nd.HoTen,
-                                  MaLopHienThi = "Lớp 10A1", // Ví dụ gán cứng để test
-                                  TenKhoaHoc = "Toán nâng cao",
-                                  NhanXetMoiNhat = "Con học tập rất tốt."
+                                  MaLopHienThi = "N/A",
+                                  TenKhoaHoc = "N/A",
+                                  NhanXetMoiNhat = "Chưa có dữ liệu"
                               }).FirstOrDefaultAsync();
 
             if (data == null) return NotFound("Không tìm thấy dữ liệu.");

@@ -3,13 +3,11 @@ using System.Collections.Generic;
 
 namespace backend.Models;
 
-public partial class Thongbao
+public partial class Thanhvienhoithoai
 {
-    public Guid MaThongBao { get; set; }
+    public Guid MaHoiThoai { get; set; }
 
-    public string TieuDe { get; set; } = null!;
-
-    public string NoiDung { get; set; } = null!;
+    public Guid MaNguoiDung { get; set; }
 
     public Guid? NguoiTao { get; set; }
 
@@ -23,5 +21,7 @@ public partial class Thongbao
 
     public bool? DaXoa { get; set; }
 
-    public virtual ICollection<Nguoinhanthongbao> Nguoinhanthongbaos { get; set; } = new List<Nguoinhanthongbao>();
+    public virtual Hoithoai MaHoiThoaiNavigation { get; set; } = null!;
+
+    public virtual Nguoidung MaNguoiDungNavigation { get; set; } = null!;
 }

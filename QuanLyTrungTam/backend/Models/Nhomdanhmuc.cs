@@ -3,16 +3,16 @@ using System.Collections.Generic;
 
 namespace backend.Models;
 
-public partial class Diemdanh
+public partial class Nhomdanhmuc
 {
-    public Guid MaBuoiHoc { get; set; }
-
-    public Guid MaHocSinh { get; set; }
+    public int MaNhom { get; set; }
 
     /// <summary>
-    /// Trỏ về ChiTietDanhMuc
+    /// VD: LOAI_PHONG, TRANG_THAI_KHOA_HOC
     /// </summary>
-    public int? MaTrangThai { get; set; }
+    public string MaCode { get; set; } = null!;
+
+    public string TenNhom { get; set; } = null!;
 
     public string? GhiChu { get; set; }
 
@@ -28,9 +28,5 @@ public partial class Diemdanh
 
     public bool? DaXoa { get; set; }
 
-    public virtual Buoihoc MaBuoiHocNavigation { get; set; } = null!;
-
-    public virtual Hocsinh MaHocSinhNavigation { get; set; } = null!;
-
-    public virtual Chitietdanhmuc? MaTrangThaiNavigation { get; set; }
+    public virtual ICollection<Chitietdanhmuc> Chitietdanhmucs { get; set; } = new List<Chitietdanhmuc>();
 }

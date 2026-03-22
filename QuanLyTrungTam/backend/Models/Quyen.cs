@@ -3,11 +3,15 @@ using System.Collections.Generic;
 
 namespace backend.Models;
 
-public partial class Vaitro
+public partial class Quyen
 {
-    public int MaVaiTro { get; set; }
+    public int MaQuyen { get; set; }
 
-    public string TenVaiTro { get; set; } = null!;
+    public int MaChucNang { get; set; }
+
+    public string TenQuyen { get; set; } = null!;
+
+    public string? MoTa { get; set; }
 
     public Guid? NguoiTao { get; set; }
 
@@ -21,9 +25,7 @@ public partial class Vaitro
 
     public bool? DaXoa { get; set; }
 
-    public virtual ICollection<Nguoidungvaitro> Nguoidungvaitros { get; set; } = new List<Nguoidungvaitro>();
+    public virtual Chucnang MaChucNangNavigation { get; set; } = null!;
 
     public virtual ICollection<Vaitroquyen> Vaitroquyens { get; set; } = new List<Vaitroquyen>();
-
-    public virtual ICollection<Chucnanghethong> MaChucNangs { get; set; } = new List<Chucnanghethong>();
 }

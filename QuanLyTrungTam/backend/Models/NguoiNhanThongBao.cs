@@ -3,15 +3,29 @@ using System.Collections.Generic;
 
 namespace backend.Models;
 
-public partial class NguoiNhanThongBao
+public partial class Nguoinhanthongbao
 {
-    public int MaThongBao { get; set; }
+    public Guid MaThongBao { get; set; }
 
-    public int MaNguoiDung { get; set; }
+    public Guid MaNguoiDung { get; set; }
 
     public bool? DaDoc { get; set; }
 
-    public virtual NguoiDung MaNguoiDungNavigation { get; set; } = null!;
+    public DateTime? NgayDoc { get; set; }
 
-    public virtual ThongBao MaThongBaoNavigation { get; set; } = null!;
+    public Guid? NguoiTao { get; set; }
+
+    public DateTime? ThoiGianTao { get; set; }
+
+    public Guid? NguoiSua { get; set; }
+
+    public DateTime? ThoiGianSua { get; set; }
+
+    public bool? TrangThai { get; set; }
+
+    public bool? DaXoa { get; set; }
+
+    public virtual Nguoidung MaNguoiDungNavigation { get; set; } = null!;
+
+    public virtual Thongbao MaThongBaoNavigation { get; set; } = null!;
 }

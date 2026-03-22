@@ -3,39 +3,48 @@ using System.Collections.Generic;
 
 namespace backend.Models;
 
-public partial class LopHoc
+public partial class Lophoc
 {
-    public int MaLop { get; set; }
+    public Guid MaLopHoc { get; set; }
 
-    public string? MaLopHienThi { get; set; }
+    public string TenLop { get; set; } = null!;
 
-    public int MaKhoaHoc { get; set; }
+    public DateOnly? NgayBatDau { get; set; }
 
-    public int? MaGiaoVien { get; set; }
+    public DateOnly? NgayKetThuc { get; set; }
 
-    public string? LichHoc { get; set; }
+    public int? SiSoHienTai { get; set; }
 
-    public DateTime? NgayTao { get; set; }
+    public int? SiSoToiDa { get; set; }
 
-    public DateTime? UpdatedAt { get; set; }
+    /// <summary>
+    /// Trỏ về ChiTietDanhMuc
+    /// </summary>
+    public int? MaTrangThai { get; set; }
 
-    public virtual ICollection<BaiKiemTra> BaiKiemTras { get; set; } = new List<BaiKiemTra>();
+    public Guid? NguoiTao { get; set; }
 
-    public virtual ICollection<BaiTapVeNha> BaiTapVeNhas { get; set; } = new List<BaiTapVeNha>();
+    public DateTime? ThoiGianTao { get; set; }
 
-    public virtual ICollection<BuoiHoc> BuoiHocs { get; set; } = new List<BuoiHoc>();
+    public Guid? NguoiSua { get; set; }
 
-    public virtual ICollection<ChuDeBaiGiang> ChuDeBaiGiangs { get; set; } = new List<ChuDeBaiGiang>();
+    public DateTime? ThoiGianSua { get; set; }
 
-    public virtual ICollection<DiemDanhGiaoVien> DiemDanhGiaoViens { get; set; } = new List<DiemDanhGiaoVien>();
+    public bool? TrangThai { get; set; }
 
-    public virtual ICollection<HocSinhLopHoc> HocSinhLopHocs { get; set; } = new List<HocSinhLopHoc>();
+    public bool? DaXoa { get; set; }
 
-    public virtual ICollection<LichDay> LichDays { get; set; } = new List<LichDay>();
+    public virtual ICollection<Buoihoc> Buoihocs { get; set; } = new List<Buoihoc>();
 
-    public virtual GiaoVien? MaGiaoVienNavigation { get; set; }
+    public virtual ICollection<ChitietkhoahocLophoc> ChitietkhoahocLophocs { get; set; } = new List<ChitietkhoahocLophoc>();
 
-    public virtual KhoaHoc MaKhoaHocNavigation { get; set; } = null!;
+    public virtual ICollection<Giangvienlophoc> Giangvienlophocs { get; set; } = new List<Giangvienlophoc>();
 
-    public virtual ICollection<YeuCauVaoLop> YeuCauVaoLops { get; set; } = new List<YeuCauVaoLop>();
+    public virtual ICollection<Hocsinhlophoc> Hocsinhlophocs { get; set; } = new List<Hocsinhlophoc>();
+
+    public virtual Chitietdanhmuc? MaTrangThaiNavigation { get; set; }
+
+    public virtual ICollection<Sukienlophoc> Sukienlophocs { get; set; } = new List<Sukienlophoc>();
+
+    public virtual ICollection<Yeucaulichday> Yeucaulichdays { get; set; } = new List<Yeucaulichday>();
 }

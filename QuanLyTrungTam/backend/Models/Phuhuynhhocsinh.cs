@@ -3,20 +3,16 @@ using System.Collections.Generic;
 
 namespace backend.Models;
 
-public partial class Hocsinhlophoc
+public partial class Phuhuynhhocsinh
 {
-    public Guid MaLopHoc { get; set; }
+    public Guid MaPhuHuynh { get; set; }
 
     public Guid MaHocSinh { get; set; }
 
     /// <summary>
     /// Trỏ về ChiTietDanhMuc
     /// </summary>
-    public int? MaTrangThai { get; set; }
-
-    public DateOnly? NgayThamGia { get; set; }
-
-    public DateOnly? NgayRoiLop { get; set; }
+    public int? MaQuanHe { get; set; }
 
     public Guid? NguoiTao { get; set; }
 
@@ -32,7 +28,7 @@ public partial class Hocsinhlophoc
 
     public virtual Hocsinh MaHocSinhNavigation { get; set; } = null!;
 
-    public virtual Lophoc MaLopHocNavigation { get; set; } = null!;
+    public virtual Phuhuynh MaPhuHuynhNavigation { get; set; } = null!;
 
-    public virtual Chitietdanhmuc? MaTrangThaiNavigation { get; set; }
+    public virtual Chitietdanhmuc? MaQuanHeNavigation { get; set; }
 }

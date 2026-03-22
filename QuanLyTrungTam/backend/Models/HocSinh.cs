@@ -3,39 +3,41 @@ using System.Collections.Generic;
 
 namespace backend.Models;
 
-public partial class HocSinh
+public partial class Hocsinh
 {
-    public int MaHocSinh { get; set; }
+    public Guid MaHocSinh { get; set; }
 
-    public int MaNguoiDung { get; set; }
-
-    public int? MaPhuHuynh { get; set; }
+    public Guid MaNguoiDung { get; set; }
 
     public DateOnly? NgaySinh { get; set; }
 
-    public int? DiemTongApos { get; set; }
+    public string? QueQuan { get; set; }
 
-    public DateTime? UpdatedAt { get; set; }
+    public string? SoDienThoaiNguoiThan { get; set; }
 
-    public virtual ICollection<BaiNopHocSinh> BaiNopHocSinhs { get; set; } = new List<BaiNopHocSinh>();
+    public string? TruongDangTheoHoc { get; set; }
 
-    public virtual ICollection<BaoCaoBaiHoc> BaoCaoBaiHocs { get; set; } = new List<BaoCaoBaiHoc>();
+    public Guid? NguoiTao { get; set; }
 
-    public virtual ICollection<BaoCaoPhuHuynh> BaoCaoPhuHuynhs { get; set; } = new List<BaoCaoPhuHuynh>();
+    public DateTime? ThoiGianTao { get; set; }
 
-    public virtual ICollection<DiemDanh> DiemDanhs { get; set; } = new List<DiemDanh>();
+    public Guid? NguoiSua { get; set; }
 
-    public virtual ICollection<HocSinhLopHoc> HocSinhLopHocs { get; set; } = new List<HocSinhLopHoc>();
+    public DateTime? ThoiGianSua { get; set; }
 
-    public virtual ICollection<KetQuaKiemTra> KetQuaKiemTras { get; set; } = new List<KetQuaKiemTra>();
+    public bool? TrangThai { get; set; }
 
-    public virtual NguoiDung MaNguoiDungNavigation { get; set; } = null!;
+    public bool? DaXoa { get; set; }
 
-    public virtual PhuHuynh? MaPhuHuynhNavigation { get; set; }
+    public virtual ICollection<Diemdanh> Diemdanhs { get; set; } = new List<Diemdanh>();
 
-    public virtual ICollection<NhatKyApo> NhatKyApos { get; set; } = new List<NhatKyApo>();
+    public virtual ICollection<Hocsinhlophoc> Hocsinhlophocs { get; set; } = new List<Hocsinhlophoc>();
 
-    public virtual ICollection<ThongKeHocTap> ThongKeHocTaps { get; set; } = new List<ThongKeHocTap>();
+    public virtual Nguoidung MaNguoiDungNavigation { get; set; } = null!;
 
-    public virtual ICollection<YeuCauVaoLop> YeuCauVaoLops { get; set; } = new List<YeuCauVaoLop>();
+    public virtual ICollection<Nguoinhansukien> Nguoinhansukiens { get; set; } = new List<Nguoinhansukien>();
+
+    public virtual ICollection<Nopbai> Nopbais { get; set; } = new List<Nopbai>();
+
+    public virtual ICollection<Phuhuynhhocsinh> Phuhuynhhocsinhs { get; set; } = new List<Phuhuynhhocsinh>();
 }
