@@ -22,6 +22,7 @@ import AdminCreateCourse from "./pages/admin/AdminCreateCourse";
 import AdminAssignStudent from "./pages/admin/AdminAssignStudent";
 import AdminMessages from './pages/admin/AdminMessages'; // Đã import component nhắn tin
 import AdminStudyContent from './pages/admin/AdminStudyContent'; // Đã import trang nội dung học tập 
+import AdminAttendance from './pages/admin/AdminAttendance'; // Đã import trang điểm danh
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCreateUser from "./pages/admin/AdminCreateUser";
 import AdminNotifcations from "./pages/admin/AdminNotifications";
@@ -79,7 +80,7 @@ function App() {
             <Route path="/admin/schedules" element={<PrivateRoute allowedRoles={['Admin']}><AdminSchedule /></PrivateRoute>} />
 
             <Route path="/admin/exams" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Bài tập - Đề thi" /></PrivateRoute>} />
-            <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Quản lý Điểm danh" /></PrivateRoute>} />
+            <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><AdminAttendance /></PrivateRoute>} />
             <Route path="/admin/reports" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Báo cáo và thống kê" /></PrivateRoute>} />
             <Route path="/admin/notifications" element={<PrivateRoute allowedRoles={['Admin']}><AdminNotifcations /></PrivateRoute>} />
             <Route path="/admin/content" element={<PrivateRoute allowedRoles={['Admin']}><AdminStudyContent /></PrivateRoute>} />

@@ -2,7 +2,7 @@ import React, { useState } from "react";
 /**
  * Chức năng: Hiển thị và quản lý danh sách thông báo cho admin
  * Creatby: Trương Quốc Lộc - 18/3/2026
- * Updateby: Nguyễn Thùy Linh - 18/3/2026
+ * Updateby: Trương Quốc Lộc - 18/3/2026
  */
 const AdminNotifications = () => {
   // 1. Dữ liệu giả
@@ -37,7 +37,7 @@ const AdminNotifications = () => {
     target: "Tất cả",
   });
 
-  // 2. Hàm xử lý(CRUD)
+  // 2. Hàm xử lý
   const handleOpenModal = (notification = null) => {
     if (notification) {
       setIsEditing(true);
