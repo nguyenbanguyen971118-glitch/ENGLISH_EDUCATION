@@ -26,12 +26,17 @@ import AdminAttendance from './pages/admin/AdminAttendance'; // Đã import tran
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminCreateUser from "./pages/admin/AdminCreateUser";
 import AdminNotifcations from "./pages/admin/AdminNotifications";
+import AdminAssignment from "./pages/admin/AdminAssignment";
 
 // Import Teacher Pages
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
-
+import TeacherProfile from './pages/teacher/TeacherProfile';
 // Import Parent Pages
 import ParentAttendance from './pages/parent/ParentAttendance';
+
+import ParentProfile from './pages/parent/ParentProfile';
+// Import Student Pages
+import StudentProfile from './pages/student/StudentProfile';
 // Component Placeholder để tránh lỗi khi chưa có file trang cụ thể
 const Placeholder = ({ title }) => (
   <div className="p-4 animate__animated animate__fadeIn">
@@ -79,8 +84,11 @@ function App() {
 
             <Route path="/admin/schedules" element={<PrivateRoute allowedRoles={['Admin']}><AdminSchedule /></PrivateRoute>} />
 
-            <Route path="/admin/exams" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Bài tập - Đề thi" /></PrivateRoute>} />
+          
             <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><AdminAttendance /></PrivateRoute>} />
+        
+            <Route path="/admin/exams" element={<PrivateRoute allowedRoles={['Admin']}><AdminAssignment /></PrivateRoute>} />
+            <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Quản lý Điểm danh" /></PrivateRoute>} />
             <Route path="/admin/reports" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Báo cáo và thống kê" /></PrivateRoute>} />
             <Route path="/admin/notifications" element={<PrivateRoute allowedRoles={['Admin']}><AdminNotifcations /></PrivateRoute>} />
             <Route path="/admin/content" element={<PrivateRoute allowedRoles={['Admin']}><AdminStudyContent /></PrivateRoute>} />
@@ -122,8 +130,7 @@ function App() {
             <Route path="/teacher/messages" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Quản lý nhắn tin" /></PrivateRoute>} />
             <Route path="/teacher/attendance" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherAttendance /></PrivateRoute>} />
             <Route path="/teacher/reports" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Báo cáo và thống kê" /></PrivateRoute>} />
-            <Route path="/teacher/profile" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Thông tin cá nhân giáo viên" /></PrivateRoute>} />
-
+            <Route path="/teacher/profile" element={<TeacherProfile />} />
             {/* --- NHÓM HỌC SINH (STUDENT) --- */}
             <Route path="/student" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentDashboard /></PrivateRoute>} />
             <Route path="/student/schedule" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><SchedulePage /></PrivateRoute>} />
@@ -131,6 +138,7 @@ function App() {
             <Route path="/student/reports" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><Placeholder title="Báo cáo thống kê" /></PrivateRoute>} />
             <Route path="/student/homework" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><Placeholder title="Học chủ động" /></PrivateRoute>} />
             <Route path="/student/notifications" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><Placeholder title="Thông báo" /></PrivateRoute>} />
+            <Route path="/student/profile" element={<StudentProfile />} />
 
             {/* --- NHÓM PHỤ HUYNH (PARENT) --- */}
             <Route path="/parent" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><ParentDashboard /></PrivateRoute>} />
@@ -138,6 +146,7 @@ function App() {
             <Route path="/parent/attendance" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><ParentAttendance /></PrivateRoute>} />
             <Route path="/parent/messages" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><Placeholder title="Quản lý nhắn tin" /></PrivateRoute>} />
             <Route path="/parent/reports" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><Placeholder title="Báo cáo thống kê" /></PrivateRoute>} />
+            <Route path="/parent/profile" element={<ParentProfile />} />
           </Route>
 
           {/* Error Routes & Catch-All */}
