@@ -1,93 +1,42 @@
-using backend.Data;
-using backend.Models;
+using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 
 namespace backend.Controllers;
 
+/// <summary>
+/// Controller quản lý ma trận phân quyền, nhóm quyền và các thao tác cập nhật quyền.
+/// Toàn bộ nghiệp vụ chính được đẩy xuống tầng service để giữ đúng cấu trúc 3 lớp.
+/// </summary>
 [Route("api/[controller]")]
 [ApiController]
 public class PermissionsController : ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly IPermissionService _permissionService;
 
-    public PermissionsController(AppDbContext context)
+    public PermissionsController(IPermissionService permissionService)
     {
-        _context = context;
+        _permissionService = permissionService;
     }
 
     [HttpGet("matrix")]
     public async Task<IActionResult> GetMatrix()
     {
-        var permissions = await _context.Quyens
-            .Include(x => x.MaChucNangNavigation)
-            .OrderBy(x => x.MaChucNang)
-            .ThenBy(x => x.MaQuyen)
-            .Select(x => new
-            {
-                MaChucNang = x.MaQuyen,
-                MaChucNangCode = x.TenQuyen,
-                TenChucNang = x.MaChucNangNavigation.TenChucNang,
-                MaTrang = "func_" + x.MaChucNang,
-                TenTrang = x.MaChucNangNavigation.TenChucNang,
-                ThuTu = x.MaQuyen
-            })
-            .ToListAsync();
-
-        var roles = await _context.Vaitros
-            .Select(x => new { x.MaVaiTro, x.TenVaiTro })
-            .ToListAsync();
-
-        var mappings = await _context.Vaitroquyens
-            .Where(x => x.DaXoa == null || x.DaXoa == false)
-            .Select(x => new { x.MaVaiTro, MaChucNang = x.MaQuyen })
-            .ToListAsync();
-
-        var groupedPages = permissions
-            .GroupBy(x => new { x.MaTrang, x.TenTrang })
-            .Select(g => new
-            {
-                maTrang = g.Key.MaTrang,
-                tenTrang = g.Key.TenTrang,
-                chucNangs = g.Select(p => new
-                {
-                    p.MaChucNang,
-                    p.MaChucNangCode,
-                    p.TenChucNang,
-                    p.ThuTu
-                }).OrderBy(x => x.ThuTu)
-            })
-            .OrderBy(x => x.maTrang)
-            .ToList();
-
-        return Ok(new
-        {
-            roles,
-            pages = groupedPages,
-            mappings
-        });
+        // Trả toàn bộ ma trận quyền để FE hiển thị màn hình phân quyền.
+        var matrix = await _permissionService.GetMatrixAsync();
+        return Ok(matrix);
     }
 
-    [HttpGet("role/{roleId:int}")]
+    [HttpGet("roles/{roleId:int}")]
     public async Task<IActionResult> GetRolePermissions(int roleId)
     {
-        var role = await _context.Vaitros.FirstOrDefaultAsync(x => x.MaVaiTro == roleId);
-        if (role == null)
+        // Lấy danh sách quyền hiện tại của một vai trò cụ thể.
+        var result = await _permissionService.GetRolePermissionsAsync(roleId);
+        if (result == null)
         {
             return NotFound(new { message = "Không tìm thấy nhóm quyền." });
         }
 
-        var permissionCodes = await _context.Vaitroquyens
-            .Where(x => x.MaVaiTro == roleId)
-            .Select(x => x.MaQuyenNavigation.TenQuyen)
-            .ToListAsync();
-
-        return Ok(new
-        {
-            roleId,
-            roleName = role.TenVaiTro,
-            permissionCodes
-        });
+        return Ok(result);
     }
 
     [HttpGet("check")]
@@ -98,8 +47,8 @@ public class PermissionsController : ControllerBase
             return BadRequest(new { message = "permissionCode là bắt buộc." });
         }
 
-        var hasPermission = await _context.Vaitroquyens.AnyAsync(x =>
-            x.MaVaiTro == roleId && x.MaQuyenNavigation.TenQuyen == permissionCode);
+        // Dùng để kiểm tra nhanh một vai trò có quyền cụ thể hay không.
+        var hasPermission = await _permissionService.CheckPermissionAsync(roleId, permissionCode);
 
         return Ok(new { roleId, permissionCode, hasPermission });
     }
@@ -107,92 +56,59 @@ public class PermissionsController : ControllerBase
     [HttpPost("roles")]
     public async Task<IActionResult> CreateRole([FromBody] CreateRoleRequest request)
     {
-        if (string.IsNullOrWhiteSpace(request.TenVaiTro))
+        // Tạo vai trò mới kèm danh sách quyền ban đầu.
+        var result = await _permissionService.CreateRoleAsync(request.TenVaiTro, request.PermissionCodes ?? new List<string>());
+        if (!result.Success)
         {
-            return BadRequest(new { message = "Tên nhóm quyền không được để trống." });
+            return BadRequest(new { message = result.Message });
         }
 
-        var normalized = request.TenVaiTro.Trim();
-        var existed = await _context.Vaitros.AnyAsync(x => x.TenVaiTro == normalized);
-        if (existed)
-        {
-            return BadRequest(new { message = "Tên nhóm quyền đã tồn tại." });
-        }
-
-        var role = new Vaitro { TenVaiTro = normalized };
-        _context.Vaitros.Add(role);
-        await _context.SaveChangesAsync();
-
-        if (request.PermissionCodes?.Count > 0)
-        {
-            var permissions = await _context.Quyens
-                .Where(x => request.PermissionCodes.Contains(x.TenQuyen))
-                .Select(x => x.MaQuyen)
-                .ToListAsync();
-
-            foreach (var permissionId in permissions)
-            {
-                _context.Vaitroquyens.Add(new Vaitroquyen
-                {
-                    MaVaiTro = role.MaVaiTro,
-                    MaQuyen = permissionId,
-                    TrangThai = true,
-                    DaXoa = false
-                });
-            }
-
-            await _context.SaveChangesAsync();
-        }
-
-        return Ok(new
-        {
-            role.MaVaiTro,
-            role.TenVaiTro
-        });
+        return Ok(result.Data);
     }
 
-    [HttpPut("role/{roleId:int}")]
+    [HttpPut("roles/{roleId:int}")]
     public async Task<IActionResult> UpdateRolePermissions(int roleId, [FromBody] UpdateRolePermissionsRequest request)
     {
-        var role = await _context.Vaitros.FirstOrDefaultAsync(x => x.MaVaiTro == roleId);
-        if (role == null)
+        // Ghi đè toàn bộ danh sách quyền của vai trò.
+        var result = await _permissionService.UpdateRolePermissionsAsync(roleId, request.PermissionCodes ?? new List<string>());
+        if (!result.Success)
         {
-            return NotFound(new { message = "Không tìm thấy nhóm quyền." });
+            return NotFound(new { message = result.Message });
         }
 
-        var permissions = await _context.Quyens
-            .Where(x => request.PermissionCodes.Contains(x.TenQuyen))
-            .Select(x => x.MaQuyen)
-            .ToListAsync();
+        return Ok(new { message = result.Message });
+    }
 
-        var oldMappings = _context.Vaitroquyens.Where(x => x.MaVaiTro == roleId);
-        _context.Vaitroquyens.RemoveRange(oldMappings);
-
-        foreach (var permissionId in permissions)
+    [HttpDelete("roles/{roleId:int}")]
+    public async Task<IActionResult> DeleteRole(int roleId)
+    {
+        // Xóa mềm vai trò nếu không còn người dùng nào được gán.
+        var result = await _permissionService.DeleteRoleAsync(roleId);
+        if (!result.Success)
         {
-            _context.Vaitroquyens.Add(new Vaitroquyen
+            if (result.Message == "Không tìm thấy nhóm quyền.")
             {
-                MaVaiTro = roleId,
-                MaQuyen = permissionId,
-                TrangThai = true,
-                DaXoa = false
-            });
+                return NotFound(new { message = result.Message });
+            }
+
+            return BadRequest(new { message = result.Message });
         }
 
-        await _context.SaveChangesAsync();
-
-        return Ok(new { message = "Cập nhật quyền thành công." });
+        return Ok(new { message = result.Message });
     }
 }
 
 public class CreateRoleRequest
 {
+    // Tên vai trò hiển thị trên hệ thống, ví dụ: Admin, Giao_Vien, Hoc_Sinh.
     public string TenVaiTro { get; set; } = string.Empty;
 
+    // Danh sách mã quyền được gán cho vai trò ngay khi tạo mới.
     public List<string> PermissionCodes { get; set; } = new();
 }
 
 public class UpdateRolePermissionsRequest
 {
+    // Danh sách mã quyền mới của vai trò sau khi cập nhật.
     public List<string> PermissionCodes { get; set; } = new();
 }

@@ -1,7 +1,8 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using backend.Data; // <--- SỬA: Phải là backend.Data thay vì QuanLyTrungTam.Data
+using backend.Data;
+using backend.Attributes;
 using QuanLyTrungTam.DTOs;
 
 namespace QuanLyTrungTam.Controllers
@@ -11,7 +12,6 @@ namespace QuanLyTrungTam.Controllers
     [ApiController]
     public class ParentController : ControllerBase
     {
-        // SỬA: Đổi ApplicationDbContext thành AppDbContext
         private readonly AppDbContext _context;
 
         public ParentController(AppDbContext context)
@@ -20,6 +20,7 @@ namespace QuanLyTrungTam.Controllers
         }
 
         [HttpGet("child-summary/{userId}")]
+        [AuthorizeByPermission(MaChucNang = 2, PermissionIds = new[] { 8 })]
         public async Task<IActionResult> GetChildSummary(string userId)
         {
             if (!Guid.TryParse(userId, out var parsedUserId))

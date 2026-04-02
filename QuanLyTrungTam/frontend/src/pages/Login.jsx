@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { authApi } from '../api';
 
 // Import tài nguyên ảnh
 import anhNen1 from '../assets/avtLogin2.jpg'; 
@@ -13,6 +14,7 @@ const Login = () => {
     const [password, setPassword] = useState('');
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [formError, setFormError] = useState('');
     const { login } = useAuth();
     const navigate = useNavigate();
 
@@ -21,45 +23,42 @@ const Login = () => {
     const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
+        setFormError('');
 
         try {
-            // 1. Gọi API đăng nhập thực tế từ Backend
-            const response = await fetch('http://localhost:64179/api/Auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
+            // 1. Gọi API đăng nhập qua module authApi
+            const data = await authApi.login(email, password);
 
-            const data = await response.json();
+            if (data?.success && data?.data) {
+                const userData = data.data;
 
-            if (response.ok) {
                 // 2. Lưu thông tin người dùng vào Context
-                login(data, data.token);
+                login(userData);
 
                 // 3. ĐIỀU HƯỚNG TỰ ĐỘNG THEO VAI TRÒ (ROLE)
                 // Lưu ý: data.role trả về từ Backend phải khớp với các case bên dưới
-                switch (data.role) {
+                switch (userData.role) {
                     case 'Admin':
-                        navigate('/admin/dashboard');
+                        navigate('/admin');
                         break;
                     case 'Giao_Vien':
-                        navigate('/teacher/dashboard');
+                        navigate('/teacher');
                         break;
                     case 'Phu_Huynh':
-                        navigate('/parent/dashboard');
+                        navigate('/parent');
                         break;
                     case 'Hoc_Sinh':
-                        navigate('/student/ashboard');
+                        navigate('/student');
                         break;
                     default:
                         navigate('/'); // Quay về trang chủ nếu không xác định được vai trò
                 }
             } else {
-                alert(data.message || "Tài khoản hoặc mật khẩu không chính xác!");
+                setFormError(data.message || "Tài khoản hoặc mật khẩu không chính xác!");
             }
         } catch (error) {
             console.error("Lỗi kết nối:", error);
-            alert("Không thể kết nối đến máy chủ. Hãy kiểm tra Backend!");
+            setFormError("Không thể kết nối đến máy chủ. Hãy kiểm tra Backend!");
         } finally {
             setLoading(false);
         }
@@ -103,6 +102,11 @@ const Login = () => {
                     <div className="login-card shadow-lg bg-white p-5" style={{ maxWidth: '450px', width: '100%', borderRadius: '32px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)', marginTop: '-15px' }}>
                         <h2 className="fw-bold text-dark mb-1 text-center">Sign in to Active</h2>
                         <p className="text-muted small mb-4 text-center">Enter your details below</p>
+                        {formError && (
+                            <div className="alert alert-danger py-2" role="alert">
+                                {formError}
+                            </div>
+                        )}
                         
                         <form onSubmit={handleLogin}>
                             <div className="mb-4">

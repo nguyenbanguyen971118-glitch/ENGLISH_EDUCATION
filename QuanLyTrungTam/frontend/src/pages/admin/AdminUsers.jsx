@@ -1,5 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from '../../context/AuthContext';
 
 /**
  * Chức năng: Hiển thị và quản lý danh sách người dùng cho admin
@@ -8,6 +9,9 @@ import { useNavigate } from "react-router-dom";
  */
 const AdminUsers = () => {
 const navigate = useNavigate();
+const { user } = useAuth();
+const permissionCodes = Array.isArray(user?.permissionCodes) ? user.permissionCodes : [];
+const canCreateUser = permissionCodes.includes('USERS_CREATE');
 
 const users = [
 {
@@ -69,6 +73,7 @@ return (
 Quản lý người dùng
 </h3>
 
+{canCreateUser && (
 <button
 className="btn btn-primary"
 onClick={()=>navigate("/admin/users/create")}
@@ -78,6 +83,7 @@ onClick={()=>navigate("/admin/users/create")}
 Thêm người dùng
 
 </button>
+)}
 
 </div>
 

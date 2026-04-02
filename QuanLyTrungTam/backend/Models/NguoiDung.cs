@@ -42,6 +42,8 @@ public partial class Nguoidung
 
     public DateTime? ThoiGianSua { get; set; }
 
+    public DateTime? LanCuoiDangNhap { get; set; }
+
     public bool? TrangThai { get; set; }
 
     public bool? DaXoa { get; set; }

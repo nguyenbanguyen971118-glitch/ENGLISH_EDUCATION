@@ -61,4 +61,36 @@ public class UserRepository : IUserRepository
             await UpdateAsync(user);
         }
     }
+
+    // 3-layer pattern implementations
+    public async Task<Vaitro> GetUserRoleAsync(Guid userId)
+    {
+        return await _context.Nguoidungvaitros
+            .Where(x => x.MaNguoiDung == userId && (x.DaXoa == null || x.DaXoa == false))
+            .Select(x => x.MaVaiTroNavigation)
+            .FirstOrDefaultAsync();
+    }
+
+    public async Task<IEnumerable<string>> GetUserPermissionsAsync(int roleId)
+    {
+        return await _context.Vaitroquyens
+            .Where(x => x.MaVaiTro == roleId && (x.DaXoa == null || x.DaXoa == false))
+            .Select(x => x.MaQuyenNavigation.TenQuyen)
+            .ToListAsync();
+    }
+
+    public async Task<Guid?> GetUserProfileIdAsync(Guid userId, string roleName)
+    {
+        if (roleName == "Hoc_Sinh")
+        {
+            var hs = await _context.Hocsinhs.FirstOrDefaultAsync(h => h.MaNguoiDung == userId);
+            return hs?.MaHocSinh;
+        }
+        else if (roleName == "Giao_Vien")
+        {
+            var gv = await _context.Giangviens.FirstOrDefaultAsync(g => g.MaNguoiDung == userId);
+            return gv?.MaGiangVien;
+        }
+        return null;
+    }
 }
