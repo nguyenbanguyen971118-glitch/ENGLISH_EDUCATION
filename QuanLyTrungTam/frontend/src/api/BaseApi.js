@@ -174,7 +174,7 @@ const normalizedBaseUrl = envBaseUrl
     ? (envBaseUrl.toLowerCase().endsWith('/api')
         ? envBaseUrl
         : `${envBaseUrl.replace(/\/+$/, '')}/api`)
-    : 'http://localhost:64179/api';
+    : 'http://localhost:5100/api';
 
 const apiClient = new BaseApi(normalizedBaseUrl);
 

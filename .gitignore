@@ -27,3 +27,6 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Database dump / export
+/HeThongHocOnline_Final.sql

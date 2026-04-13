@@ -32,8 +32,10 @@ import AdminFunctions from './pages/admin/AdminFunctions';
 // Import Teacher Pages
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import TeacherProfile from './pages/teacher/TeacherProfile';
+import TeacherMessages from './pages/teacher/TeacherMessages';
 // Import Parent Pages
 import ParentAttendance from './pages/parent/ParentAttendance';
+import ParentMessages from './pages/parent/ParentMessages';
 
 import ParentProfile from './pages/parent/ParentProfile';
 // Import Student Pages
@@ -119,7 +121,7 @@ function App() {
             <Route path="/teacher/grading" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Chấm điểm" /></PrivateRoute>} />
             <Route path="/teacher/content" element={<PrivateRoute allowedRoles={['Giao_Vien']}><AdminStudyContent /></PrivateRoute>} />
             <Route path="/teacher/notifications" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Thông báo" /></PrivateRoute>} />
-            <Route path="/teacher/messages" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Quản lý nhắn tin" /></PrivateRoute>} />
+            <Route path="/teacher/messages" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherMessages /></PrivateRoute>} />
             <Route path="/teacher/attendance" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherAttendance /></PrivateRoute>} />
             <Route path="/teacher/reports" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Báo cáo và thống kê" /></PrivateRoute>} />
             <Route path="/teacher/profile" element={<TeacherProfile />} />
@@ -139,7 +141,7 @@ function App() {
             <Route path="/parent" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><ParentDashboard /></PrivateRoute>} />
             <Route path="/parent/schedule" element={<PrivateRoute requiredPermissions={['PAGE_PARENT_SCHEDULE_VIEW']}><ParentSchedule /></PrivateRoute>} />
             <Route path="/parent/attendance" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><ParentAttendance /></PrivateRoute>} />
-            <Route path="/parent/messages" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><Placeholder title="Quản lý nhắn tin" /></PrivateRoute>} />
+            <Route path="/parent/messages" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><ParentMessages /></PrivateRoute>} />
             <Route path="/parent/reports" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><Placeholder title="Báo cáo thống kê" /></PrivateRoute>} />
             <Route path="/parent/profile" element={<ParentProfile />} />
           </Route>

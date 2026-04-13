@@ -9,6 +9,7 @@ using backend.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using backend.Hubs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -24,7 +25,8 @@ builder.Services.AddCors(options => {
     options.AddPolicy("AllowReactApp", policy => {
         policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:5173") 
               .AllowAnyHeader()
-              .AllowAnyMethod();
+              .AllowAnyMethod()
+              .AllowCredentials();
     });
 });
 
@@ -39,23 +41,29 @@ if (string.IsNullOrWhiteSpace(connectionString))
 
 // 3. Thiết lập kết nối MySQL.
 builder.Services.AddDbContext<AppDbContext>(options =>
-    options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString))
+    options.UseMySql(connectionString, ServerVersion.Parse("8.0.45-mysql"))
 );
 
 // 4. Đăng ký các tầng Repository / Service / Helper.
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
+builder.Services.AddScoped<IChatRepository, ChatRepository>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IPermissionService, PermissionService>();
+builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
+builder.Services.AddScoped<IChatRealtimeNotifier, ChatRealtimeNotifier>();
 builder.Services.AddSingleton<IRefreshSessionStore, InMemoryRefreshSessionStore>();
+builder.Services.AddSingleton<IFirebasePushService, FirebasePushService>();
+builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<PermissionBootstrapService>();
 builder.Services.AddScoped<UserBootstrapHelper>();
 builder.Services.AddScoped<PermissionHelper>(); // Helper kiểm tra quyền chi tiết.
 
 builder.Services.AddControllers();
+builder.Services.AddSignalR();
 
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 var jwtSecret = jwtSection["Secret"] ?? "replace-this-in-production-please-at-least-32-chars";
@@ -76,6 +84,22 @@ builder.Services
             ValidAudience = jwtAudience,
             ValidateLifetime = true,
             ClockSkew = TimeSpan.FromSeconds(30)
+        };
+
+        options.Events = new JwtBearerEvents
+        {
+            OnMessageReceived = context =>
+            {
+                var accessToken = context.Request.Query["access_token"];
+                var path = context.HttpContext.Request.Path;
+
+                if (!string.IsNullOrWhiteSpace(accessToken) && path.StartsWithSegments("/hubs/chat"))
+                {
+                    context.Token = accessToken;
+                }
+
+                return Task.CompletedTask;
+            }
         };
     });
 
@@ -120,20 +144,20 @@ app.UseSwaggerUI(options =>
     options.RoutePrefix = "swagger"; // Truy cập tại: http://localhost:PORT/swagger
 });
 
-// 7. Kích hoạt CORS trước các middleware khác để xử lý pre-flight request.
-app.UseCors("AllowReactApp");
-
 app.UseMiddleware<ExceptionMiddleware>();
 app.UseMiddleware<LoginRateLimitMiddleware>();
 app.UseMiddleware<LoginAuditMiddleware>();
 
 // Thứ tự này đảm bảo: có endpoint -> xác thực JWT -> kiểm tra quyền chi tiết -> áp dụng authorization chuẩn.
 app.UseRouting(); 
+// 7. Kích hoạt CORS sau UseRouting và trước Auth/Authorization để xử lý pre-flight request.
+app.UseCors("AllowReactApp");
 app.UseAuthentication();
 app.UseMiddleware<AuthorizationMiddleware>();  
 app.UseAuthorization();
 
 // 8. Map controller endpoints.
 app.MapControllers();
+app.MapHub<ChatHub>("/hubs/chat");
 
 app.Run();

@@ -3,7 +3,7 @@ import { useMessagingAPI } from '../../hooks/useMessagingAPI';
 import { useChatHub } from '../../hooks/useChatHub';
 import { useAuth } from '../../context/AuthContext';
 
-const AdminMessages = () => {
+const TeacherMessages = () => {
     const { user: currentUser } = useAuth();
     const messaging = useMessagingAPI();
     const chatHub = useChatHub();
@@ -268,14 +268,12 @@ const AdminMessages = () => {
     };
 
     const handleCreateGroup = async () => {
-        const sanitizedMembers = Array.from(new Set(selectedMembers)).filter(id => id && id !== currentUser?.id);
-
-        if (!newGroupName.trim() || sanitizedMembers.length === 0) {
+        if (!newGroupName.trim() || selectedMembers.length === 0) {
             alert('Vui lòng nhập tên nhóm và chọn thành viên!');
             return;
         }
 
-        const result = await messaging.createGroupConversation(newGroupName, sanitizedMembers);
+        const result = await messaging.createGroupConversation(newGroupName, selectedMembers);
         if (result) {
             setSelectedMembers([]);
             setMemberSearchTerm('');
@@ -294,7 +292,7 @@ const AdminMessages = () => {
 
     const getSenderInfo = (senderId) => {
         if (senderId === currentUser.id) {
-            return { name: currentUser.name || 'Admin', avatar: currentUser.avatar || 'https://ui-avatars.com/api/?name=Admin&background=0d6efd&color=fff' };
+            return { name: currentUser.name || 'Giáo viên', avatar: currentUser.avatar || 'https://ui-avatars.com/api/?name=Teacher&background=198754&color=fff' };
         }
         return chatUsers.find(u => u.id === senderId) || { name: 'Người dùng', avatar: '' };
     };
@@ -306,7 +304,7 @@ const AdminMessages = () => {
     const filteredContacts = chatUsers.filter(c =>
         (c?.name || '').toLowerCase().includes(memberSearchTerm.toLowerCase()) ||
         String(c?.id || '').toLowerCase().includes(memberSearchTerm.toLowerCase())
-    ).filter(c => c?.id !== currentUser?.id);
+    );
 
     useEffect(() => {
         const handleClickOutside = () => setDropdownOpen(null);
@@ -352,8 +350,8 @@ const AdminMessages = () => {
                             </div>
                         </div>
                     ) : filteredConversations.length > 0 ? (
-                        filteredConversations.map((chat, chatIndex) => (
-                            <div key={chat.id || `chat-${chatIndex}`}
+                        filteredConversations.map(chat => (
+                            <div key={chat.id}
                                 className={`position-relative d-flex align-items-center p-3 mb-2 rounded-4 cursor-pointer transition-all chat-item-card 
                                 ${activeChat === chat.id && rightView === 'chat' ? 'bg-primary-subtle border border-primary-subtle shadow-sm' : 'border border-transparent hover-bg-light'}`}
                                 onClick={() => handleSelectChat(chat.id)}
@@ -450,8 +448,8 @@ const AdminMessages = () => {
                                     </div>
 
                                     <div className="border rounded-4 overflow-y-auto custom-scrollbar" style={{ maxHeight: '250px' }}>
-                                        {filteredContacts.map((contact, contactIndex) => (
-                                            <div key={contact.id || `contact-${contactIndex}`}
+                                        {filteredContacts.map(contact => (
+                                            <div key={contact.id}
                                                 className="d-flex justify-content-between align-items-center p-3 border-bottom hover-bg-light cursor-pointer transition-all"
                                                 onClick={() => toggleMemberSelection(contact.id)}>
                                                 <div className="d-flex align-items-center">
@@ -546,7 +544,7 @@ const AdminMessages = () => {
                                         const isSameSenderAsPrev = index > 0 && chatMsgs[index - 1].senderId === msg.senderId;
 
                                         return (
-                                            <div key={msg.id || `${msg.senderId || 'sender'}-${msg.time || 'time'}-${index}`} className={`d-flex mb-3 ${isSelf ? 'justify-content-end' : 'justify-content-start'}`}>
+                                            <div key={msg.id} className={`d-flex mb-3 ${isSelf ? 'justify-content-end' : 'justify-content-start'}`}>
                                                 {!isSelf && (
                                                     <div style={{ width: '38px', marginRight: '10px' }}>
                                                         {!isSameSenderAsPrev && <img src={senderInfo.avatar} className="rounded-circle shadow-sm" width="36" height="36" alt="avt" />}
@@ -558,8 +556,8 @@ const AdminMessages = () => {
                                                         <span className="small text-muted fw-bold ms-1 mb-1" style={{ fontSize: '12px' }}>{senderInfo.name}</span>
                                                     )}
 
-                                                    {msg.attachments && msg.attachments.map((att, attIndex) => (
-                                                        <div key={att.id || att.url || `att-${attIndex}`} className={`mb-1 ${isSelf ? 'text-end' : 'text-start'}`}>
+                                                    {msg.attachments && msg.attachments.map(att => (
+                                                        <div key={att.id} className={`mb-1 ${isSelf ? 'text-end' : 'text-start'}`}>
                                                             {att.type === 'image' ? (
                                                                 <div className="position-relative d-inline-block">
                                                                     <img src={att.url} alt="attachment" className="rounded-4 shadow-sm border border-light cursor-pointer"
@@ -614,8 +612,8 @@ const AdminMessages = () => {
                             <div className="bg-white border-top p-3 px-4 position-relative">
                                 {attachments.length > 0 && (
                                     <div className="d-flex gap-2 mb-3 pb-2 overflow-x-auto custom-scrollbar">
-                                        {attachments.map((att, attIndex) => (
-                                            <div key={att.id || att.url || `draft-att-${attIndex}`} className="position-relative border rounded-4 bg-light shadow-sm p-1 d-flex flex-column align-items-center justify-content-center" style={{ width: '90px', height: '90px', flexShrink: 0 }}>
+                                        {attachments.map(att => (
+                                            <div key={att.id} className="position-relative border rounded-4 bg-light shadow-sm p-1 d-flex flex-column align-items-center justify-content-center" style={{ width: '90px', height: '90px', flexShrink: 0 }}>
                                                 <button type="button" className="btn-close position-absolute top-0 end-0 bg-white border rounded-circle shadow-sm" style={{ transform: 'translate(30%, -30%)', padding: '5px' }} onClick={() => removeAttachment(att.id)}></button>
                                                 {att.type === 'image' ? (
                                                     <img src={att.url} alt="prev" className="w-100 h-100 rounded-3 object-fit-cover" />
@@ -697,4 +695,4 @@ const AdminMessages = () => {
     );
 };
 
-export default AdminMessages;
+export default TeacherMessages;
