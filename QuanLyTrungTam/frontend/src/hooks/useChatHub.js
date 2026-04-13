@@ -1,13 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import * as signalR from '@microsoft/signalr';
 import { useAuth } from '../context/AuthContext';
+import { getSignalRBaseUrl } from '../api/BaseApi';
 
-const SIGNALR_URL = 'http://localhost:5100/hubs/chat';
+const SIGNALR_URL = `${getSignalRBaseUrl()}/hubs/chat`;
 
 export const useChatHub = () => {
   const { user, logout } = useAuth();
   const token = user?.token || user?.accessToken || null;
   const connectionRef = useRef(null);
+  const reconnectTimeoutRef = useRef(null);
   const authFailedRef = useRef(false);
   const [isConnected, setIsConnected] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
@@ -19,13 +21,22 @@ export const useChatHub = () => {
     'message-read': []
   });
 
+  const clearReconnectTimeout = useCallback(() => {
+    if (reconnectTimeoutRef.current) {
+      clearTimeout(reconnectTimeoutRef.current);
+      reconnectTimeoutRef.current = null;
+    }
+  }, []);
+
   // Kết nối đến SignalR Hub
   useEffect(() => {
     if (!token) return;
     authFailedRef.current = false;
+    clearReconnectTimeout();
+    let cancelled = false;
 
     const connectToHub = async () => {
-      if (authFailedRef.current) return;
+      if (authFailedRef.current || cancelled) return;
       try {
         const connection = new signalR.HubConnectionBuilder()
           .withUrl(SIGNALR_URL, {
@@ -74,10 +85,16 @@ export const useChatHub = () => {
 
         connectionRef.current = connection;
         await connection.start();
+        if (cancelled) {
+          await connection.stop().catch(() => {});
+          return;
+        }
         setIsConnected(true);
         setConnectionError(null);
         console.log('SignalR connected');
       } catch (error) {
+        if (cancelled || authFailedRef.current) return;
+
         const aborted =
           error?.name === 'AbortError' ||
           error?.message?.includes('stopped during negotiation') ||
@@ -103,18 +120,23 @@ export const useChatHub = () => {
         }
 
         // Retry after 5 seconds
-        setTimeout(connectToHub, 5000);
+        clearReconnectTimeout();
+        reconnectTimeoutRef.current = setTimeout(connectToHub, 5000);
       }
     };
 
     connectToHub();
 
     return () => {
+      cancelled = true;
+      clearReconnectTimeout();
       if (connectionRef.current) {
-        connectionRef.current.stop().catch(e => console.error('Error stopping connection:', e));
+        const connection = connectionRef.current;
+        connectionRef.current = null;
+        connection.stop().catch(e => console.error('Error stopping connection:', e));
       }
     };
-  }, [token]);
+  }, [token, clearReconnectTimeout, logout]);
 
   // Subscribe để nhận event
   const on = useCallback((event, handler) => {

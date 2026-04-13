@@ -169,14 +169,23 @@ class BaseApi {
     }
 }
 
-const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
-const normalizedBaseUrl = envBaseUrl
-    ? (envBaseUrl.toLowerCase().endsWith('/api')
-        ? envBaseUrl
-        : `${envBaseUrl.replace(/\/+$/, '')}/api`)
-    : 'http://localhost:5100/api';
+const DEFAULT_BACKEND_BASE_URL = 'http://localhost:5000';
 
-const apiClient = new BaseApi(normalizedBaseUrl);
+const normalizeApiBaseUrl = (baseUrl = DEFAULT_BACKEND_BASE_URL) => {
+    const trimmedBaseUrl = baseUrl.trim().replace(/\/+$/, '');
 
-export { BaseApi };
+    if (/\/api$/i.test(trimmedBaseUrl)) {
+        return trimmedBaseUrl;
+    }
+
+    return `${trimmedBaseUrl}/api`;
+};
+
+const getApiBaseUrl = () => normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_BACKEND_BASE_URL);
+
+const getSignalRBaseUrl = () => getApiBaseUrl().replace(/\/api$/i, '');
+
+const apiClient = new BaseApi(getApiBaseUrl());
+
+export { BaseApi, getApiBaseUrl, getSignalRBaseUrl, normalizeApiBaseUrl };
 export default apiClient;

@@ -1,26 +1,15 @@
 import { useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-
-const API_BASE_URL = 'http://localhost:5100/api/messages';
+import apiClient from '../api/BaseApi';
 
 export const useMessagingAPI = () => {
   const { user, logout } = useAuth();
   const token = user?.token || user?.accessToken || null;
 
-  const getHeaders = () => ({
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`
-  });
-
-  const parseJsonSafe = async (response) => {
-    const text = await response.text();
-    if (!text) return null;
-
-    try {
-      return JSON.parse(text);
-    } catch {
-      return null;
-    }
+  const handleUnauthorized = (message, fallbackValue) => {
+    console.warn(message);
+    logout?.();
+    return fallbackValue;
   };
 
   // Lấy danh sách người dùng có thể nhắn tin (Admin, GiáoViên, PhụHuynh)
@@ -28,279 +17,195 @@ export const useMessagingAPI = () => {
     try {
       if (!token) return [];
 
-      const response = await fetch(`${API_BASE_URL}/users`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await apiClient.get('messages/users');
+      if (response?.status === 401) {
+        return handleUnauthorized('Chưa đăng nhập hoặc token hết hạn khi lấy danh sách người dùng', []);
+      }
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Chưa đăng nhập hoặc token hết hạn khi lấy danh sách người dùng');
-          logout?.();
-          return [];
-        }
-        const errorData = await parseJsonSafe(response);
-        console.error('Lỗi lấy danh sách người dùng:', errorData?.message || response.statusText);
+      if (!response?.success) {
+        console.error('Lỗi lấy danh sách người dùng:', response?.message || 'Không thể tải danh sách người dùng');
         return [];
       }
 
-      const data = await parseJsonSafe(response);
-      if (data.success) {
-        return (data.data || []).map((u) => ({
-          id: u?.id || u?.userId,
-          name: u?.name || u?.fullName,
-          role: u?.role,
-          avatarUrl: u?.avatarUrl || null
-        }));
-      } else {
-        console.error('Lỗi lấy danh sách người dùng:', data.message);
-        return [];
-      }
+      return (response.data || []).map((u) => ({
+        id: u?.id || u?.userId,
+        name: u?.name || u?.fullName,
+        role: u?.role,
+        avatarUrl: u?.avatarUrl || null
+      }));
     } catch (error) {
       console.error('Lỗi kết nối lấy danh sách người dùng:', error);
       return [];
     }
-  }, [token]);
+  }, [token, logout]);
 
   // Lấy danh sách cuộc trò chuyện
   const getConversations = useCallback(async () => {
     try {
       if (!token) return [];
 
-      const response = await fetch(`${API_BASE_URL}/conversations`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await apiClient.get('messages/conversations');
+      if (response?.status === 401) {
+        return handleUnauthorized('Chưa đăng nhập hoặc token hết hạn khi lấy cuộc trò chuyện', []);
+      }
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Chưa đăng nhập hoặc token hết hạn khi lấy cuộc trò chuyện');
-          logout?.();
-          return [];
-        }
-        const errorData = await parseJsonSafe(response);
-        console.error('Lỗi lấy danh sách cuộc trò chuyện:', errorData?.message || response.statusText);
+      if (!response?.success) {
+        console.error('Lỗi lấy danh sách cuộc trò chuyện:', response?.message || 'Không thể tải danh sách cuộc trò chuyện');
         return [];
       }
 
-      const data = await parseJsonSafe(response);
-      if (data.success) {
-        return data.data || [];
-      } else {
-        console.error('Lỗi lấy danh sách cuộc trò chuyện:', data.message);
-        return [];
-      }
+      return response.data || [];
     } catch (error) {
       console.error('Lỗi kết nối lấy cuộc trò chuyện:', error);
       return [];
     }
-  }, [token]);
+  }, [token, logout]);
 
   // Lấy tin nhắn của một cuộc trò chuyện
   const getMessages = useCallback(async (conversationId, take = 50) => {
     try {
       if (!token) return [];
 
-      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages?take=${take}`, {
-        method: 'GET',
-        headers: getHeaders()
-      });
+      const response = await apiClient.get(`messages/conversations/${conversationId}/messages?take=${take}`);
+      if (response?.status === 401) {
+        return handleUnauthorized('Chưa đăng nhập hoặc token hết hạn khi lấy tin nhắn', []);
+      }
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Chưa đăng nhập hoặc token hết hạn khi lấy tin nhắn');
-          logout?.();
-          return [];
-        }
-        const errorData = await parseJsonSafe(response);
-        console.error('Lỗi lấy tin nhắn:', errorData?.message || response.statusText);
+      if (!response?.success) {
+        console.error('Lỗi lấy tin nhắn:', response?.message || 'Không thể tải tin nhắn');
         return [];
       }
 
-      const data = await parseJsonSafe(response);
-      if (data.success) {
-        return data.data || [];
-      } else {
-        console.error('Lỗi lấy tin nhắn:', data.message);
-        return [];
-      }
+      return response.data || [];
     } catch (error) {
       console.error('Lỗi kết nối lấy tin nhắn:', error);
       return [];
     }
-  }, [token]);
+  }, [token, logout]);
 
   // Gửi tin nhắn
   const sendMessage = useCallback(async (conversationId, content, attachmentUrls = []) => {
     try {
       if (!token) return null;
 
-      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/messages`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          content,
-          attachmentUrls: attachmentUrls.length > 0 ? attachmentUrls : undefined
-        })
+      const response = await apiClient.post(`messages/conversations/${conversationId}/messages`, {
+        content,
+        attachmentUrls: attachmentUrls.length > 0 ? attachmentUrls : undefined
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Chưa đăng nhập hoặc token hết hạn khi gửi tin nhắn');
-          logout?.();
-          return null;
-        }
-        const errorData = await parseJsonSafe(response);
-        console.error('Lỗi gửi tin nhắn:', errorData?.message || response.statusText);
+      if (response?.status === 401) {
+        return handleUnauthorized('Chưa đăng nhập hoặc token hết hạn khi gửi tin nhắn', null);
+      }
+
+      if (!response?.success) {
+        console.error('Lỗi gửi tin nhắn:', response?.message || 'Không thể gửi tin nhắn');
         return null;
       }
 
-      const data = await parseJsonSafe(response);
-      if (data.success) {
-        return data.data;
-      } else {
-        console.error('Lỗi gửi tin nhắn:', data.message);
-        return null;
-      }
+      return response.data;
     } catch (error) {
       console.error('Lỗi kết nối gửi tin nhắn:', error);
       return null;
     }
-  }, [token]);
+  }, [token, logout]);
 
   // Tạo cuộc trò chuyện 1-1
   const createDirectConversation = useCallback(async (recipientId, initialMessage = null) => {
     try {
       if (!token) return null;
 
-      const response = await fetch(`${API_BASE_URL}/direct`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          recipientUserId: recipientId,
-          initialMessage
-        })
+      const response = await apiClient.post('messages/direct', {
+        recipientUserId: recipientId,
+        initialMessage
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Chưa đăng nhập hoặc token hết hạn khi tạo cuộc trò chuyện');
-          logout?.();
-          return null;
-        }
-        const errorData = await parseJsonSafe(response);
-        console.error('Lỗi tạo cuộc trò chuyện:', errorData?.message || response.statusText);
+      if (response?.status === 401) {
+        return handleUnauthorized('Chưa đăng nhập hoặc token hết hạn khi tạo cuộc trò chuyện', null);
+      }
+
+      if (!response?.success) {
+        console.error('Lỗi tạo cuộc trò chuyện:', response?.message || 'Không thể tạo cuộc trò chuyện');
         return null;
       }
 
-      const data = await parseJsonSafe(response);
-      if (data.success) {
-        return data.data;
-      } else {
-        console.error('Lỗi tạo cuộc trò chuyện:', data.message);
-        return null;
-      }
+      return response.data;
     } catch (error) {
       console.error('Lỗi kết nối tạo cuộc trò chuyện:', error);
       return null;
     }
-  }, [token]);
+  }, [token, logout]);
 
   // Tạo nhóm chat
   const createGroupConversation = useCallback(async (title, memberIds, initialMessage = null) => {
     try {
       if (!token) return null;
 
-      const response = await fetch(`${API_BASE_URL}/groups`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          title,
-          memberUserIds: memberIds,
-          initialMessage
-        })
+      const response = await apiClient.post('messages/groups', {
+        title,
+        memberUserIds: memberIds,
+        initialMessage
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Chưa đăng nhập hoặc token hết hạn khi tạo nhóm chat');
-          logout?.();
-          return null;
-        }
-        const errorData = await parseJsonSafe(response);
-        console.error('Lỗi tạo nhóm chat:', errorData?.message || response.statusText);
+      if (response?.status === 401) {
+        return handleUnauthorized('Chưa đăng nhập hoặc token hết hạn khi tạo nhóm chat', null);
+      }
+
+      if (!response?.success) {
+        console.error('Lỗi tạo nhóm chat:', response?.message || 'Không thể tạo nhóm chat');
         return null;
       }
 
-      const data = await parseJsonSafe(response);
-      if (data.success) {
-        return data.data;
-      } else {
-        console.error('Lỗi tạo nhóm chat:', data.message);
-        return null;
-      }
+      return response.data;
     } catch (error) {
       console.error('Lỗi kết nối tạo nhóm chat:', error);
       return null;
     }
-  }, [token]);
+  }, [token, logout]);
 
   // Đánh dấu cuộc trò chuyện đã đọc
   const markAsRead = useCallback(async (conversationId) => {
     try {
       if (!token) return false;
 
-      const response = await fetch(`${API_BASE_URL}/conversations/${conversationId}/read`, {
-        method: 'POST',
-        headers: getHeaders()
-      });
+      const response = await apiClient.post(`messages/conversations/${conversationId}/read`);
+      if (response?.status === 401) {
+        return handleUnauthorized('Chưa đăng nhập hoặc token hết hạn khi đánh dấu đã đọc', false);
+      }
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Chưa đăng nhập hoặc token hết hạn khi đánh dấu đã đọc');
-          logout?.();
-          return false;
-        }
+      if (!response?.success) {
         return false;
       }
 
-      const data = await parseJsonSafe(response);
-      return data.success;
+      return true;
     } catch (error) {
       console.error('Lỗi kết nối đánh dấu đã đọc:', error);
       return false;
     }
-  }, [token]);
+  }, [token, logout]);
 
   // Đăng ký device token cho push notifications
   const registerDeviceToken = useCallback(async (deviceToken) => {
     try {
       if (!token) return false;
 
-      const response = await fetch(`${API_BASE_URL}/device-token`, {
-        method: 'POST',
-        headers: getHeaders(),
-        body: JSON.stringify({
-          deviceToken
-        })
+      const response = await apiClient.post('messages/device-token', {
+        deviceToken
       });
 
-      if (!response.ok) {
-        if (response.status === 401) {
-          console.warn('Chưa đăng nhập hoặc token hết hạn khi đăng ký device token');
-          logout?.();
-          return false;
-        }
+      if (response?.status === 401) {
+        return handleUnauthorized('Chưa đăng nhập hoặc token hết hạn khi đăng ký device token', false);
+      }
+
+      if (!response?.success) {
         return false;
       }
 
-      const data = await parseJsonSafe(response);
-      return data.success;
+      return true;
     } catch (error) {
       console.error('Lỗi kết nối đăng ký device token:', error);
       return false;
     }
-  }, [token]);
+  }, [token, logout]);
 
   return {
     getUsers,

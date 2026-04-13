@@ -224,9 +224,15 @@ All endpoints are in `/backend/Controllers/MessagesController.cs`:
 
 ### Frontend (`.env` if needed)
 ```javascript
-API_BASE_URL = 'http://localhost:5000'
-SIGNALR_URL = 'http://localhost:5000/hubs/chat'
+VITE_API_BASE_URL = 'http://localhost:5000'
+// REST API dùng `${VITE_API_BASE_URL}/api`
+// SignalR dùng cùng base host: `${VITE_API_BASE_URL}/hubs/chat`
 ```
+
+### Production / Deploy
+- Set `VITE_API_BASE_URL` to the backend origin for each environment, then rebuild frontend with `npm run build`.
+- The generated `dist` bundle is environment-specific; rebuild it whenever the backend host or port changes.
+- Keep `dist` out of git and treat it as a generated artifact, not a source of truth.
 
 ### Backend (appsettings.json)
 ```json
@@ -281,6 +287,8 @@ To verify the system works end-to-end:
    cd backend && dotnet run
    # Should listen on http://localhost:5000
    ```
+
+   Nếu cần đổi môi trường triển khai, cập nhật `VITE_API_BASE_URL` trong file `.env` của frontend thay vì sửa cứng URL trong code.
 
 2. **Start Frontend:**
    ```bash
