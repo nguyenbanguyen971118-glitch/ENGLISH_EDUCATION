@@ -33,6 +33,7 @@ import AdminFunctions from './pages/admin/AdminFunctions';
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
 import TeacherProfile from './pages/teacher/TeacherProfile';
 import TeacherMessages from './pages/teacher/TeacherMessages';
+import TeacherExams from './pages/teacher/TeacherExams';
 // Import Parent Pages
 import ParentAttendance from './pages/parent/ParentAttendance';
 import ParentMessages from './pages/parent/ParentMessages';
@@ -87,9 +88,9 @@ function App() {
 
             <Route path="/admin/schedules" element={<PrivateRoute allowedRoles={['Admin']}><AdminSchedule /></PrivateRoute>} />
 
-          
+
             <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><AdminAttendance /></PrivateRoute>} />
-        
+
             <Route path="/admin/exams" element={<PrivateRoute allowedRoles={['Admin']}><AdminAssignment /></PrivateRoute>} />
             <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Quản lý Điểm danh" /></PrivateRoute>} />
             <Route path="/admin/reports" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Báo cáo và thống kê" /></PrivateRoute>} />
@@ -117,7 +118,7 @@ function App() {
             <Route path="/teacher" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherDashboard /></PrivateRoute>} />
             <Route path="/teacher/schedule" element={<PrivateRoute requiredPermissions={['PAGE_TEACHER_SCHEDULE_VIEW']}><TeacherSchedule /></PrivateRoute>} />
             <Route path="/teacher/classes" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Quản lý lớp học" /></PrivateRoute>} />
-            <Route path="/teacher/exams" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Quản lý bài tập - Đề thi" /></PrivateRoute>} />
+            <Route path="/teacher/exams" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherExams /></PrivateRoute>} />
             <Route path="/teacher/grading" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Chấm điểm" /></PrivateRoute>} />
             <Route path="/teacher/content" element={<PrivateRoute allowedRoles={['Giao_Vien']}><AdminStudyContent /></PrivateRoute>} />
             <Route path="/teacher/notifications" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Thông báo" /></PrivateRoute>} />
