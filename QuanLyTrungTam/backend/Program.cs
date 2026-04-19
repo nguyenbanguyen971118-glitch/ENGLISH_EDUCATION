@@ -54,6 +54,8 @@ builder.Services.AddScoped<IChatService, ChatService>();
 builder.Services.AddScoped<IJwtTokenService, JwtTokenService>();
 builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IChatRealtimeNotifier, ChatRealtimeNotifier>();
+builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
+builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddSingleton<IRefreshSessionStore, InMemoryRefreshSessionStore>();
 builder.Services.AddSingleton<IFirebasePushService, FirebasePushService>();
 builder.Services.AddHttpClient();

@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import BaseApi from "../../api/BaseApi";
 /**
  * Chức năng: Hiển thị và quản lý danh sách thông báo cho admin
  * Creatby: Trương Quốc Lộc - 18/3/2026
@@ -6,22 +7,7 @@ import React, { useState } from "react";
  */
 const AdminNotifications = () => {
   // 1. Dữ liệu giả
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      title: "Nghỉ lễ Giỗ tổ Hùng Vương",
-      content: "Trung tâm nghỉ lễ vào ngày 10/3 Âm lịch.",
-      target: "Tất cả",
-      date: "2026-03-15",
-    },
-    {
-      id: 2,
-      title: "Nhắc nhở đóng học phí",
-      content: "Hạn chót đóng học phí tháng 3 là 20/03/2026.",
-      target: "Phụ huynh",
-      date: "2026-03-10",
-    },
-  ]);
+  const [notifications, setNotifications] = useState([]);
 
   // State lọc dữ liệu
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,6 +22,41 @@ const AdminNotifications = () => {
     content: "",
     target: "Tất cả",
   });
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      const res = await BaseApi.get("Notification");
+      const resData = res.data || res;
+
+      // Xử lý linh hoạt: Backend trả về trực tiếp mảng (Array) HOẶC trả object chứa data
+      const isArray = Array.isArray(resData);
+      const isSuccess = resData.success || isArray;
+      const dataList = isArray ? resData : (resData.data || []);
+
+      if (isSuccess) {
+        const normalizedData = dataList.map(item => ({
+          id: item.id || item.Id,
+          title: item.title || item.Title || "",
+          content: item.content || item.Content || "",
+          target: item.target || item.Target || "Tất cả",
+          date: item.date || item.Date || ""
+        }));
+        setNotifications(normalizedData);
+      } else {
+        alert("Lỗi từ server: " + (resData.message || "Không lấy được dữ liệu"));
+      }
+    } catch (error) {
+      if (error.response) {
+        alert(`Lỗi API: Mã ${error.response.status} - ${error.response.statusText}`);
+      } else {
+        alert("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.");
+      }
+    }
+  };
 
   // 2. Hàm xử lý
   const handleOpenModal = (notification = null) => {
@@ -56,32 +77,60 @@ const AdminNotifications = () => {
     setFormData({ ...formData, [name]: value });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!formData.title || !formData.content) {
       alert("Vui lòng nhập đầy đủ Tiêu đề và Nội dung!");
       return;
     }
 
-    if (isEditing) {
-      setNotifications(
-        notifications.map((item) =>
-          item.id === formData.id ? { ...formData, date: item.date } : item,
-        ),
-      );
-    } else {
-      const newNotification = {
-        ...formData,
-        id: Date.now(),
-        date: new Date().toISOString().split("T")[0],
-      };
-      setNotifications([newNotification, ...notifications]);
+    try {
+      let res;
+      if (isEditing) {
+        res = await BaseApi.put(`Notification/${formData.id}`, formData);
+      } else {
+        res = await BaseApi.post("Notification", formData);
+      }
+
+      const resData = res.data || res;
+
+      // Bắt lỗi nếu Backend trả về HTTP 200 nhưng nội dung bên trong báo success = false
+      if (resData && resData.success === false) {
+        alert("Lỗi từ server: " + (resData.message || "Không thể lưu thông báo."));
+        return;
+      }
+
+      alert(isEditing ? "Cập nhật thông báo thành công!" : "Thêm mới thông báo thành công!");
+      await fetchNotifications(); // Tải lại danh sách từ server
+      handleCloseModal();
+    } catch (error) {
+      if (error.response) {
+        alert(`Lỗi API: Mã ${error.response.status} - ${error.response.data?.message || error.response.statusText}`);
+      } else {
+        alert("Có lỗi xảy ra khi lưu. Vui lòng kiểm tra kết nối mạng.");
+      }
     }
-    handleCloseModal();
   };
 
-  const handleDelete = (id) => {
+  const handleDelete = async (id) => {
     if (window.confirm("Bạn có chắc chắn muốn xóa thông báo này?")) {
-      setNotifications(notifications.filter((item) => item.id !== id));
+      try {
+        const res = await BaseApi.delete(`Notification/${id}`);
+        const resData = res.data || res;
+
+        if (resData && resData.success === false) {
+          alert("Lỗi từ server: " + (resData.message || "Không thể xóa thông báo."));
+          return;
+        }
+
+        alert("Xóa thông báo thành công!");
+        await fetchNotifications(); // Tải lại danh sách từ server
+      } catch (error) {
+        if (error.response) {
+          alert(`Lỗi API: Mã ${error.response.status} - ${error.response.data?.message || error.response.statusText}`);
+        } else {
+          alert("Có lỗi xảy ra khi xóa thông báo.");
+        }
+      }
     }
   };
 
@@ -95,7 +144,7 @@ const AdminNotifications = () => {
 
   // Lọc dữ liệu trước khi hiển thị
   const filteredNotifications = notifications.filter((item) => {
-    const matchSearch = item.title
+    const matchSearch = (item.title || "")
       .toLowerCase()
       .includes(searchTerm.toLowerCase());
     const matchTarget =
