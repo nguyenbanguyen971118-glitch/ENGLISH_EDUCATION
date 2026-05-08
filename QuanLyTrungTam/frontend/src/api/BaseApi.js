@@ -85,8 +85,9 @@ class BaseApi {
         const isJson = contentType.includes('application/json');
         const payload = isJson ? await response.json() : null;
 
-        // Neu gap 401 va chua refresh thi thu refresh token
-        if (response.status === 401 && !this.refreshInProgress && this.refreshTokenProvider) {
+        // Neu gap 401 chi thu refresh khi co access token.
+        // Request public/anonymous (nhu trang login) khong duoc tu dong redirect loop.
+        if (response.status === 401 && token && !this.refreshInProgress && this.refreshTokenProvider) {
             this.refreshInProgress = true;
             try {
                 const refreshResult = await this.refreshTokenProvider();
@@ -124,9 +125,15 @@ class BaseApi {
                 localStorage.removeItem('user');
             }
 
+            const validationMessage = Array.isArray(payload?.errors) && payload.errors.length > 0
+                ? payload.errors.join(' ')
+                : Array.isArray(payload?.data?.errors) && payload.data.errors.length > 0
+                    ? payload.data.errors.join(' ')
+                    : '';
+
             return {
                 success: false,
-                message: payload?.message || `Request failed with status ${response.status}`,
+                message: payload?.message || payload?.error || validationMessage || `Request failed with status ${response.status}`,
                 status: response.status,
                 data: payload?.data,
                 raw: payload,
@@ -169,7 +176,7 @@ class BaseApi {
     }
 }
 
-const DEFAULT_BACKEND_BASE_URL = 'http://localhost:5000';
+const DEFAULT_BACKEND_BASE_URL = 'http://localhost:5050';
 
 const normalizeApiBaseUrl = (baseUrl = DEFAULT_BACKEND_BASE_URL) => {
     const trimmedBaseUrl = baseUrl.trim().replace(/\/+$/, '');

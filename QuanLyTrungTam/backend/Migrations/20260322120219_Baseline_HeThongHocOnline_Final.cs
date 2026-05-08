@@ -21,9 +21,9 @@ namespace backend.Migrations
                 {
                     MaChucNang = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    TenChucNang = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenChucNang = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    MoTa = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    MoTa = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -37,7 +37,7 @@ namespace backend.Migrations
                     table.PrimaryKey("PRIMARY", x => x.MaChucNang);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "chucnanghethong",
@@ -45,13 +45,13 @@ namespace backend.Migrations
                 {
                     maChucNang = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    maChucNangCode = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    maChucNangCode = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    tenChucNang = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    tenChucNang = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    maTrang = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    maTrang = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    tenTrang = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    tenTrang = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     thuTu = table.Column<int>(type: "int", nullable: false)
                 },
@@ -60,14 +60,14 @@ namespace backend.Migrations
                     table.PrimaryKey("PRIMARY", x => x.maChucNang);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "hoithoai",
                 columns: table => new
                 {
                     MaHoiThoai = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    TieuDe = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    TieuDe = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -81,7 +81,7 @@ namespace backend.Migrations
                     table.PrimaryKey("PRIMARY", x => x.MaHoiThoai);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "nhomdanhmuc",
@@ -89,11 +89,11 @@ namespace backend.Migrations
                 {
                     MaNhom = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    MaCode = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, comment: "VD: LOAI_PHONG, TRANG_THAI_KHOA_HOC", collation: "utf8mb4_0900_ai_ci")
+                    MaCode = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, comment: "VD: LOAI_PHONG, TRANG_THAI_KHOA_HOC", collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    TenNhom = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenNhom = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    GhiChu = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    GhiChu = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -107,16 +107,16 @@ namespace backend.Migrations
                     table.PrimaryKey("PRIMARY", x => x.MaNhom);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "thongbao",
                 columns: table => new
                 {
                     MaThongBao = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    TieuDe = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TieuDe = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    NoiDung = table.Column<string>(type: "text", nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    NoiDung = table.Column<string>(type: "text", nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -130,7 +130,7 @@ namespace backend.Migrations
                     table.PrimaryKey("PRIMARY", x => x.MaThongBao);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "tiethoc",
@@ -138,7 +138,7 @@ namespace backend.Migrations
                 {
                     MaTiet = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    TenTiet = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenTiet = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     GioBatDau = table.Column<TimeOnly>(type: "time", nullable: false),
                     GioKetThuc = table.Column<TimeOnly>(type: "time", nullable: false),
@@ -154,7 +154,7 @@ namespace backend.Migrations
                     table.PrimaryKey("PRIMARY", x => x.MaTiet);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "vaitro",
@@ -162,7 +162,7 @@ namespace backend.Migrations
                 {
                     MaVaiTro = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
-                    TenVaiTro = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenVaiTro = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -176,7 +176,7 @@ namespace backend.Migrations
                     table.PrimaryKey("PRIMARY", x => x.MaVaiTro);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "quyen",
@@ -185,9 +185,9 @@ namespace backend.Migrations
                     MaQuyen = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     MaChucNang = table.Column<int>(type: "int", nullable: false),
-                    TenQuyen = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenQuyen = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    MoTa = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    MoTa = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -206,7 +206,7 @@ namespace backend.Migrations
                         principalColumn: "MaChucNang");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "chitietdanhmuc",
@@ -215,9 +215,9 @@ namespace backend.Migrations
                     MaChiTiet = table.Column<int>(type: "int", nullable: false)
                         .Annotation("MySql:ValueGenerationStrategy", MySqlValueGenerationStrategy.IdentityColumn),
                     MaNhom = table.Column<int>(type: "int", nullable: false),
-                    MaCode = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true, comment: "VD: PH_LAB, TKH_OPEN", collation: "utf8mb4_0900_ai_ci")
+                    MaCode = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: true, comment: "VD: PH_LAB, TKH_OPEN", collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    TenChiTiet = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenChiTiet = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ThuTu = table.Column<int>(type: "int", nullable: true, defaultValueSql: "'0'"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
@@ -237,7 +237,7 @@ namespace backend.Migrations
                         principalColumn: "MaNhom");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "vaitrochucnang",
@@ -264,7 +264,7 @@ namespace backend.Migrations
                         onDelete: ReferentialAction.Cascade);
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "vaitroquyen",
@@ -295,16 +295,16 @@ namespace backend.Migrations
                         principalColumn: "MaQuyen");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "khoahoc",
                 columns: table => new
                 {
                     MaKhoaHoc = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    TenKhoaHoc = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenKhoaHoc = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    MoTa = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    MoTa = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     GiaCoBan = table.Column<decimal>(type: "decimal(14,2)", precision: 14, scale: 2, nullable: true),
                     MaTrangThai = table.Column<int>(type: "int", nullable: true, comment: "Trỏ về ChiTietDanhMuc"),
@@ -325,14 +325,14 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "lophoc",
                 columns: table => new
                 {
                     MaLopHoc = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    TenLop = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenLop = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NgayBatDau = table.Column<DateOnly>(type: "date", nullable: true),
                     NgayKetThuc = table.Column<DateOnly>(type: "date", nullable: true),
@@ -356,7 +356,7 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "nguoidung",
@@ -364,18 +364,18 @@ namespace backend.Migrations
                 {
                     MaNguoiDung = table.Column<Guid>(type: "char(36)", nullable: false, comment: "GUID cho tài khoản", collation: "ascii_general_ci"),
                     LoaiTaiKhoan = table.Column<sbyte>(type: "tinyint", nullable: false, comment: "1: Admin, 2: GiangVien, 3: HocSinh, 4: PhuHuynh"),
-                    TenDangNhap = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenDangNhap = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    MatKhauHash = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    MatKhauHash = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    HoTen = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    HoTen = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Email = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    Email = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    AnhDaiDien = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    AnhDaiDien = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     MaTrangThai = table.Column<int>(type: "int", nullable: true, comment: "Trỏ về ChiTietDanhMuc"),
-                    TokenXacMinh = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    TokenXacMinh = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DaXacMinhEmail = table.Column<bool>(type: "tinyint(1)", nullable: true, defaultValueSql: "'0'"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
@@ -395,18 +395,18 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "phonghoc",
                 columns: table => new
                 {
                     MaPhongHoc = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    TenPhong = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenPhong = table.Column<string>(type: "varchar(50)", maxLength: 50, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     SucChua = table.Column<int>(type: "int", nullable: true),
                     LoaiPhong = table.Column<int>(type: "int", nullable: true, comment: "Trỏ về ChiTietDanhMuc"),
-                    Link = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    Link = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -425,7 +425,7 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "baitap",
@@ -433,9 +433,9 @@ namespace backend.Migrations
                 {
                     MaBaiTap = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaKhoaHoc = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    TenBaiTap = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenBaiTap = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    MoTa = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    MoTa = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     LoaiBaiTap = table.Column<int>(type: "int", nullable: true, comment: "Trỏ về ChiTietDanhMuc"),
                     ThoiGianLamBai = table.Column<int>(type: "int", nullable: true),
@@ -462,7 +462,7 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "chuonghoc",
@@ -470,9 +470,9 @@ namespace backend.Migrations
                 {
                     MaChuong = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaKhoaHoc = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    TenChuong = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenChuong = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    MoTa = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    MoTa = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     ThuTu = table.Column<int>(type: "int", nullable: true),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
@@ -492,7 +492,7 @@ namespace backend.Migrations
                         principalColumn: "MaKhoaHoc");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "nganhangcauhoi",
@@ -503,9 +503,9 @@ namespace backend.Migrations
                     LoaiCauHoi = table.Column<int>(type: "int", nullable: true, comment: "Trỏ về ChiTietDanhMuc"),
                     MucDo = table.Column<int>(type: "int", nullable: true, comment: "Trỏ về ChiTietDanhMuc"),
                     MucDichSuDung = table.Column<sbyte>(type: "tinyint", nullable: true, defaultValueSql: "'1'"),
-                    NoiDungCauHoi = table.Column<string>(type: "text", nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    NoiDungCauHoi = table.Column<string>(type: "text", nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    GiaiThichDapAn = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    GiaiThichDapAn = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -534,7 +534,7 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "chitietkhoahoc_lophoc",
@@ -542,7 +542,7 @@ namespace backend.Migrations
                 {
                     MaKhoaHoc = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaLopHoc = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    GhiChu = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    GhiChu = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -567,7 +567,7 @@ namespace backend.Migrations
                         principalColumn: "MaLopHoc");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "giangvien",
@@ -575,15 +575,15 @@ namespace backend.Migrations
                 {
                     MaGiangVien = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaNguoiDung = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    SoDienThoai = table.Column<string>(type: "varchar(15)", maxLength: 15, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    SoDienThoai = table.Column<string>(type: "varchar(15)", maxLength: 15, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    QueQuan = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    QueQuan = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    TrinhDoChuyenMon = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TrinhDoChuyenMon = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    HocVi = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    HocVi = table.Column<string>(type: "varchar(100)", maxLength: 100, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    KinhNghiemGiangDay = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    KinhNghiemGiangDay = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -602,7 +602,7 @@ namespace backend.Migrations
                         principalColumn: "MaNguoiDung");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "hocsinh",
@@ -611,11 +611,11 @@ namespace backend.Migrations
                     MaHocSinh = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaNguoiDung = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     NgaySinh = table.Column<DateOnly>(type: "date", nullable: true),
-                    QueQuan = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    QueQuan = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    SoDienThoaiNguoiThan = table.Column<string>(type: "varchar(15)", maxLength: 15, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    SoDienThoaiNguoiThan = table.Column<string>(type: "varchar(15)", maxLength: 15, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    TruongDangTheoHoc = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    TruongDangTheoHoc = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -634,7 +634,7 @@ namespace backend.Migrations
                         principalColumn: "MaNguoiDung");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "nguoidungvaitro",
@@ -665,7 +665,7 @@ namespace backend.Migrations
                         principalColumn: "MaVaiTro");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "nguoinhanthongbao",
@@ -698,7 +698,7 @@ namespace backend.Migrations
                         principalColumn: "MaNguoiDung");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "phuhuynh",
@@ -706,11 +706,11 @@ namespace backend.Migrations
                 {
                     MaPhuHuynh = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaNguoiDung = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    SoDienThoai = table.Column<string>(type: "varchar(15)", maxLength: 15, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    SoDienThoai = table.Column<string>(type: "varchar(15)", maxLength: 15, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    DiaChiLienHe = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    DiaChiLienHe = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    NgheNghiep = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    NgheNghiep = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -729,7 +729,7 @@ namespace backend.Migrations
                         principalColumn: "MaNguoiDung");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "tainguyenluutru",
@@ -737,9 +737,9 @@ namespace backend.Migrations
                 {
                     MaTaiNguyen = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaNguoiDung = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    TenTaiNguyen = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenTaiNguyen = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    Link = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    Link = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -758,7 +758,7 @@ namespace backend.Migrations
                         principalColumn: "MaNguoiDung");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "thanhvienhoithoai",
@@ -789,7 +789,7 @@ namespace backend.Migrations
                         principalColumn: "MaNguoiDung");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "tinnhan",
@@ -798,7 +798,7 @@ namespace backend.Migrations
                     MaTinNhan = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaHoiThoai = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaNguoiDungGui = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    NoiDung = table.Column<string>(type: "text", nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    NoiDung = table.Column<string>(type: "text", nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DaDoc = table.Column<bool>(type: "tinyint(1)", nullable: true, defaultValueSql: "'0'"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
@@ -823,7 +823,7 @@ namespace backend.Migrations
                         principalColumn: "MaNguoiDung");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "buoihoc",
@@ -835,9 +835,9 @@ namespace backend.Migrations
                     NgayHoc = table.Column<DateOnly>(type: "date", nullable: false),
                     MaTietBatDau = table.Column<int>(type: "int", nullable: false),
                     MaTietKetThuc = table.Column<int>(type: "int", nullable: false),
-                    TieuDe = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    TieuDe = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    NoiDung = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    NoiDung = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -871,7 +871,7 @@ namespace backend.Migrations
                         principalColumn: "MaTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "sukienlophoc",
@@ -882,7 +882,7 @@ namespace backend.Migrations
                     MaNguoiDung = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     DangSuKien = table.Column<int>(type: "int", nullable: true, comment: "Trỏ về ChiTietDanhMuc"),
                     MaBaiTap = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
-                    NoiDung = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    NoiDung = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     HanNop = table.Column<DateTime>(type: "datetime", nullable: true),
                     MaTrangThai = table.Column<int>(type: "int", nullable: true, comment: "Trỏ về ChiTietDanhMuc"),
@@ -923,7 +923,7 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "tailieu",
@@ -931,11 +931,11 @@ namespace backend.Migrations
                 {
                     MaTaiLieu = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaChuongHoc = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    TenTaiLieu = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    TenTaiLieu = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    LinkTaiLieu = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    LinkTaiLieu = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
-                    MoTa = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    MoTa = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -954,7 +954,7 @@ namespace backend.Migrations
                         principalColumn: "MaChuong");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "baitapcauhoi",
@@ -987,7 +987,7 @@ namespace backend.Migrations
                         principalColumn: "MaCauHoi");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "dapan",
@@ -995,7 +995,7 @@ namespace backend.Migrations
                 {
                     MaDapAn = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaCauHoi = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    NoiDungDapAn = table.Column<string>(type: "text", nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    NoiDungDapAn = table.Column<string>(type: "text", nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     LaDapAnDung = table.Column<bool>(type: "tinyint(1)", nullable: true, defaultValueSql: "'0'"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
@@ -1015,7 +1015,7 @@ namespace backend.Migrations
                         principalColumn: "MaCauHoi");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "giangvienlophoc",
@@ -1048,7 +1048,7 @@ namespace backend.Migrations
                         principalColumn: "MaGiangVien");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "hocsinhlophoc",
@@ -1087,7 +1087,7 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "phuhuynhhocsinh",
@@ -1124,7 +1124,7 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "diemdanh",
@@ -1133,7 +1133,7 @@ namespace backend.Migrations
                     MaBuoiHoc = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaHocSinh = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaTrangThai = table.Column<int>(type: "int", nullable: true, comment: "Trỏ về ChiTietDanhMuc"),
-                    GhiChu = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    GhiChu = table.Column<string>(type: "varchar(255)", maxLength: 255, nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -1163,7 +1163,7 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "yeucaulichday",
@@ -1176,7 +1176,7 @@ namespace backend.Migrations
                     NgayHocDeXuat = table.Column<DateOnly>(type: "date", nullable: false),
                     MaTietBatDauDeXuat = table.Column<int>(type: "int", nullable: false),
                     MaTietKetThucDeXuat = table.Column<int>(type: "int", nullable: false),
-                    LyDo = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    LyDo = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     TrangThaiDuyet = table.Column<sbyte>(type: "tinyint", nullable: true, defaultValueSql: "'0'"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
@@ -1216,7 +1216,7 @@ namespace backend.Migrations
                         principalColumn: "MaTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "binhluan",
@@ -1225,7 +1225,7 @@ namespace backend.Migrations
                     MaBinhLuan = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaSuKien = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaNguoiDung = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
-                    NoiDung = table.Column<string>(type: "text", nullable: false, collation: "utf8mb4_0900_ai_ci")
+                    NoiDung = table.Column<string>(type: "text", nullable: false, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
                     ThoiGianTao = table.Column<DateTime>(type: "datetime", nullable: true, defaultValueSql: "CURRENT_TIMESTAMP"),
@@ -1249,7 +1249,7 @@ namespace backend.Migrations
                         principalColumn: "MaNguoiDung");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "dinhkem",
@@ -1280,7 +1280,7 @@ namespace backend.Migrations
                         principalColumn: "MaTaiNguyen");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "nguoinhansukien",
@@ -1311,7 +1311,7 @@ namespace backend.Migrations
                         principalColumn: "MaHocSinh");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "nopbai",
@@ -1322,7 +1322,7 @@ namespace backend.Migrations
                     MaHocSinh = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     ThoiGianBatDau = table.Column<DateTime>(type: "datetime", nullable: true),
                     ThoiGianNop = table.Column<DateTime>(type: "datetime", nullable: true),
-                    NhanXetGiaoVien = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    NhanXetGiaoVien = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DiemSo = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: true),
                     LanNop = table.Column<int>(type: "int", nullable: true, defaultValueSql: "'1'"),
@@ -1354,7 +1354,7 @@ namespace backend.Migrations
                         principalColumn: "MaChiTiet");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "chitietnopbai",
@@ -1364,7 +1364,7 @@ namespace backend.Migrations
                     MaNopBai = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaCauHoi = table.Column<Guid>(type: "char(36)", nullable: false, collation: "ascii_general_ci"),
                     MaDapAnChon = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
-                    CauTraLoiDienKhuyet = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_0900_ai_ci")
+                    CauTraLoiDienKhuyet = table.Column<string>(type: "text", nullable: true, collation: "utf8mb4_general_ci")
                         .Annotation("MySql:CharSet", "utf8mb4"),
                     DiemDatDuoc = table.Column<decimal>(type: "decimal(5,2)", precision: 5, scale: 2, nullable: true, defaultValueSql: "'0.00'"),
                     NguoiTao = table.Column<Guid>(type: "char(36)", nullable: true, collation: "ascii_general_ci"),
@@ -1394,7 +1394,7 @@ namespace backend.Migrations
                         principalColumn: "MaDapAn");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateTable(
                 name: "dinhkemnopbai",
@@ -1425,7 +1425,7 @@ namespace backend.Migrations
                         principalColumn: "MaTaiNguyen");
                 })
                 .Annotation("MySql:CharSet", "utf8mb4")
-                .Annotation("Relational:Collation", "utf8mb4_0900_ai_ci");
+                .Annotation("Relational:Collation", "utf8mb4_general_ci");
 
             migrationBuilder.CreateIndex(
                 name: "LoaiBaiTap",

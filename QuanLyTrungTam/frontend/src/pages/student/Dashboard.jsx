@@ -1,14 +1,22 @@
 import React from 'react';
-import { useAuth } from '../../context/AuthContext'; 
-// XÓA Sidebar import ở đây vì MainLayout đã có rồi
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import { useStudentClass } from '../../context/StudentClassContext';
 
 const Dashboard = () => {
     const { user } = useAuth();
+    const { classes, currentClass, selectClass, loading, error } = useStudentClass();
+    const navigate = useNavigate();
+
+    const handleSelectClass = (classId) => {
+        selectClass(classId);
+    };
+
+    const handleViewSchedule = () => {
+        navigate('/student/schedule');
+    };
 
     return (
-        /* 1. Xóa class vh-100 và container-fluid vì MainLayout đã bao bọc vùng này rồi.
-           2. Thêm class animate__animated để giữ hiệu ứng mượt mà.
-        */
         <div className="p-0 animate__animated animate__fadeIn" style={{ fontFamily: "'Montserrat', sans-serif" }}>
             
             {/* TOPBAR */}
@@ -92,6 +100,67 @@ const Dashboard = () => {
                 </div>
             </div>
 
+            {/* LỚP HIỆN TẠI */}
+            <div className="mb-4">
+                <div className="d-flex align-items-center mb-4">
+                    <div className="bg-primary rounded-3 p-2 me-3"><i className="bi bi-book-fill text-white"></i></div>
+                    <h5 className="fw-bold mb-0 text-dark">Lớp hiện tại</h5>
+                </div>
+
+                {error && (
+                    <div className="alert alert-warning alert-dismissible fade show" role="alert">
+                        <i className="bi bi-exclamation-triangle me-2"></i>
+                        {error}
+                    </div>
+                )}
+
+                {loading ? (
+                    <div className="text-center py-4">
+                        <div className="spinner-border text-primary" role="status">
+                            <span className="visually-hidden">Đang tải...</span>
+                        </div>
+                    </div>
+                ) : classes.length === 0 ? (
+                    <div className="bg-white rounded-5 py-5 shadow-sm border border-dashed border-2 text-center">
+                        <img src="https://active.apollo.edu.vn/static/media/robot-empty.6200236a.png" alt="robot" style={{ width: '150px' }} className="mb-4" />
+                        <h5 className="fw-bold text-dark">Chưa có lớp từ database</h5>
+                        <p className="text-muted">Tài khoản học sinh hiện chưa được gán vào lớp nào. Vui lòng liên hệ quản trị viên hoặc giáo viên phụ trách để được thêm vào lớp.</p>
+                    </div>
+                ) : (
+                    <div className="bg-white rounded-5 p-4 shadow-sm border">
+                        <div className="row align-items-center">
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold text-muted text-uppercase small mb-2">Chọn lớp</label>
+                                <select 
+                                    className="form-select form-select-lg rounded-4 border-2 border-primary fw-bold"
+                                    value={currentClass?.id || ''}
+                                    onChange={(e) => handleSelectClass(e.target.value)}
+                                    style={{ color: '#2c3e50' }}
+                                >
+                                    {classes.map(cls => (
+                                        <option key={cls.id} value={cls.id}>
+                                            {cls.classCode} - {cls.teacher}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                            <div className="col-md-6">
+                                {currentClass && (
+                                    <div className="p-4" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', borderRadius: '20px', color: 'white' }}>
+                                        <p className="mb-1 small opacity-75">LỚPĐANG HỌC</p>
+                                        <h4 className="fw-bold mb-2">{currentClass.classCode}</h4>
+                                        <p className="mb-0 small">
+                                            <i className="bi bi-person-fill me-2"></i>
+                                            {currentClass.teacher}
+                                        </p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                )}
+            </div>
+
             {/* LỚP HỌC HÔM NAY */}
             <div className="mb-4">
                 <div className="d-flex align-items-center mb-4">
@@ -101,9 +170,12 @@ const Dashboard = () => {
                 
                 <div className="bg-white rounded-5 py-5 shadow-sm border border-dashed border-2 text-center">
                     <img src="https://active.apollo.edu.vn/static/media/robot-empty.6200236a.png" alt="robot" style={{ width: '150px' }} className="mb-4" />
-                    <h5 className="fw-bold text-dark">Hiện chưa có lớp học nào</h5>
+                    <h5 className="fw-bold text-dark">Hiện chưa có lớp học nào hôm nay</h5>
                     <p className="text-muted">Hãy quay lại sau hoặc xem lịch học chi tiết nhé!</p>
-                    <button className="btn btn-outline-primary rounded-pill px-4 fw-bold mt-2">XEM LỊCH HỌC</button>
+                    <button className="btn btn-outline-primary rounded-pill px-4 fw-bold mt-2" onClick={handleViewSchedule}>
+                        <i className="bi bi-calendar3 me-2"></i>
+                        XEM LỊCH HỌC
+                    </button>
                 </div>
             </div>
 

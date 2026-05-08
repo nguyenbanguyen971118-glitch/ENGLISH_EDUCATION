@@ -32,6 +32,12 @@ public class AuthorizationMiddleware
 
     public async Task InvokeAsync(HttpContext context, PermissionHelper permissionHelper)
     {
+        if (HttpMethods.IsOptions(context.Request.Method))
+        {
+            await _next(context);
+            return;
+        }
+
         var endpoint = context.GetEndpoint();
         if (endpoint != null)
         {

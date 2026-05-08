@@ -50,6 +50,43 @@ public class JwtTokenService : IJwtTokenService
         return new JwtSecurityTokenHandler().WriteToken(token);
     }
 
+    // Overload to support profileId/teacherId in JWT
+    public string GenerateAccessToken(Guid userId, string email, string role, string fullName, Guid? profileId)
+    {
+        var jwtSection = _configuration.GetSection("JwtSettings");
+        var secret = jwtSection["Secret"] ?? throw new InvalidOperationException("Missing JwtSettings:Secret");
+        var issuer = jwtSection["Issuer"] ?? "backend";
+        var audience = jwtSection["Audience"] ?? "frontend";
+        var expiresMinutes = int.TryParse(jwtSection["AccessTokenMinutes"], out var parsedMinutes) ? parsedMinutes : 15;
+
+        var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secret));
+        var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+        var claims = new List<Claim>
+        {
+            new(JwtRegisteredClaimNames.Sub, userId.ToString()),
+            new(JwtRegisteredClaimNames.Email, email),
+            new(ClaimTypes.Role, role),
+            new("fullName", fullName)
+        };
+
+        // Add profileId claim for teachers to use as teacherId
+        if (profileId.HasValue)
+        {
+            claims.Add(new("profileId", profileId.Value.ToString()));
+        }
+
+        var token = new JwtSecurityToken(
+            issuer: issuer,
+            audience: audience,
+            claims: claims,
+            expires: DateTime.UtcNow.AddMinutes(expiresMinutes),
+            signingCredentials: credentials
+        );
+
+        return new JwtSecurityTokenHandler().WriteToken(token);
+    }
+
     // - chuc nang: Tao refresh token ngau nhien de cap phien dang nhap.
     // - nmkhue -29/2/2026
     public string GenerateRefreshToken()

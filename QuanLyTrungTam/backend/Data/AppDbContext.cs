@@ -109,7 +109,7 @@ public partial class AppDbContext : DbContext
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
-            .UseCollation("utf8mb4_0900_ai_ci")
+            .UseCollation("utf8mb4_general_ci")
             .HasCharSet("utf8mb4");
 
         modelBuilder.Entity<Baitap>(entity =>
@@ -1715,6 +1715,8 @@ public partial class AppDbContext : DbContext
 
             entity.HasIndex(e => e.MaBuoiHoc, "MaBuoiHoc");
 
+                entity.HasIndex(e => e.MaPhongHocDeXuat, "MaPhongHocDeXuat");
+
             entity.HasIndex(e => e.MaGiangVien, "MaGiangVien");
 
             entity.HasIndex(e => e.MaLopHoc, "MaLopHoc2");
@@ -1729,6 +1731,9 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.DaXoa).HasDefaultValueSql("'0'");
             entity.Property(e => e.LyDo).HasColumnType("text");
             entity.Property(e => e.MaBuoiHoc)
+                .UseCollation("ascii_general_ci")
+                .HasCharSet("ascii");
+            entity.Property(e => e.MaPhongHocDeXuat)
                 .UseCollation("ascii_general_ci")
                 .HasCharSet("ascii");
             entity.Property(e => e.MaGiangVien)
@@ -1773,6 +1778,10 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.MaTietKetThucDeXuat)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("yeucaulichday_ibfk_5");
+
+            entity.HasOne(d => d.MaPhongHocDeXuatNavigation).WithMany()
+                .HasForeignKey(d => d.MaPhongHocDeXuat)
+                .HasConstraintName("FK_yeucaulichday_phonghoc_MaPhongHocDeXuat");
         });
 
         OnModelCreatingPartial(modelBuilder);

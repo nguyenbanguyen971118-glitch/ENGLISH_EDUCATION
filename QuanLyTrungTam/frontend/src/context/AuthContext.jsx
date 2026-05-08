@@ -1,10 +1,27 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import * as React from 'react';
+const { createContext, useState, useContext, useEffect } = React || {};
 import { authApi } from '../api';
 import apiClient from '../api/BaseApi';
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+    if (!React || typeof React.useState !== 'function') {
+        console.error('AuthContext: React import is invalid or hooks not available', React);
+        const fallback = {
+            user: null,
+            login: () => {},
+            logout: () => { window.location.href = '/login'; },
+            loading: false,
+            refreshPermissions: async () => ({ success: false }),
+            refreshAccessToken: async () => ({ success: false })
+        };
+        return (
+            <AuthContext.Provider value={fallback}>
+                {children}
+            </AuthContext.Provider>
+        );
+    }
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -14,6 +31,22 @@ export const AuthProvider = ({ children }) => {
         if (savedUser) {
             setUser(JSON.parse(savedUser));
         }
+        // Nếu chưa có user nhưng có rememberedCredentials (chỉ token), khôi phục tạm thời
+        if (!savedUser) {
+            try {
+                const remembered = localStorage.getItem('rememberedCredentials');
+                if (remembered) {
+                    const parsed = JSON.parse(remembered);
+                    if (parsed?.token) {
+                        const minimalUser = { token: parsed.token };
+                        setUser(minimalUser);
+                    }
+                }
+            } catch (err) {
+                console.warn('AuthContext: cannot restore remembered credentials', err);
+            }
+        }
+
         setLoading(false);
 
         // Dang ky callback de refresh token khi gap 401

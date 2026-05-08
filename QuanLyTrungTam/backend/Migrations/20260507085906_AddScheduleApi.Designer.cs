@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using backend.Data;
 
@@ -11,9 +12,11 @@ using backend.Data;
 namespace backend.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260507085906_AddScheduleApi")]
+    partial class AddScheduleApi
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -2654,12 +2657,6 @@ namespace backend.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValueSql("'0'");
 
-                    b.Property<string>("GhiChuAdmin")
-                        .HasColumnType("longtext");
-
-                    b.Property<sbyte?>("LoaiYeuCau")
-                        .HasColumnType("tinyint");
-
                     b.Property<string>("LyDo")
                         .HasColumnType("text");
 
@@ -2680,12 +2677,6 @@ namespace backend.Migrations
                         .UseCollation("ascii_general_ci");
 
                     MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid>("MaLopHoc"), "ascii");
-
-                    b.Property<Guid?>("MaPhongHocDeXuat")
-                        .HasColumnType("char(36)");
-
-                    b.Property<Guid?>("MaPhongHocDeXuatNavigationMaPhongHoc")
-                        .HasColumnType("char(36)");
 
                     b.Property<int>("MaTietBatDauDeXuat")
                         .HasColumnType("int");
@@ -2728,8 +2719,6 @@ namespace backend.Migrations
 
                     b.HasKey("MaYeuCau")
                         .HasName("PRIMARY");
-
-                    b.HasIndex("MaPhongHocDeXuatNavigationMaPhongHoc");
 
                     b.HasIndex(new[] { "MaBuoiHoc" }, "MaBuoiHoc");
 
@@ -3394,10 +3383,6 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasConstraintName("yeucaulichday_ibfk_2");
 
-                    b.HasOne("backend.Models.Phonghoc", "MaPhongHocDeXuatNavigation")
-                        .WithMany()
-                        .HasForeignKey("MaPhongHocDeXuatNavigationMaPhongHoc");
-
                     b.HasOne("backend.Models.Tiethoc", "MaTietBatDauDeXuatNavigation")
                         .WithMany("YeucaulichdayMaTietBatDauDeXuatNavigations")
                         .HasForeignKey("MaTietBatDauDeXuat")
@@ -3415,8 +3400,6 @@ namespace backend.Migrations
                     b.Navigation("MaGiangVienNavigation");
 
                     b.Navigation("MaLopHocNavigation");
-
-                    b.Navigation("MaPhongHocDeXuatNavigation");
 
                     b.Navigation("MaTietBatDauDeXuatNavigation");
 
