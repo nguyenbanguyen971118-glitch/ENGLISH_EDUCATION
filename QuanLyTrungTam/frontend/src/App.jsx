@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { StudentClassProvider } from './context/StudentClassContext';
 import PrivateRoute from './routes/PrivateRoute';
 import MainLayout from './components/MainLayout';
 
@@ -68,7 +69,8 @@ const HomeRedirect = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <StudentClassProvider>
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<HomeRedirect />} />
@@ -151,7 +153,8 @@ function App() {
           <Route path="/unauthorized" element={<div className="d-flex align-items-center justify-content-center" style={{ height: '100vh' }}><div className="text-center"><i className="bi bi-shield-lock-fill fs-1 text-danger"></i><h1 className="mt-3">403 - Không có quyền truy cập</h1><p className="text-muted">Bạn không có quyền truy cập trang này</p></div></div>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
-      </Router>
+        </Router>
+      </StudentClassProvider>
     </AuthProvider>
   );
 }

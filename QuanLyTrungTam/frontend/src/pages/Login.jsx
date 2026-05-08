@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api';
@@ -15,10 +15,25 @@ const Login = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [loading, setLoading] = useState(false);
     const [formError, setFormError] = useState('');
+    const [remember, setRemember] = useState(false);
     const { login } = useAuth();
     const navigate = useNavigate();
 
     const bannerImages = [avtLogin,anhNen1, anhNen2, anhNen3];
+
+    useEffect(() => {
+        try {
+            const saved = localStorage.getItem('rememberedCredentials');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                if (parsed?.email) setEmail(parsed.email);
+                // We purposely do NOT pre-fill password when storing token for security
+                if (parsed?.token) setRemember(true);
+            }
+        } catch (err) {
+            console.warn('Không thể đọc credentials đã lưu', err);
+        }
+    }, []);
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -31,6 +46,18 @@ const Login = () => {
 
             if (data?.success && data?.data) {
                 const userData = data.data;
+
+                // Nếu bật ghi nhớ, lưu credential vào localStorage (ngược lại xóa)
+                try {
+                    const tokenValue = userData?.token || userData?.accessToken || userData?.authToken || null;
+                    if (remember && tokenValue) {
+                        localStorage.setItem('rememberedCredentials', JSON.stringify({ email, token: tokenValue }));
+                    } else {
+                        localStorage.removeItem('rememberedCredentials');
+                    }
+                } catch (err) {
+                    console.warn('Không thể lưu token:', err);
+                }
 
                 // 2. Lưu thông tin người dùng vào Context
                 login(userData);
@@ -129,6 +156,14 @@ const Login = () => {
                                     </button>
                                 </div>
                             </div>
+                            <div className="form-check d-flex align-items-center justify-content-between mb-3">
+                                <div>
+                                    <input className="form-check-input me-2" type="checkbox" value="" id="rememberCheck" checked={remember} onChange={(e) => setRemember(e.target.checked)} />
+                                    <label className="form-check-label small text-secondary" htmlFor="rememberCheck">Ghi nhớ tài khoản</label>
+                                </div>
+                                <a href="#" className="small text-decoration-none fw-bold" style={{ color: '#005197' }}>Quên mật khẩu?</a>
+                            </div>
+
                             <button type="submit" className="btn w-100 py-3 rounded-pill fw-bold text-white transition-all mt-2" disabled={loading || !email || !password} style={{ backgroundColor: (email && password) ? '#ef7d00' : '#dcdcdc', boxShadow: (email && password) ? '0 6px 15px rgba(239, 125, 0, 0.4)' : 'none' }}>
                                 {loading ? <><span className="spinner-border spinner-border-sm me-2"></span>Signing in...</> : 'Sign in'}
                             </button>

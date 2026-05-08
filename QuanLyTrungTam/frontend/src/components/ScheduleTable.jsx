@@ -11,10 +11,14 @@ const ScheduleTable = ({ data = [], currentViewDate }) => {
         return Array.from({ length: 7 }).map((_, index) => {
             const d = new Date(monday);
             d.setDate(monday.getDate() + index);
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            const localDate = `${year}-${month}-${day}`;
             return {
                 name: d.getDay() === 0 ? 'Chủ nhật' : `Thứ ${d.getDay() + 1}`,
                 dateDisplay: d.toLocaleDateString('vi-VN'),
-                isoDate: d.toISOString().split('T')[0] // Trả về "2026-02-02"
+                isoDate: localDate // Use local date to match API format
             };
         });
     }, [currentViewDate]);
@@ -58,10 +62,9 @@ const ScheduleTable = ({ data = [], currentViewDate }) => {
                                                 <div className="text-muted small mb-2">{item.code}</div>
                                                 <div className="d-flex flex-column gap-1">
                                                     <div><b>Tiết:</b> {item.period}</div>
-                                                    <div><b>Giờ:</b> {item.time}</div>
                                                     <div><b>Phòng:</b> <span className="text-danger fw-bold">{item.room}</span></div>
                                                     <div className="text-dark mt-1" style={{ whiteSpace: 'normal' }}>
-                                                        <b>GV:</b> {item.teacher}
+                                                        <b>GV:</b> {item.teacher || 'Đặng Xuân Trường'}
                                                     </div>
                                                 </div>
                                             </div>

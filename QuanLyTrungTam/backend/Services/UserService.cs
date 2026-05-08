@@ -76,7 +76,7 @@ public class UserService : IUserService
         var permissionCodes = (await _userRepository.GetUserPermissionsAsync(role.MaVaiTro)).ToList();
 
         // Bước 6: Phát hành access token + refresh token và tạo session để quản lý refresh.
-        var accessToken = _jwtTokenService.GenerateAccessToken(user.MaNguoiDung, user.Email ?? string.Empty, roleName, user.HoTen ?? string.Empty);
+        var accessToken = _jwtTokenService.GenerateAccessToken(user.MaNguoiDung, user.Email ?? string.Empty, roleName, user.HoTen ?? string.Empty, profileId);
         var refreshToken = _jwtTokenService.GenerateRefreshToken();
         var refreshDays = int.TryParse(_configuration["JwtSettings:RefreshTokenDays"], out var parsedDays) ? parsedDays : 7;
         var refreshExpiry = DateTime.UtcNow.AddDays(refreshDays);
@@ -126,9 +126,10 @@ public class UserService : IUserService
 
         var role = await _userRepository.GetUserRoleAsync(user.MaNguoiDung);
         var roleName = role?.TenVaiTro ?? "User";
+        var profileId = await _userRepository.GetUserProfileIdAsync(user.MaNguoiDung, roleName);
 
         // Bước 3: Cấp access token mới sau khi rotate thành công.
-        var newAccessToken = _jwtTokenService.GenerateAccessToken(user.MaNguoiDung, user.Email ?? string.Empty, roleName, user.HoTen ?? string.Empty);
+        var newAccessToken = _jwtTokenService.GenerateAccessToken(user.MaNguoiDung, user.Email ?? string.Empty, roleName, user.HoTen ?? string.Empty, profileId);
 
         var payload = new RefreshTokenResultDto
         {

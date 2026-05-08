@@ -117,14 +117,6 @@ const Sidebar = () => {
                     })()}
                 </div>
 
-                {rolePath === 'student' && (
-                    <div className="mb-4 px-1">
-                        <p className="text-muted fw-bold mb-2 ps-1" style={{ fontSize: '10px', letterSpacing: '1px', opacity: 0.8 }}>LỚP HIỆN TẠI</p>
-                        <select className="form-select border-light-subtle bg-light rounded-3 py-2 small fw-bold text-dark shadow-none border-2" style={{ fontSize: '12px', cursor: 'pointer' }}>
-                            <option>HNI - PRI4 - 0065</option>
-                        </select>
-                    </div>
-                )}
             </div>
 
             {/* --- PHẦN GIỮA CÓ THỂ CUỘN (MENU) --- */}

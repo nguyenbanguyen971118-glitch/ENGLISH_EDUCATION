@@ -10,6 +10,8 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using backend.Hubs;
+using backend.Swagger;
+using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -63,6 +65,7 @@ builder.Services.AddHttpClient();
 builder.Services.AddScoped<PermissionBootstrapService>();
 builder.Services.AddScoped<UserBootstrapHelper>();
 builder.Services.AddScoped<PermissionHelper>(); // Helper kiểm tra quyền chi tiết.
+builder.Services.AddScoped<IScheduleChangeRequestService, ScheduleChangeRequestService>();
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
@@ -120,6 +123,15 @@ builder.Services.AddSwaggerGen(options =>
             Name = "Support Team"
         }
     });
+
+    var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath))
+    {
+        options.IncludeXmlComments(xmlPath, includeControllerXmlComments: true);
+    }
+
+    options.OperationFilter<ScheduleSwaggerExamplesOperationFilter>();
 });
 
 var app = builder.Build();
@@ -150,10 +162,10 @@ app.UseMiddleware<ExceptionMiddleware>();
 app.UseMiddleware<LoginRateLimitMiddleware>();
 app.UseMiddleware<LoginAuditMiddleware>();
 
-// Thứ tự này đảm bảo: có endpoint -> xác thực JWT -> kiểm tra quyền chi tiết -> áp dụng authorization chuẩn.
-app.UseRouting(); 
-// 7. Kích hoạt CORS sau UseRouting và trước Auth/Authorization để xử lý pre-flight request.
+// Thứ tự này đảm bảo: CORS trước -> có endpoint -> xác thực JWT -> kiểm tra quyền chi tiết -> áp dụng authorization chuẩn.
+// 7. Kích hoạt CORS trước UseRouting để xử lý pre-flight request (OPTIONS) ngay lập tức.
 app.UseCors("AllowReactApp");
+app.UseRouting(); 
 app.UseAuthentication();
 app.UseMiddleware<AuthorizationMiddleware>();  
 app.UseAuthorization();

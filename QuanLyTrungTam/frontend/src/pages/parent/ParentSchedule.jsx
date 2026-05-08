@@ -1,20 +1,173 @@
 import React, { useState, useEffect } from 'react';
+import apiClient from '../../api/BaseApi';
 import ScheduleTable from '../../components/ScheduleTable';
-import scheduleData from '../../data/schedule.json'; 
 
 const ParentSchedule = () => {
-    const [children] = useState([
-        { id: "HS001", tenCon: "Nguyễn Văn Học", lop: "HNI - PRI4 - 0065" },
-        { id: "HS002", tenCon: "Nguyễn Minh Anh", lop: "HNI - PRI1 - 0012" }
-    ]);
-
-    const [selectedChild, setSelectedChild] = useState(children[0]);
-    const [filteredSchedule, setFilteredSchedule] = useState([]);
+    const [scheduleData, setScheduleData] = useState([]);
+    const [children, setChildren] = useState([]);
+    const [selectedChild, setSelectedChild] = useState(null);
     const [currentDate, setCurrentDate] = useState(new Date());
+    const [loading, setLoading] = useState(true);
+    const [loadingSchedule, setLoadingSchedule] = useState(false);
+    const [error, setError] = useState('');
 
+    // Hàm lấy thứ Hai đầu tuần
+    const getWeekStart = (dateInWeek) => {
+        const date = new Date(dateInWeek);
+        const dayOfWeek = date.getDay();
+        const diff = date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        const monday = new Date(date.setDate(diff));
+        monday.setHours(0, 0, 0, 0);
+        return monday;
+    };
+
+    // Hàm format ngày cho API
+    const formatDateForApi = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}T00:00:00`;
+    };
+
+    const getStudentDisplayName = (item) => {
+        const name = item?.studentName || item?.tenCon || item?.hoTen || item?.fullName || item?.name || item?.tenHocSinh;
+        if (typeof name === 'string' && name.trim()) {
+            return name.trim();
+        }
+
+        return item?.studentId || item?.id || 'Học sinh';
+    };
+
+    // Load danh sách con phụ huynh lần đầu
+    const loadChildren = async () => {
+        try {
+            const weekStart = getWeekStart(new Date());
+            const response = await apiClient.get(`Schedule/parent-board?weekStart=${formatDateForApi(weekStart)}`);
+            
+            if (response?.success === false) {
+                setError(response?.message || 'Không thể tải danh sách con.');
+                setChildren([]);
+                return;
+            }
+
+            const data = response?.data || response;
+            const schedules = data?.schedules || [];
+
+            // Extract unique children from schedule data
+            const uniqueChildren = [];
+            const seenIds = new Set();
+            
+            schedules.forEach(schedule => {
+                const studentId = String(schedule.studentId || '');
+                if (!seenIds.has(studentId)) {
+                    uniqueChildren.push({
+                        id: studentId,
+                        tenCon: getStudentDisplayName(schedule),
+                        lop: schedule.classCode
+                    });
+                    seenIds.add(studentId);
+                }
+            });
+
+            setChildren(uniqueChildren);
+            if (uniqueChildren.length > 0) {
+                setSelectedChild(uniqueChildren[0]);
+            }
+        } catch (err) {
+            console.error('Error loading children:', err);
+            setChildren([]);
+        }
+    };
+
+    // Load dữ liệu lịch từ API
+    const loadScheduleData = async (date = currentDate) => {
+        setLoadingSchedule(true);
+        setError('');
+        try {
+            const weekStart = getWeekStart(date);
+            const response = await apiClient.get(`Schedule/parent-board?weekStart=${formatDateForApi(weekStart)}`);
+            
+            // Kiểm tra nếu API trả về lỗi
+            if (response?.success === false) {
+                setError(response?.message || 'Không thể tải dữ liệu lịch.');
+                setScheduleData([]);
+                setLoadingSchedule(false);
+                return;
+            }
+
+            const data = response?.data || response;
+
+            // Map slot numbers to session names
+            const getSessionFromSlot = (slotId, slotEndId) => {
+                if (!slotId) return 'Sáng';
+                const slot = Number(slotId);
+                if (slot <= 2) return 'Sáng';
+                if (slot <= 6) return 'Chiều';
+                return 'Tối';
+            };
+
+            // Transform API data to match ScheduleTable format
+            const transformedData = (data?.schedules || []).map(schedule => {
+                // Format ngayHoc to YYYY-MM-DD
+                const ngayHocDate = new Date(schedule.ngayHoc);
+                const year = ngayHocDate.getFullYear();
+                const month = String(ngayHocDate.getMonth() + 1).padStart(2, '0');
+                const day = String(ngayHocDate.getDate()).padStart(2, '0');
+                const dateStr = `${year}-${month}-${day}`;
+
+                return {
+                    id: schedule.id,
+                    date: dateStr,
+                    slot: getSessionFromSlot(schedule.slotId, schedule.slotEndId),
+                    subject: schedule.subject,
+                    code: schedule.classCode,
+                    period: `${schedule.slotId}-${schedule.slotEndId}`,
+                    room: schedule.room,
+                    teacher: schedule.teacher,
+                    type: 'theory',
+                    studentId: String(schedule.studentId || ''),
+                    studentName: getStudentDisplayName(schedule),
+                    // Keep original fields for filtering
+                    slotId: schedule.slotId,
+                    slotEndId: schedule.slotEndId,
+                    className: schedule.className,
+                    classCode: schedule.classCode,
+                    ngayHoc: schedule.ngayHoc,
+                    dayIdx: schedule.dayIdx
+                };
+            });
+
+            setScheduleData(transformedData);
+        } catch (err) {
+            const message = err?.message || 'Không thể tải dữ liệu lịch.';
+            setError(message);
+            setScheduleData([]);
+        } finally {
+            setLoadingSchedule(false);
+        }
+    };
+
+    // Load danh sách con lần đầu
     useEffect(() => {
-        setFilteredSchedule(scheduleData);
-    }, [selectedChild]);
+        const initData = async () => {
+            await loadChildren();
+            await loadScheduleData(currentDate);
+            setLoading(false);
+        };
+        initData();
+    }, []);
+
+    // Load dữ liệu lịch khi currentDate thay đổi
+    useEffect(() => {
+        if (children.length > 0) {
+            loadScheduleData(currentDate);
+        }
+    }, [currentDate]);
+
+    // Filter schedule data by selected child
+    const filteredSchedule = selectedChild
+        ? scheduleData.filter(item => String(item.studentId) === String(selectedChild.id))
+        : scheduleData;
 
     const changeWeek = (offset) => {
         const newDate = new Date(currentDate);
@@ -29,65 +182,110 @@ const ParentSchedule = () => {
                 Lịch học, lịch thi theo tuần
             </h2>
 
-            {/* Header: Chứa nút chọn con bên trái và điều hướng bên phải */}
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                
-                {/* 1. Bộ chọn con (Dropdown) nằm bên TRÁI */}
-                <div className="dropdown">
-                    <button 
-                        className="btn btn-outline-primary dropdown-toggle rounded-pill fw-bold px-3 border-2 d-flex align-items-center shadow-sm" 
-                        type="button" 
-                        data-bs-toggle="dropdown"
-                        style={{ height: '40px', fontSize: '14px' }}
-                    >
-                        <span className="text-uppercase me-1" style={{ fontSize: '11px', opacity: 0.8 }}>Đang xem lịch của:</span> 
-                        <span className="text-dark">{selectedChild.tenCon} ({selectedChild.id})</span>
-                    </button>
-                    <ul className="dropdown-menu shadow border-0 mt-2 rounded-4">
-                        {children.map(child => (
-                            <li key={child.id}>
-                                <button 
-                                    className="dropdown-item py-2 fw-medium" 
-                                    onClick={() => setSelectedChild(child)}
-                                >
-                                    {child.tenCon} - {child.id}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+            {error && (
+                <div className="alert alert-danger alert-dismissible fade show" role="alert">
+                    <i className="bi bi-exclamation-triangle me-2"></i>
+                    {error}
+                    <button type="button" className="btn-close" onClick={() => setError('')}></button>
                 </div>
-                
-                {/* 2. Cụm điều hướng thời gian nằm bên PHẢI */}
-                <div className="d-flex align-items-center gap-2">
-                    {/* Nút Hiện tại */}
-                    <button 
-                        className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" 
-                        onClick={() => setCurrentDate(new Date())}
-                        style={{ backgroundColor: '#007bff', border: 'none', height: '40px' }}
-                    >
-                        Hiện tại
-                    </button>
+            )}
+
+            {/* Header: Chứa nút chọn con bên trái và điều hướng bên phải */}
+            {children.length > 0 && (
+                <div className="d-flex flex-column mb-4 gap-3">
                     
-                    {/* Nút Trở về / Tiếp */}
-                    <div className="d-flex align-items-center border rounded-pill bg-white px-2 shadow-sm" style={{ height: '40px' }}>
-                        <button className="btn btn-link text-dark p-0 px-2 text-decoration-none small fw-medium" onClick={() => changeWeek(-1)}>
-                            <i className="bi bi-chevron-left small"></i> Trở về
+                    {/* 1. Bộ chọn con - Hiển thị dạng nút bấm */}
+                    <div>
+                        <p className="text-muted fw-bold mb-2" style={{ fontSize: '13px' }}>
+                            <i className="bi bi-person-circle me-2" style={{ color: '#007bff' }}></i>
+                            Chọn con để xem thời khóa biểu:
+                        </p>
+                        <div className="d-flex flex-wrap gap-2">
+                            {children.map(child => (
+                                <button 
+                                    key={child.id}
+                                    className={`btn fw-bold rounded-pill px-4 shadow-sm transition-all ${
+                                        selectedChild?.id === child.id 
+                                            ? 'btn-primary' 
+                                            : 'btn-outline-primary'
+                                    }`}
+                                    onClick={() => setSelectedChild(child)}
+                                    style={{ 
+                                        height: '40px',
+                                        fontSize: '14px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <i className="bi bi-person me-1"></i>
+                                    {child.tenCon}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    
+                    {/* 2. Cụm điều hướng thời gian nằm bên trái dưới */}
+                    <div className="d-flex align-items-center gap-2">
+                        {/* Nút Hiện tại */}
+                        <button 
+                            className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" 
+                            onClick={() => setCurrentDate(new Date())}
+                            style={{ backgroundColor: '#007bff', border: 'none', height: '40px' }}
+                        >
+                            <i className="bi bi-calendar-today me-1"></i>
+                            Hiện tại
                         </button>
-                        <div className="vr mx-1 my-2" style={{ opacity: 0.2 }}></div>
-                        <button className="btn btn-link text-dark p-0 px-2 text-decoration-none small fw-medium" onClick={() => changeWeek(1)}>
-                            Tiếp <i className="bi bi-chevron-right small"></i>
-                        </button>
+                        
+                        {/* Nút Trở về / Tiếp */}
+                        <div className="d-flex align-items-center border rounded-pill bg-white px-2 shadow-sm" style={{ height: '40px' }}>
+                            <button className="btn btn-link text-dark p-0 px-2 text-decoration-none small fw-medium" onClick={() => changeWeek(-1)}>
+                                <i className="bi bi-chevron-left small"></i> Trước
+                            </button>
+                            <div className="vr mx-1 my-2" style={{ opacity: 0.2 }}></div>
+                            <button className="btn btn-link text-dark p-0 px-2 text-decoration-none small fw-medium" onClick={() => changeWeek(1)}>
+                                Sau <i className="bi bi-chevron-right small"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
-            </div>
+            )}
+
+            {/* Hiển thị thông tin con đang xem */}
+            {selectedChild && (
+                <div className="alert alert-info rounded-4 mb-4 d-flex align-items-center shadow-sm">
+                    <i className="bi bi-info-circle-fill me-2" style={{ fontSize: '18px' }}></i>
+                    <div>
+                        <strong>{selectedChild.tenCon}</strong> 
+                        {selectedChild.lop && <span className="ms-2 badge bg-primary">{selectedChild.lop}</span>}
+                    </div>
+                </div>
+            )}
 
             {/* Bảng lịch học */}
             <div className="card border-0 shadow-sm rounded-5 overflow-hidden">
                 <div className="card-body p-0">
-                    <ScheduleTable 
-                        data={filteredSchedule} 
-                        currentViewDate={currentDate} 
-                    />
+                    {loading ? (
+                        <div className="text-center py-5">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Đang tải...</span>
+                            </div>
+                        </div>
+                    ) : loadingSchedule ? (
+                        <div className="text-center py-5">
+                            <div className="spinner-border text-primary" role="status">
+                                <span className="visually-hidden">Đang tải lịch...</span>
+                            </div>
+                        </div>
+                    ) : children.length === 0 ? (
+                        <div className="alert alert-info m-3">
+                            <i className="bi bi-info-circle me-2"></i>
+                            Không có con của phụ huynh hoặc chưa có lịch học.
+                        </div>
+                    ) : (
+                        <ScheduleTable 
+                            data={filteredSchedule} 
+                            currentViewDate={currentDate} 
+                        />
+                    )}
                 </div>
             </div>
         </div>

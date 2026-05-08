@@ -91,6 +91,11 @@ public class UserRepository : IUserRepository
             var gv = await _context.Giangviens.FirstOrDefaultAsync(g => g.MaNguoiDung == userId);
             return gv?.MaGiangVien;
         }
+        else if (roleName == "Phu_Huynh")
+        {
+            var ph = await _context.Phuhuynhs.FirstOrDefaultAsync(p => p.MaNguoiDung == userId);
+            return ph?.MaPhuHuynh;
+        }
         return null;
     }
 }

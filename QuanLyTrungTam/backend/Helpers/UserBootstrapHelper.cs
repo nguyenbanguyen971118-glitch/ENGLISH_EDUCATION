@@ -54,7 +54,26 @@ public class UserBootstrapHelper
             existingSeedUsers.Contains(x.MaNguoiDung) &&
             (x.DaXoa == null || x.DaXoa == false));
 
-        return mappingCount >= RequiredSeedUsers.Length;
+        if (mappingCount < RequiredSeedUsers.Length)
+        {
+            return false;
+        }
+
+        var teacherUser = await _context.Nguoidungs.FirstOrDefaultAsync(x =>
+            x.Email == "giaovien@qltt.local" && (x.DaXoa == null || x.DaXoa == false));
+        var studentUser = await _context.Nguoidungs.FirstOrDefaultAsync(x =>
+            x.Email == "hocsinh@qltt.local" && (x.DaXoa == null || x.DaXoa == false));
+        var parentUser = await _context.Nguoidungs.FirstOrDefaultAsync(x =>
+            x.Email == "phuhuynh@qltt.local" && (x.DaXoa == null || x.DaXoa == false));
+
+        var teacherProfileExists = teacherUser != null && await _context.Giangviens.AnyAsync(x =>
+            x.MaNguoiDung == teacherUser.MaNguoiDung && (x.DaXoa == null || x.DaXoa == false));
+        var studentProfileExists = studentUser != null && await _context.Hocsinhs.AnyAsync(x =>
+            x.MaNguoiDung == studentUser.MaNguoiDung && (x.DaXoa == null || x.DaXoa == false));
+        var parentProfileExists = parentUser != null && await _context.Phuhuynhs.AnyAsync(x =>
+            x.MaNguoiDung == parentUser.MaNguoiDung && (x.DaXoa == null || x.DaXoa == false));
+
+        return teacherProfileExists && studentProfileExists && parentProfileExists;
     }
 
     public async Task EnsureInitializedAsync()
@@ -186,5 +205,85 @@ public class UserBootstrapHelper
         }
 
         await _context.SaveChangesAsync();
+
+        // Create GiangVien profile for teacher seed user if it doesn't exist
+        var teacherUser = await _context.Nguoidungs.FirstOrDefaultAsync(x =>
+            x.Email == "giaovien@qltt.local" && (x.DaXoa == null || x.DaXoa == false));
+
+        if (teacherUser != null)
+        {
+            var existingTeacherProfile = await _context.Giangviens.FirstOrDefaultAsync(x =>
+                x.MaNguoiDung == teacherUser.MaNguoiDung && (x.DaXoa == null || x.DaXoa == false));
+
+            if (existingTeacherProfile == null)
+            {
+                var giangvien = new Giangvien
+                {
+                    MaGiangVien = Guid.NewGuid(),
+                    MaNguoiDung = teacherUser.MaNguoiDung,
+                    SoDienThoai = null,
+                    QueQuan = null,
+                    TrinhDoChuyenMon = "Chưa cập nhật",
+                    HocVi = null,
+                    KinhNghiemGiangDay = null,
+                    TrangThai = true,
+                    DaXoa = false,
+                    ThoiGianTao = DateTime.UtcNow
+                };
+
+                _context.Giangviens.Add(giangvien);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        var studentUser = await _context.Nguoidungs.FirstOrDefaultAsync(x =>
+            x.Email == "hocsinh@qltt.local" && (x.DaXoa == null || x.DaXoa == false));
+
+        if (studentUser != null)
+        {
+            var existingStudentProfile = await _context.Hocsinhs.FirstOrDefaultAsync(x =>
+                x.MaNguoiDung == studentUser.MaNguoiDung && (x.DaXoa == null || x.DaXoa == false));
+
+            if (existingStudentProfile == null)
+            {
+                var hocsinh = new Hocsinh
+                {
+                    MaHocSinh = Guid.NewGuid(),
+                    MaNguoiDung = studentUser.MaNguoiDung,
+                    TruongDangTheoHoc = "Chưa cập nhật",
+                    TrangThai = true,
+                    DaXoa = false,
+                    ThoiGianTao = DateTime.UtcNow
+                };
+
+                _context.Hocsinhs.Add(hocsinh);
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        var parentUser = await _context.Nguoidungs.FirstOrDefaultAsync(x =>
+            x.Email == "phuhuynh@qltt.local" && (x.DaXoa == null || x.DaXoa == false));
+
+        if (parentUser != null)
+        {
+            var existingParentProfile = await _context.Phuhuynhs.FirstOrDefaultAsync(x =>
+                x.MaNguoiDung == parentUser.MaNguoiDung && (x.DaXoa == null || x.DaXoa == false));
+
+            if (existingParentProfile == null)
+            {
+                var phuhuynh = new Phuhuynh
+                {
+                    MaPhuHuynh = Guid.NewGuid(),
+                    MaNguoiDung = parentUser.MaNguoiDung,
+                    SoDienThoai = "0000000000",
+                    TrangThai = true,
+                    DaXoa = false,
+                    ThoiGianTao = DateTime.UtcNow
+                };
+
+                _context.Phuhuynhs.Add(phuhuynh);
+                await _context.SaveChangesAsync();
+            }
+        }
     }
 }
