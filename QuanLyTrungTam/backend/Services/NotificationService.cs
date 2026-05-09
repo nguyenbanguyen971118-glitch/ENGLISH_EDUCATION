@@ -20,18 +20,21 @@ namespace backend.Services
             _context = context;
         }
 
-        // Hàm helper: Tìm danh sách ID người dùng theo Đối tượng (Target)
-        private async Task<List<Guid>> GetUserIdsByTargetAsync(string target)
+        // Hàm helper: Tìm danh sách ID người dùng theo Đối tượng (DoiTuong)
+        private async Task<List<Guid>> GetUserIdsByTargetAsync(string doiTuong)
         {
             var query = _context.Nguoidungs.Where(u => u.DaXoa == null || u.DaXoa == false);
 
-            if (target == "Học sinh")
+            // Map sang tên vai trò tiếng Anh trong database
+            if (doiTuong == "Hoc_Sinh")
                 query = query.Where(u => u.Nguoidungvaitros.Any(v => v.MaVaiTroNavigation.TenVaiTro == "Hoc_Sinh"));
-            else if (target == "Giáo viên")
+            else if (doiTuong == "Giao_Vien")
                 query = query.Where(u => u.Nguoidungvaitros.Any(v => v.MaVaiTroNavigation.TenVaiTro == "Giao_Vien"));
-            else if (target == "Phụ huynh")
+            else if (doiTuong == "Phu_Huynh")
                 query = query.Where(u => u.Nguoidungvaitros.Any(v => v.MaVaiTroNavigation.TenVaiTro == "Phu_Huynh"));
-            // Nếu là "Tất cả", query sẽ không filter role, lấy toàn bộ user.
+            else if (doiTuong == "Admin")
+                query = query.Where(u => u.Nguoidungvaitros.Any(v => v.MaVaiTroNavigation.TenVaiTro == "Admin"));
+            // Nếu là "Tat_Ca", query sẽ không filter role, lấy toàn bộ user.
 
             return await query.Select(u => u.MaNguoiDung).ToListAsync();
         }
@@ -45,12 +48,69 @@ namespace backend.Services
                 Id = t.MaThongBao,
                 Title = t.TieuDe,
                 Content = t.NoiDung,
-                // Tạm thời trả về "Tất cả" hoặc nội suy. Ở đây mình giả lập dựa theo tổng số lượng người nhận.
-                Target = "Tất cả", // TODO: Thêm cột DoiTuong vào DB để map chuẩn xác nhất
-                Date = (t.ThoiGianTao ?? DateTime.UtcNow).ToString("yyyy-MM-dd")
+                DoiTuong = t.DoiTuong ?? "Tat_Ca",
+                CreatedAt = t.ThoiGianTao ?? DateTime.UtcNow
             }).ToList();
 
             return ApiResponseDto<List<NotificationDto>>.Ok(result, "Lấy danh sách thông báo thành công");
+        }
+
+        public async Task<ApiResponseDto<List<UserNotificationDto>>> GetUserNotificationsAsync(Guid userId)
+        {
+            var notifications = await _notificationRepo.GetNotificationsByUserIdAsync(userId);
+
+            var result = notifications
+                .Where(n => n.MaThongBaoNavigation != null)
+                .Select(n => new UserNotificationDto
+                {
+                    Id = n.MaThongBao,
+                    Title = n.MaThongBaoNavigation!.TieuDe,
+                    Content = n.MaThongBaoNavigation!.NoiDung,
+                    DoiTuong = n.MaThongBaoNavigation!.DoiTuong ?? "Tat_Ca",
+                    CreatedAt = n.MaThongBaoNavigation!.ThoiGianTao ?? DateTime.UtcNow,
+                    IsRead = n.DaDoc ?? false,
+                    ReadAt = n.NgayDoc
+                }).ToList();
+
+            return ApiResponseDto<List<UserNotificationDto>>.Ok(result, "Lấy thông báo của người dùng thành công");
+        }
+
+        public async Task<ApiResponseDto<List<UserNotificationDto>>> GetUnreadNotificationsAsync(Guid userId)
+        {
+            var notifications = await _notificationRepo.GetUnreadNotificationsByUserIdAsync(userId);
+
+            var result = notifications
+                .Where(n => n.MaThongBaoNavigation != null)
+                .Select(n => new UserNotificationDto
+                {
+                    Id = n.MaThongBao,
+                    Title = n.MaThongBaoNavigation!.TieuDe,
+                    Content = n.MaThongBaoNavigation!.NoiDung,
+                    DoiTuong = n.MaThongBaoNavigation!.DoiTuong ?? "Tat_Ca",
+                    CreatedAt = n.MaThongBaoNavigation!.ThoiGianTao ?? DateTime.UtcNow,
+                    IsRead = n.DaDoc ?? false,
+                    ReadAt = n.NgayDoc
+                }).ToList();
+
+            return ApiResponseDto<List<UserNotificationDto>>.Ok(result, "Lấy thông báo chưa đọc thành công");
+        }
+
+        public async Task<ApiResponseDto<int>> GetUnreadCountAsync(Guid userId)
+        {
+            var count = await _notificationRepo.GetUnreadCountAsync(userId);
+            return ApiResponseDto<int>.Ok(count, "Lấy số lượng thông báo chưa đọc thành công");
+        }
+
+        public async Task<ApiResponseDto<object>> MarkAsReadAsync(Guid userId, Guid notificationId)
+        {
+            await _notificationRepo.MarkAsReadAsync(userId, notificationId);
+            return ApiResponseDto<object>.Ok(null, "Đánh dấu thông báo là đã đọc thành công");
+        }
+
+        public async Task<ApiResponseDto<object>> MarkAllAsReadAsync(Guid userId)
+        {
+            await _notificationRepo.MarkAllAsReadAsync(userId);
+            return ApiResponseDto<object>.Ok(null, "Đánh dấu tất cả thông báo là đã đọc thành công");
         }
 
         public async Task<ApiResponseDto<NotificationDto>> CreateAsync(Guid currentUserId, CreateNotificationDto dto)
@@ -58,13 +118,14 @@ namespace backend.Services
             if (string.IsNullOrWhiteSpace(dto.Title) || string.IsNullOrWhiteSpace(dto.Content))
                 return ApiResponseDto<NotificationDto>.Fail("Tiêu đề và nội dung không được để trống", "INVALID_INPUT");
 
-            var receiverIds = await GetUserIdsByTargetAsync(dto.Target);
+            var receiverIds = await GetUserIdsByTargetAsync(dto.DoiTuong);
 
             var thongBao = new Thongbao
             {
                 MaThongBao = Guid.NewGuid(),
                 TieuDe = dto.Title,
                 NoiDung = dto.Content,
+                DoiTuong = dto.DoiTuong ?? "Tat_Ca",
                 NguoiTao = currentUserId,
                 ThoiGianTao = DateTime.UtcNow,
                 DaXoa = false,
@@ -78,8 +139,8 @@ namespace backend.Services
                 Id = thongBao.MaThongBao,
                 Title = thongBao.TieuDe,
                 Content = thongBao.NoiDung,
-                Target = dto.Target,
-                Date = thongBao.ThoiGianTao.Value.ToString("yyyy-MM-dd")
+                DoiTuong = thongBao.DoiTuong ?? "Tat_Ca",
+                CreatedAt = thongBao.ThoiGianTao.Value
             };
 
             return ApiResponseDto<NotificationDto>.Ok(result, "Tạo thông báo thành công");
@@ -93,11 +154,12 @@ namespace backend.Services
 
             thongBao.TieuDe = dto.Title;
             thongBao.NoiDung = dto.Content;
+            thongBao.DoiTuong = dto.DoiTuong ?? "Tat_Ca";
             thongBao.NguoiSua = currentUserId;
             thongBao.ThoiGianSua = DateTime.UtcNow;
 
             // Tính toán lại danh sách người nhận mới
-            var newReceiverIds = await GetUserIdsByTargetAsync(dto.Target);
+            var newReceiverIds = await GetUserIdsByTargetAsync(dto.DoiTuong);
 
             await _notificationRepo.UpdateAsync(thongBao, newReceiverIds, currentUserId);
 
@@ -106,8 +168,8 @@ namespace backend.Services
                 Id = thongBao.MaThongBao,
                 Title = thongBao.TieuDe,
                 Content = thongBao.NoiDung,
-                Target = dto.Target,
-                Date = (thongBao.ThoiGianTao ?? DateTime.UtcNow).ToString("yyyy-MM-dd")
+                DoiTuong = thongBao.DoiTuong ?? "Tat_Ca",
+                CreatedAt = thongBao.ThoiGianTao ?? DateTime.UtcNow
             };
 
             return ApiResponseDto<NotificationDto>.Ok(result, "Cập nhật thành công");

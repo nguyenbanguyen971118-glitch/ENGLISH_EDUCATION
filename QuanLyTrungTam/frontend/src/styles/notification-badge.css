@@ -1,0 +1,57 @@
+/* Notification Badge Animations */
+
+/* Pulse animation - gentle continuous pulsing */
+@keyframes notificationPulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(220, 53, 69, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    transform: scale(1);
+  }
+}
+
+/* Bounce animation - gentle bounce effect */
+@keyframes notificationBounce {
+  0%, 100% {
+    transform: scale(1) translateY(0);
+  }
+  50% {
+    transform: scale(1.1) translateY(-2px);
+  }
+}
+
+/* Badge with pulse effect */
+.notification-badge {
+  animation: notificationPulse 2s infinite;
+}
+
+/* Badge with bounce effect */
+.notification-badge-bounce {
+  animation: notificationBounce 1s infinite;
+}
+
+/* Combined effect - pulse + subtle bounce */
+.notification-badge-animated {
+  animation: notificationPulse 2s infinite, notificationBounce 1.5s infinite;
+}
+
+/* Smooth appearance animation when badge appears */
+@keyframes badgeAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.notification-badge-appear {
+  animation: badgeAppear 0.3s ease-out;
+}

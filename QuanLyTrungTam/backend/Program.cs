@@ -58,6 +58,7 @@ builder.Services.AddScoped<IPasswordService, PasswordService>();
 builder.Services.AddScoped<IChatRealtimeNotifier, ChatRealtimeNotifier>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<NotificationEventService>(); // Service xử lý sự kiện thông báo
 builder.Services.AddSingleton<IRefreshSessionStore, InMemoryRefreshSessionStore>();
 builder.Services.AddSingleton<IFirebasePushService, FirebasePushService>();
 builder.Services.AddHttpClient();
@@ -69,6 +70,13 @@ builder.Services.AddScoped<IScheduleChangeRequestService, ScheduleChangeRequestS
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
+
+// Cấu hình JSON serialization để DateTime luôn là UTC
+builder.Services.AddControllers().AddJsonOptions(options =>
+{
+    // Ensure DateTime values are serialized in ISO 8601 format (with Z for UTC)
+    options.JsonSerializerOptions.WriteIndented = false;
+});
 
 var jwtSection = builder.Configuration.GetSection("JwtSettings");
 var jwtSecret = jwtSection["Secret"] ?? "replace-this-in-production-please-at-least-32-chars";
@@ -173,5 +181,6 @@ app.UseAuthorization();
 // 8. Map controller endpoints.
 app.MapControllers();
 app.MapHub<ChatHub>("/hubs/chat");
+app.MapHub<NotificationHub>("/hubs/notification");
 
 app.Run();

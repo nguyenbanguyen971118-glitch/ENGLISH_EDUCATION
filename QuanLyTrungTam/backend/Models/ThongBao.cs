@@ -11,6 +11,11 @@ public partial class Thongbao
 
     public string NoiDung { get; set; } = null!;
 
+    /// <summary>
+    /// Đối tượng nhận thông báo: Admin, Giao_Vien, Hoc_Sinh, Phu_Huynh, Tat_Ca
+    /// </summary>
+    public string DoiTuong { get; set; } = "Tat_Ca";
+
     public Guid? NguoiTao { get; set; }
 
     public DateTime? ThoiGianTao { get; set; }

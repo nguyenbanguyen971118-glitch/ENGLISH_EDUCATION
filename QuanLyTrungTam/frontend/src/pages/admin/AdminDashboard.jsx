@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
+import NotificationPanel from '../../components/NotificationPanel';
+import BaseApi from '../../api/BaseApi';
+import '../../styles/notification-badge.css';
 
 const AdminDashboard = () => {
     const { user } = useAuth();
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const stats = [
         { title: "Tổng học viên", count: "1,250", icon: "bi-people-fill", color: "linear-gradient(45deg, #005197, #0081f1)" },
@@ -17,6 +22,49 @@ const AdminDashboard = () => {
         { id: "TEST-002", course: "IELTS Mock Test: Listening", teacher: "Ban Khảo Thí", room: "Hội trường G3", time: "13:30 - 15:10", status: "Sắp bắt đầu" },
         { id: "ENG-WRT-02", course: "Academic Writing Task 2", teacher: "Ms. Thu Hà", room: "C101", time: "14:25 - 17:00", status: "Chờ dạy" },
     ];
+
+    // Fetch unread notification count
+    useEffect(() => {
+        fetchUnreadCount();
+    }, []);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const res = await BaseApi.get('Notification/unread-count');
+            console.log('Full response object:', res);
+            const resData = res.data || res;
+            console.log('Unread count response:', resData);
+            
+            // Handle multiple response formats
+            let count = 0;
+            if (typeof resData === 'number') {
+                count = resData;
+            } else if (resData && typeof resData === 'object') {
+                // Check if it's ApiResponse format with data property
+                if ('data' in resData && typeof resData.data === 'number') {
+                    count = resData.data;
+                } else if ('value' in resData && typeof resData.value === 'number') {
+                    count = resData.value;
+                }
+            }
+            
+            console.log('Setting unread count to:', count);
+            setUnreadCount(count);
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+            console.error('Error details:', error.response?.data || error.message);
+            setUnreadCount(0);
+        }
+    };
+
+    // Refresh unread count when notification panel opens
+    const handleNotificationPanelOpen = (isOpen) => {
+        setShowNotifications(isOpen);
+        if (!isOpen) {
+            // Refresh count when panel closes (after marking as read)
+            fetchUnreadCount();
+        }
+    };
 
     return (
         <div className="p-4 animate__animated animate__fadeIn">
@@ -40,13 +88,20 @@ const AdminDashboard = () => {
                     </div>
 
                     {/* 2. Nút thông báo hình chuông (Đồng bộ với các trang khác) */}
-                    <div className="position-relative hover-up bg-white shadow-sm border rounded-circle d-flex align-items-center justify-content-center" 
-                         style={{ width: '45px', height: '45px', cursor: 'pointer' }}>
+                    <div 
+                        className="position-relative hover-up bg-white shadow-sm border rounded-circle d-flex align-items-center justify-content-center" 
+                        style={{ width: '45px', height: '45px', cursor: 'pointer' }}
+                        onClick={() => handleNotificationPanelOpen(!showNotifications)}
+                        title="Thông báo"
+                    >
                         <i className="bi bi-bell-fill text-secondary fs-5"></i>
-                        <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" style={{fontSize: '10px'}}>
-                            5
-                        </span>
+                        {unreadCount > 0 && (
+                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light notification-badge" style={{fontSize: '10px'}}>
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                        )}
                     </div>
+                    <NotificationPanel isOpen={showNotifications} onClose={() => handleNotificationPanelOpen(false)} onMarkAsRead={fetchUnreadCount} />
                 </div>
             </div>
 

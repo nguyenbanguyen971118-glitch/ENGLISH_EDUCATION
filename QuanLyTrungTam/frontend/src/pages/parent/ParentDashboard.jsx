@@ -1,6 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import NotificationPanel from '../../components/NotificationPanel';
+import BaseApi from '../../api/BaseApi';
+import '../../styles/notification-badge.css';
 
 const ParentDashboard = () => {
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const [children] = useState([
         {
             id: "HS00123",
@@ -33,6 +38,48 @@ const ParentDashboard = () => {
 
     const [selectedChild, setSelectedChild] = useState(children[0]);
 
+    // Fetch unread notification count
+    useEffect(() => {
+        fetchUnreadCount();
+    }, []);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const res = await BaseApi.get('Notification/unread-count');
+            console.log('Full response object:', res);
+            const resData = res.data || res;
+            console.log('Unread count response:', resData);
+            
+            // Handle multiple response formats
+            let count = 0;
+            if (typeof resData === 'number') {
+                count = resData;
+            } else if (resData && typeof resData === 'object') {
+                // Check if it's ApiResponse format with data property
+                if ('data' in resData && typeof resData.data === 'number') {
+                    count = resData.data;
+                } else if ('value' in resData && typeof resData.value === 'number') {
+                    count = resData.value;
+                }
+            }
+            
+            console.log('Setting unread count to:', count);
+            setUnreadCount(count);
+        } catch (error) {
+            console.error('Error fetching unread count:', error);
+            console.error('Error details:', error.response?.data || error.message);
+            setUnreadCount(0);
+        }
+    };
+
+    const handleNotificationPanelOpen = (isOpen) => {
+        setShowNotifications(isOpen);
+        if (!isOpen) {
+            // Refresh count when panel closes (after marking as read)
+            fetchUnreadCount();
+        }
+    };
+
     return (
         <div className="p-0 animate__animated animate__fadeIn" style={{ fontFamily: "'Montserrat', sans-serif" }}>
             
@@ -44,37 +91,55 @@ const ParentDashboard = () => {
                     </h2>
                     <p className="text-muted fw-500 mb-0">Theo dõi hành trình học tập của các con.</p>
                 </div>
-                
-                {/* Bộ chọn con - Thiết kế lại để không bị lỗi đè chữ */}
-                <div className="dropdown">
+
+                <div className="d-flex align-items-center gap-3">
+                    {/* Nút thông báo hình chuông */}
                     <div 
-                        className="bg-white px-3 py-2 rounded-4 shadow-sm border border-2 d-flex flex-column justify-content-center"
-                        style={{ minWidth: '250px', cursor: 'pointer' }}
-                        data-bs-toggle="dropdown"
+                        className="position-relative hover-up bg-white shadow-sm border rounded-circle d-flex align-items-center justify-content-center" 
+                        style={{ width: '45px', height: '45px', cursor: 'pointer' }}
+                        onClick={() => handleNotificationPanelOpen(!showNotifications)}
+                        title="Thông báo"
                     >
-                        <label className="fw-bold text-muted d-block mb-0" style={{ fontSize: '10px', pointerEvents: 'none' }}>
-                            ĐANG XEM DỮ LIỆU CỦA:
-                        </label>
-                        <div className="d-flex justify-content-between align-items-center">
-                            <span className="fw-bold text-primary" style={{ fontSize: '14px' }}>
-                                {selectedChild.tenCon} ({selectedChild.maHocSinh})
+                        <i className="bi bi-bell-fill text-secondary fs-5"></i>
+                        {unreadCount > 0 && (
+                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light notification-badge" style={{fontSize: '10px'}}>
+                                {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
-                            <i className="bi bi-chevron-down text-primary small"></i>
-                        </div>
+                        )}
                     </div>
-                    
-                    <ul className="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2 p-2">
-                        {children.map(child => (
-                            <li key={child.id}>
-                                <button 
-                                    className={`dropdown-item rounded-3 py-2 mb-1 fw-bold ${selectedChild.id === child.id ? 'bg-primary-subtle text-primary' : ''}`}
-                                    onClick={() => setSelectedChild(child)}
-                                >
-                                    {child.tenCon} <span className="small opacity-50 fw-normal">({child.maHocSinh})</span>
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
+                    <NotificationPanel isOpen={showNotifications} onClose={() => handleNotificationPanelOpen(false)} onMarkAsRead={fetchUnreadCount} />
+
+                    {/* Bộ chọn con - Dropdown */}
+                    <div className="dropdown">
+                        <div 
+                            className="bg-white px-3 py-2 rounded-4 shadow-sm border border-2 d-flex flex-column justify-content-center"
+                            style={{ minWidth: '250px', cursor: 'pointer' }}
+                            data-bs-toggle="dropdown"
+                        >
+                            <label className="fw-bold text-muted d-block mb-0" style={{ fontSize: '10px', pointerEvents: 'none' }}>
+                                ĐANG XEM DỮ LIỆU CỦA:
+                            </label>
+                            <div className="d-flex justify-content-between align-items-center">
+                                <span className="fw-bold text-primary" style={{ fontSize: '14px' }}>
+                                    {selectedChild.tenCon} ({selectedChild.maHocSinh})
+                                </span>
+                                <i className="bi bi-chevron-down text-primary small"></i>
+                            </div>
+                        </div>
+                        
+                        <ul className="dropdown-menu dropdown-menu-end shadow border-0 rounded-4 mt-2 p-2">
+                            {children.map(child => (
+                                <li key={child.id}>
+                                    <button 
+                                        className={`dropdown-item rounded-3 py-2 mb-1 fw-bold ${selectedChild.id === child.id ? 'bg-primary-subtle text-primary' : ''}`}
+                                        onClick={() => setSelectedChild(child)}
+                                    >
+                                        {child.tenCon} <span className="small opacity-50 fw-normal">({child.maHocSinh})</span>
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                    </div>
                 </div>
             </div>
 

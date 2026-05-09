@@ -36,18 +36,47 @@ const AdminMessages = () => {
 
     const formatTime = (dateString) => {
         if (!dateString) return 'Vừa xong';
-        const date = new Date(dateString);
+        
+        // Thêm 'Z' nếu thiếu để đảm bảo parse như UTC
+        const normalizedDateString = dateString.endsWith('Z') ? dateString : dateString + 'Z';
+        const date = new Date(normalizedDateString);
         const now = new Date();
-        const diffMs = now - date;
-        const diffMins = Math.floor(diffMs / 60000);
-        const diffHours = Math.floor(diffMs / 3600000);
-        const diffDays = Math.floor(diffMs / 86400000);
-
-        if (diffMins < 1) return 'Vừa xong';
-        if (diffMins < 60) return `${diffMins}p`;
-        if (diffHours < 24) return `${diffHours}h`;
-        if (diffDays < 7) return `${diffDays}d`;
-        return date.toLocaleDateString('vi-VN');
+        
+        // Lấy giờ:phút theo múi giờ local của trình duyệt (không hardcode)
+        const timeFormatter = new Intl.DateTimeFormat('vi-VN', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: false
+        });
+        const timeStr = timeFormatter.format(date);
+        
+        // So sánh ngày dựa trên local time
+        const dateOnlyFormatter = new Intl.DateTimeFormat('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit'
+        });
+        
+        const dateStr = dateOnlyFormatter.format(date);
+        const nowStr = dateOnlyFormatter.format(now);
+        
+        if (dateStr === nowStr) {
+            return timeStr; // Hôm nay
+        }
+        
+        // Tính số ngày chênh lệch
+        const dateParsed = new Date(dateStr);
+        const nowParsed = new Date(nowStr);
+        const diffDays = Math.floor((nowParsed - dateParsed) / 86400000);
+        
+        if (diffDays === 1) return `Hôm qua ${timeStr}`; // Hôm qua
+        if (diffDays < 7) return `${diffDays}d`; // Trong 7 ngày
+        
+        // Hiển thị ngày/tháng
+        const parts = dateOnlyFormatter.formatToParts(date);
+        const day = parts.find(p => p.type === 'day')?.value;
+        const month = parts.find(p => p.type === 'month')?.value;
+        return `${day}/${month} ${timeStr}`;
     };
 
     const formatMemberRole = (role) => {
@@ -173,7 +202,7 @@ const AdminMessages = () => {
 
             setConversations(prev => prev.map(c => 
                 c.id === message.conversationId 
-                    ? { ...c, lastMessage: message.content, time: 'Vừa xong', unread: 0 }
+                    ? { ...c, lastMessage: message.content, time: formatTime(message.createdAt), unread: 0 }
                     : c
             ));
         });
@@ -236,12 +265,24 @@ const AdminMessages = () => {
         try {
             const result = await messaging.sendMessage(activeChat, messageText, messageAttachments);
             if (!result) {
+                console.error('Lỗi gửi tin nhắn - result null');
                 alert('Lỗi gửi tin nhắn, vui lòng thử lại');
+            } else {
+                console.log('Tin nhắn gửi thành công:', result);
+                // Chỉ đánh dấu đã đọc nếu gửi thành công
+                try {
+                    await messaging.markAsRead(activeChat);
+                } catch (markAsReadError) {
+                    console.warn('Lỗi đánh dấu đã đọc:', markAsReadError);
+                    // Không xử lý lỗi nghiêm trọng ở đây
+                }
             }
+        } catch (error) {
+            console.error('Lỗi khi gửi tin nhắn:', error);
+            alert('Lỗi khi gửi tin nhắn, vui lòng thử lại');
         } finally {
             isSendingRef.current = false;
         }
-        await messaging.markAsRead(activeChat);
     };
 
     const handleSelectChat = async (chatId) => {
