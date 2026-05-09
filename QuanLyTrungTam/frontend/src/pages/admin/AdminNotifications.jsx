@@ -5,6 +5,37 @@ import BaseApi from "../../api/BaseApi";
  * Creatby: Trương Quốc Lộc - 18/3/2026
  * Updateby: Trương Quốc Lộc - 18/3/2026
  */
+
+// Utility function để convert UTC time sang local time
+const formatLocalDate = (utcDateString) => {
+  try {
+    // Parse ISO string (with Z suffix indicating UTC)
+    const utcDate = new Date(utcDateString);
+    // toLocaleDateString automatically converts to browser's local timezone
+    return utcDate.toLocaleDateString('vi-VN');
+  } catch (error) {
+    return 'N/A';
+  }
+};
+
+const formatLocalTime = (utcDateString) => {
+  try {
+    const utcDate = new Date(utcDateString);
+    // toLocaleTimeString automatically converts to browser's local timezone
+    return utcDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+  } catch (error) {
+    return 'N/A';
+  }
+};
+
+// Get local timezone offset for display (e.g., "GMT+7" or "UTC+7")
+const getTimezoneOffset = () => {
+  const now = new Date();
+  const offset = -now.getTimezoneOffset() / 60; // Convert minutes to hours
+  const sign = offset >= 0 ? '+' : '';
+  return `UTC${sign}${offset}`;
+};
+
 const AdminNotifications = () => {
   // 1. Dữ liệu giả
   const [notifications, setNotifications] = useState([]);
@@ -43,7 +74,7 @@ const AdminNotifications = () => {
           title: item.title || item.Title || "",
           content: item.content || item.Content || "",
           target: item.target || item.Target || "Tất cả",
-          date: item.date || item.Date || ""
+          createdAt: item.createdAt || item.CreatedAt || item.ThoiGianTao || new Date().toISOString()
         }));
         setNotifications(normalizedData);
       } else {
@@ -157,10 +188,15 @@ const AdminNotifications = () => {
     <div className="p-4">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h3 className="fw-bold">
-          <i className="bi bi-bell me-2"></i>
-          Quản lý thông báo
-        </h3>
+        <div>
+          <h3 className="fw-bold mb-1">
+            <i className="bi bi-bell me-2"></i>
+            Quản lý thông báo
+          </h3>
+          <small className="text-muted">
+            <i className="bi bi-globe me-1"></i>Múi giờ hệ thống: {getTimezoneOffset()}
+          </small>
+        </div>
         <button className="btn btn-primary" onClick={() => handleOpenModal()}>
           <i className="bi bi-plus-circle me-2"></i> Thêm thông báo
         </button>
@@ -203,6 +239,7 @@ const AdminNotifications = () => {
               <tr>
                 <th>#</th>
                 <th>Ngày đăng</th>
+                <th>Khung giờ</th>
                 <th>Tiêu đề</th>
                 <th>Đối tượng</th>
                 <th>Thao tác</th>
@@ -219,7 +256,16 @@ const AdminNotifications = () => {
                 filteredNotifications.map((item, index) => (
                   <tr key={item.id}>
                     <td>{index + 1}</td>
-                    <td>{item.date}</td>
+                    <td>
+                      <small className="text-muted">
+                        {formatLocalDate(item.createdAt)}
+                      </small>
+                    </td>
+                    <td>
+                      <small className="text-muted">
+                        {formatLocalTime(item.createdAt)}
+                      </small>
+                    </td>
                     <td>
                       <div className="fw-medium">{item.title}</div>
                       {/* Thêm phần hiển thị 1 đoạn ngắn nội dung giống cách hiển thị sđt ở AdminUsers */}

@@ -1,12 +1,43 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useStudentClass } from '../../context/StudentClassContext';
+import NotificationPanel from '../../components/NotificationPanel';
+import BaseApi from '../../api/BaseApi';
 
 const Dashboard = () => {
     const { user } = useAuth();
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
     const { classes, currentClass, selectClass, loading, error } = useStudentClass();
     const navigate = useNavigate();
+
+    useEffect(() => {
+        fetchUnreadCount();
+    }, []);
+
+    const fetchUnreadCount = async () => {
+        try {
+            const res = await BaseApi.get('Notification/unread-count');
+            const resData = res.data || res;
+            const count = typeof resData.data === 'number'
+                ? resData.data
+                : resData.success && typeof resData.data === 'number'
+                    ? resData.data
+                    : 0;
+            setUnreadCount(count);
+        } catch (err) {
+            console.error('Error fetching unread count:', err);
+            setUnreadCount(0);
+        }
+    };
+
+    const handleNotificationPanelOpen = (isOpen) => {
+        setShowNotifications(isOpen);
+        if (!isOpen) {
+            fetchUnreadCount();
+        }
+    };
 
     const handleSelectClass = (classId) => {
         selectClass(classId);
@@ -35,10 +66,20 @@ const Dashboard = () => {
                         </span>
                         <span className="fw-bold text-dark">92 Apos</span>
                     </div>
-                    <div className="bg-white p-2 rounded-circle shadow-sm border d-flex align-items-center justify-content-center position-relative" style={{ width: '45px', height: '45px', cursor: 'pointer' }}>
+                    <div 
+                        className="position-relative hover-up bg-white shadow-sm border rounded-circle d-flex align-items-center justify-content-center" 
+                        style={{ width: '45px', height: '45px', cursor: 'pointer' }}
+                        onClick={() => handleNotificationPanelOpen(!showNotifications)}
+                        title="Thông báo"
+                    >
                         <i className="bi bi-bell-fill text-primary fs-5"></i>
-                        <span className="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-white rounded-circle"></span>
+                        {unreadCount > 0 && (
+                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" style={{ fontSize: '10px' }}>
+                                {unreadCount > 99 ? '99+' : unreadCount}
+                            </span>
+                        )}
                     </div>
+                    <NotificationPanel isOpen={showNotifications} onClose={() => handleNotificationPanelOpen(false)} onMarkAsRead={fetchUnreadCount} />
                 </div>
             </div>
 

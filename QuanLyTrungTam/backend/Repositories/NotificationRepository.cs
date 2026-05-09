@@ -33,6 +33,73 @@ namespace backend.Repositories
                 .FirstOrDefaultAsync(t => t.MaThongBao == id && (t.DaXoa == null || t.DaXoa == false));
         }
 
+        public async Task<List<Nguoinhanthongbao>> GetNotificationsByUserIdAsync(Guid userId)
+        {
+            return await _context.Nguoinhanthongbaos
+                .Include(n => n.MaThongBaoNavigation)
+                .Where(n => n.MaNguoiDung == userId 
+                    && (n.DaXoa == null || n.DaXoa == false)
+                    && (n.MaThongBaoNavigation.DaXoa == null || n.MaThongBaoNavigation.DaXoa == false))
+                .OrderByDescending(n => n.MaThongBaoNavigation.ThoiGianTao)
+                .ToListAsync();
+        }
+
+        public async Task<List<Nguoinhanthongbao>> GetUnreadNotificationsByUserIdAsync(Guid userId)
+        {
+            return await _context.Nguoinhanthongbaos
+                .Include(n => n.MaThongBaoNavigation)
+                .Where(n => n.MaNguoiDung == userId 
+                    && (n.DaDoc == null || n.DaDoc == false)
+                    && (n.DaXoa == null || n.DaXoa == false)
+                    && (n.MaThongBaoNavigation.DaXoa == null || n.MaThongBaoNavigation.DaXoa == false))
+                .OrderByDescending(n => n.MaThongBaoNavigation.ThoiGianTao)
+                .ToListAsync();
+        }
+
+        public async Task<int> GetUnreadCountAsync(Guid userId)
+        {
+            return await _context.Nguoinhanthongbaos
+                .Where(n => n.MaNguoiDung == userId 
+                    && (n.DaDoc == null || n.DaDoc == false)
+                    && (n.DaXoa == null || n.DaXoa == false))
+                .CountAsync();
+        }
+
+        public async Task MarkAsReadAsync(Guid userId, Guid notificationId)
+        {
+            var record = await _context.Nguoinhanthongbaos
+                .FirstOrDefaultAsync(n => n.MaNguoiDung == userId && n.MaThongBao == notificationId);
+
+            if (record != null)
+            {
+                record.DaDoc = true;
+                record.NgayDoc = DateTime.UtcNow;
+                record.NguoiSua = userId;
+                record.ThoiGianSua = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+            }
+        }
+
+        public async Task MarkAllAsReadAsync(Guid userId)
+        {
+            var records = await _context.Nguoinhanthongbaos
+                .Where(n => n.MaNguoiDung == userId && (n.DaDoc == null || n.DaDoc == false))
+                .ToListAsync();
+
+            foreach (var record in records)
+            {
+                record.DaDoc = true;
+                record.NgayDoc = DateTime.UtcNow;
+                record.NguoiSua = userId;
+                record.ThoiGianSua = DateTime.UtcNow;
+            }
+
+            if (records.Count > 0)
+            {
+                await _context.SaveChangesAsync();
+            }
+        }
+
         public async Task<Guid> CreateAsync(Thongbao thongBao, List<Guid> receiverIds)
         {
             await _context.Thongbaos.AddAsync(thongBao);
@@ -97,7 +164,6 @@ namespace backend.Repositories
             _context.Thongbaos.Update(thongBao);
             await _context.SaveChangesAsync();
         }
-
 
         public async Task DeleteSoftAsync(Guid id, Guid currentUserId)
         {

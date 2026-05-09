@@ -165,7 +165,6 @@ const Sidebar = () => {
                             <li className="nav-item"><NavLink to="/student/homework-list" className={getNavLinkClass}><i className="bi bi-pencil-square me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Bài tập/bài thi</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/student/reports" className={getNavLinkClass}><i className="bi bi-pie-chart-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Báo cáo thống kê</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/student/homework" className={getNavLinkClass}><i className="bi bi-laptop me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Học chủ động</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/student/notifications" className={getNavLinkClass}><i className="bi bi-bell-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Thông báo</span></NavLink></li>
                         </>
                     )}
 

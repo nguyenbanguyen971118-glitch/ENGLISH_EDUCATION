@@ -169,10 +169,13 @@ export const useMessagingAPI = () => {
 
       const response = await apiClient.post(`messages/conversations/${conversationId}/read`);
       if (response?.status === 401) {
-        return handleUnauthorized('Chưa đăng nhập hoặc token hết hạn khi đánh dấu đã đọc', false);
+        // Không tự động logout ở đây, chỉ log
+        console.warn('Token hết hạn khi đánh dấu đã đọc');
+        return false;
       }
 
       if (!response?.success) {
+        console.warn('Lỗi đánh dấu đã đọc:', response?.message);
         return false;
       }
 
@@ -181,7 +184,7 @@ export const useMessagingAPI = () => {
       console.error('Lỗi kết nối đánh dấu đã đọc:', error);
       return false;
     }
-  }, [token, logout]);
+  }, [token]);
 
   // Đăng ký device token cho push notifications
   const registerDeviceToken = useCallback(async (deviceToken) => {

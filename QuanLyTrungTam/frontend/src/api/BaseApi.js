@@ -176,10 +176,14 @@ class BaseApi {
     }
 }
 
-const DEFAULT_BACKEND_BASE_URL = 'http://localhost:5050';
+const DEFAULT_BACKEND_BASE_URL = import.meta.env.DEV ? '/api' : 'http://localhost:5050';
 
 const normalizeApiBaseUrl = (baseUrl = DEFAULT_BACKEND_BASE_URL) => {
     const trimmedBaseUrl = baseUrl.trim().replace(/\/+$/, '');
+
+    if (trimmedBaseUrl === '') {
+        return '/api';
+    }
 
     if (/\/api$/i.test(trimmedBaseUrl)) {
         return trimmedBaseUrl;
@@ -188,7 +192,16 @@ const normalizeApiBaseUrl = (baseUrl = DEFAULT_BACKEND_BASE_URL) => {
     return `${trimmedBaseUrl}/api`;
 };
 
-const getApiBaseUrl = () => normalizeApiBaseUrl(import.meta.env.VITE_API_BASE_URL?.trim() || DEFAULT_BACKEND_BASE_URL);
+const getApiBaseUrl = () => {
+    const envBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+
+    // Trong môi trường dev, nếu backend được cấu hình localhost thì dùng proxy /api để tránh lỗi CORS
+    if (import.meta.env.DEV && (!envBaseUrl || envBaseUrl.includes('localhost') || envBaseUrl.includes('127.0.0.1'))) {
+        return normalizeApiBaseUrl('/api');
+    }
+
+    return normalizeApiBaseUrl(envBaseUrl || DEFAULT_BACKEND_BASE_URL);
+};
 
 const getSignalRBaseUrl = () => getApiBaseUrl().replace(/\/api$/i, '');
 
