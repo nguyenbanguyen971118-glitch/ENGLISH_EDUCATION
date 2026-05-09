@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -38,7 +39,6 @@ const Dashboard = () => {
             fetchUnreadCount();
         }
     };
-
     const handleSelectClass = (classId) => {
         selectClass(classId);
     };

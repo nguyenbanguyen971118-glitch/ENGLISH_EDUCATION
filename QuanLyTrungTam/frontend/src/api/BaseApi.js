@@ -176,7 +176,9 @@ class BaseApi {
     }
 }
 
+
 const DEFAULT_BACKEND_BASE_URL = import.meta.env.DEV ? '/api' : 'http://localhost:5050';
+
 
 const normalizeApiBaseUrl = (baseUrl = DEFAULT_BACKEND_BASE_URL) => {
     const trimmedBaseUrl = baseUrl.trim().replace(/\/+$/, '');
