@@ -1,71 +1,94 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import BaseApi from "../../api/BaseApi";
 
 /**
  * Chức năng: Hiển thị và quản lý tình trạng điểm danh các lớp học cho admin
+ * Createdby: Trương Quốc Lộc - 08/06/2026
+ * Updatedby: Trương Quốc Lộc - 08/06/2026
  */
-const AdminAttendance = () => {
-    // 1. Dữ liệu giả
-    const [attendances, setAttendances] = useState([
-        {
-            id: 1,
-            classCode: "IELTS-SPK",
-            courseName: "IELTS Speaking: Part 3",
-            teacher: "Steven Dang",
-            date: "24/03/2026",
-            time: "07:55 - 10:35",
-            present: 28,
-            total: 30,
-            status: "Đã điểm danh",
-        },
-        {
-            id: 2,
-            classCode: "HNI-PRI4-006",
-            courseName: "IELTS Reading: Multiple Choice",
-            teacher: "Nguyễn Thị Lan Anh",
-            date: "24/03/2026",
-            time: "07:00 - 09:40",
-            present: 20,
-            total: 30,
-            status: "Đã điểm danh",
-        },
-        {
-            id: 3,
-            classCode: "TEST-002",
-            courseName: "IELTS Mock Test: Listening",
-            teacher: "Ban Khảo Thí",
-            date: "24/03/2026",
-            time: "13:30 - 15:10",
-            present: 0,
-            total: 40,
-            status: "Chưa điểm danh",
-        },
-    ]);
 
-    // State lọc dữ liệu
+const AdminAttendance = () => {
+    // ── State ────────────────────────────────────────────────────────────
+    const [attendances, setAttendances] = useState([]);
+    const [loading, setLoading] = useState(false);
     const [searchTerm, setSearchTerm] = useState("");
     const [filterStatus, setFilterStatus] = useState("Tất cả trạng thái");
 
-    // 2. Hàm xử lý logic
-    const statusColor = (status) => {
+    // ── Fetch API ────────────────────────────────────────────────────────
+    // BaseApi dùng fetch native → phải tự build query string, KHÔNG dùng { params }
+    const fetchAttendances = useCallback(async () => {
+        setLoading(true);
+        try {
+            // Build query string thủ công
+            const queryParams = new URLSearchParams();
+            if (filterStatus !== "Tất cả trạng thái") {
+                queryParams.append("status", filterStatus);
+            }
+            const queryString = queryParams.toString();
+            const endpoint = queryString
+                ? `admin/attendance?${queryString}`
+                : "admin/attendance";
+
+            // BaseApi.get() trả thẳng payload (không có .data wrapper)
+            const resData = await BaseApi.get(endpoint);
+
+            const isArray = Array.isArray(resData);
+            const isSuccess = resData?.success || isArray;
+            const dataList = isArray ? resData : (resData?.data || []);
+
+            if (isSuccess) {
+                const normalized = dataList.map(item => ({
+                    id: item.id || item.Id,
+                    classCode: item.classCode || item.ClassCode || "",
+                    courseName: item.courseName || item.CourseName || "",
+                    teacher: item.teacher || item.Teacher || "Chưa phân công",
+                    date: item.date || item.Date || "",
+                    time: item.time || item.Time || "",
+                    present: item.present ?? item.Present ?? 0,
+                    total: item.total ?? item.Total ?? 0,
+                    status: item.status || item.Status || "Chưa điểm danh",
+                }));
+                setAttendances(normalized);
+            } else {
+                alert("Lỗi từ server: " + (resData?.message || "Không lấy được dữ liệu"));
+            }
+        } catch (error) {
+            if (error.response) {
+                alert(`Lỗi API: Mã ${error.response.status} - ${error.response.statusText}`);
+            } else {
+                alert("Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.");
+            }
+        } finally {
+            setLoading(false);
+        }
+    }, [filterStatus]);
+
+    useEffect(() => {
+        fetchAttendances();
+    }, [fetchAttendances]);
+
+    // ── Helpers ──────────────────────────────────────────────────────────
+    const statusBadgeClass = (status) => {
         if (status === "Đã điểm danh") return "bg-success";
         if (status === "Chưa điểm danh") return "bg-warning text-dark";
         return "bg-secondary";
     };
 
-    // Lọc dữ liệu trước khi hiển thị
+    // Search client-side (teacher & courseName không query được trên API)
     const filteredAttendances = attendances.filter((item) => {
-        const matchSearch =
-            item.classCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            item.teacher.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchStatus =
-            filterStatus === "Tất cả trạng thái" || item.status === filterStatus;
-        return matchSearch && matchStatus;
+        if (!searchTerm.trim()) return true;
+        const q = searchTerm.toLowerCase();
+        return (
+            item.classCode.toLowerCase().includes(q) ||
+            item.courseName.toLowerCase().includes(q) ||
+            item.teacher.toLowerCase().includes(q)
+        );
     });
 
-    // 3. Render
+    // ── Render ───────────────────────────────────────────────────────────
     return (
         <div className="p-4 animate__animated animate__fadeIn">
+
             {/* Header */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h3 className="fw-bold text-dark">
@@ -110,7 +133,8 @@ const AdminAttendance = () => {
                     <table className="table align-middle table-hover mb-0">
                         <thead className="table-light text-muted small">
                             <tr>
-                                <th className="ps-4 border-0">Lớp học / Khóa học</th>
+                                <th className="ps-4 border-0">#</th>
+                                <th className="border-0">Lớp học / Khóa học</th>
                                 <th className="border-0">Giáo viên</th>
                                 <th className="border-0">Thời gian học</th>
                                 <th className="border-0">Tình trạng (Hiện diện)</th>
@@ -119,23 +143,41 @@ const AdminAttendance = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredAttendances.length === 0 ? (
+                            {/* Loading skeleton */}
+                            {loading && Array.from({ length: 4 }).map((_, i) => (
+                                <tr key={`sk-${i}`}>
+                                    {Array.from({ length: 7 }).map((_, j) => (
+                                        <td key={j} className={j === 0 ? "ps-4" : j === 6 ? "pe-4" : ""}>
+                                            <div className="placeholder-glow">
+                                                <span
+                                                    className="placeholder col-12 rounded"
+                                                    style={{ height: j === 1 ? 40 : 20 }}
+                                                />
+                                            </div>
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))}
+
+                            {/* Empty */}
+                            {!loading && filteredAttendances.length === 0 && (
                                 <tr>
-                                    <td colSpan="6" className="text-center py-5 text-muted">
+                                    <td colSpan="7" className="text-center py-5 text-muted">
                                         <i className="bi bi-search fs-1 d-block mb-2"></i>
                                         Không tìm thấy dữ liệu điểm danh nào.
                                     </td>
                                 </tr>
-                            ) : (
-                                filteredAttendances.map((item) => (
+                            )}
+
+                            {/* Data rows */}
+                            {!loading && filteredAttendances.map((item, index) => {
+                                const ratio = item.total > 0 ? item.present / item.total : 0;
+                                return (
                                     <tr key={item.id}>
-                                        <td className="ps-4 py-3">
-                                            <div className="fw-bold text-primary">
-                                                {item.classCode}
-                                            </div>
-                                            <small className="text-muted fw-medium">
-                                                {item.courseName}
-                                            </small>
+                                        <td className="ps-4 text-muted">{index + 1}</td>
+                                        <td className="py-3">
+                                            <div className="fw-bold text-primary">{item.classCode}</div>
+                                            <small className="text-muted fw-medium">{item.courseName}</small>
                                         </td>
                                         <td>
                                             <span className="fw-bold text-secondary">
@@ -145,7 +187,7 @@ const AdminAttendance = () => {
                                         </td>
                                         <td>
                                             <div className="small fw-bold text-dark">
-                                                <i className="bi bi-calendar-event me-1"></i>{" "}
+                                                <i className="bi bi-calendar-event me-1"></i>
                                                 {item.date}
                                             </div>
                                             <small className="text-muted">
@@ -154,33 +196,21 @@ const AdminAttendance = () => {
                                         </td>
                                         <td>
                                             <div className="d-flex align-items-center">
-                                                <span
-                                                    className={`fw-bold fs-6 me-1 ${item.present / item.total < 0.5 ? "text-danger" : "text-success"}`}
-                                                >
+                                                <span className={`fw-bold fs-6 me-1 ${ratio < 0.5 ? "text-danger" : "text-success"}`}>
                                                     {item.present}
                                                 </span>
-                                                <span className="text-muted fw-medium">
-                                                    {" "}
-                                                    / {item.total}
-                                                </span>
+                                                <span className="text-muted fw-medium"> / {item.total}</span>
                                             </div>
-                                            <div
-                                                className="progress mt-1"
-                                                style={{ height: "5px", width: "80%" }}
-                                            >
+                                            <div className="progress mt-1" style={{ height: "5px", width: "80%" }}>
                                                 <div
-                                                    className={`progress-bar ${item.present / item.total < 0.5 ? "bg-danger" : "bg-success"}`}
+                                                    className={`progress-bar ${ratio < 0.5 ? "bg-danger" : "bg-success"}`}
                                                     role="progressbar"
-                                                    style={{
-                                                        width: `${item.total > 0 ? (item.present / item.total) * 100 : 0}%`,
-                                                    }}
-                                                ></div>
+                                                    style={{ width: `${ratio * 100}%` }}
+                                                />
                                             </div>
                                         </td>
                                         <td>
-                                            <span
-                                                className={`badge ${statusColor(item.status)} rounded-pill px-3 py-2 fw-medium shadow-sm`}
-                                            >
+                                            <span className={`badge ${statusBadgeClass(item.status)} rounded-pill px-3 py-2 fw-medium shadow-sm`}>
                                                 {item.status}
                                             </span>
                                         </td>
@@ -193,11 +223,18 @@ const AdminAttendance = () => {
                                             </button>
                                         </td>
                                     </tr>
-                                ))
-                            )}
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
+
+                {/* Footer count */}
+                {!loading && filteredAttendances.length > 0 && (
+                    <div className="card-footer bg-transparent border-0 text-muted small px-4 py-2">
+                        Hiển thị <strong>{filteredAttendances.length}</strong> / <strong>{attendances.length}</strong> buổi học
+                    </div>
+                )}
             </div>
         </div>
     );

@@ -59,6 +59,7 @@ builder.Services.AddScoped<IChatRealtimeNotifier, ChatRealtimeNotifier>();
 builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<NotificationEventService>(); // Service xử lý sự kiện thông báo
+builder.Services.AddScoped<IAdminAttendanceService, AdminAttendanceService>();//Service quản lý điểm danh cho admin
 builder.Services.AddSingleton<IRefreshSessionStore, InMemoryRefreshSessionStore>();
 builder.Services.AddSingleton<IFirebasePushService, FirebasePushService>();
 builder.Services.AddHttpClient();
