@@ -15,7 +15,6 @@ import ParentSchedule from './pages/parent/ParentSchedule';
 import SchedulePage from './pages/student/SchedulePage';
 
 // Import Admin Pages
-import AdminSchedule from './pages/admin/AdminSchedule';
 import AdminCourses from './pages/admin/AdminCourses';
 import AdminClasses from './pages/admin/AdminClasses';
 import AdminCreateClass from "./pages/admin/AdminCreateClass";
@@ -32,6 +31,7 @@ import AdminFunctions from './pages/admin/AdminFunctions';
 
 // Import Teacher Pages
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
+import TeacherClasses from './pages/teacher/TeacherClasses';
 import TeacherProfile from './pages/teacher/TeacherProfile';
 import TeacherMessages from './pages/teacher/TeacherMessages';
 import TeacherExams from './pages/teacher/TeacherExams';
@@ -88,9 +88,6 @@ function App() {
             <Route path="/admin/classes/create" element={<PrivateRoute allowedRoles={['Admin']}><AdminCreateClass /></PrivateRoute>} />
             <Route path="/admin/classes/assign-students" element={<PrivateRoute allowedRoles={['Admin']}><AdminAssignStudent /></PrivateRoute>} />
 
-            <Route path="/admin/schedules" element={<PrivateRoute allowedRoles={['Admin']}><AdminSchedule /></PrivateRoute>} />
-
-
             <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><AdminAttendance /></PrivateRoute>} />
 
             <Route path="/admin/exams" element={<PrivateRoute allowedRoles={['Admin']}><AdminAssignment /></PrivateRoute>} />
@@ -119,7 +116,7 @@ function App() {
             {/* --- NHÓM GIÁO VIÊN (TEACHER) --- */}
             <Route path="/teacher" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherDashboard /></PrivateRoute>} />
             <Route path="/teacher/schedule" element={<PrivateRoute requiredPermissions={['PAGE_TEACHER_SCHEDULE_VIEW']}><TeacherSchedule /></PrivateRoute>} />
-            <Route path="/teacher/classes" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Quản lý lớp học" /></PrivateRoute>} />
+            <Route path="/teacher/classes" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherClasses /></PrivateRoute>} />
             <Route path="/teacher/exams" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherExams /></PrivateRoute>} />
             <Route path="/teacher/grading" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Chấm điểm" /></PrivateRoute>} />
             <Route path="/teacher/content" element={<PrivateRoute allowedRoles={['Giao_Vien']}><AdminStudyContent /></PrivateRoute>} />
