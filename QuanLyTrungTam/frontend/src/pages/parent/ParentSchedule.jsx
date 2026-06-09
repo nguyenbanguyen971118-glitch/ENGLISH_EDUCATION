@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../../api/BaseApi';
 import ScheduleTable from '../../components/ScheduleTable';
+import { formatPeriodLabel, getSessionLabelFromPeriod } from '../../constants/scheduleTime';
 
 const ParentSchedule = () => {
     const [scheduleData, setScheduleData] = useState([]);
@@ -97,15 +98,6 @@ const ParentSchedule = () => {
 
             const data = response?.data || response;
 
-            // Map slot numbers to session names
-            const getSessionFromSlot = (slotId, slotEndId) => {
-                if (!slotId) return 'Sáng';
-                const slot = Number(slotId);
-                if (slot <= 2) return 'Sáng';
-                if (slot <= 6) return 'Chiều';
-                return 'Tối';
-            };
-
             // Transform API data to match ScheduleTable format
             const transformedData = (data?.schedules || []).map(schedule => {
                 // Format ngayHoc to YYYY-MM-DD
@@ -118,10 +110,10 @@ const ParentSchedule = () => {
                 return {
                     id: schedule.id,
                     date: dateStr,
-                    slot: getSessionFromSlot(schedule.slotId, schedule.slotEndId),
+                    slot: getSessionLabelFromPeriod(schedule.slotId),
                     subject: schedule.subject,
                     code: schedule.classCode,
-                    period: `${schedule.slotId}-${schedule.slotEndId}`,
+                    period: formatPeriodLabel(schedule.slotId, schedule.slotEndId),
                     room: schedule.room,
                     teacher: schedule.teacher,
                     type: 'theory',

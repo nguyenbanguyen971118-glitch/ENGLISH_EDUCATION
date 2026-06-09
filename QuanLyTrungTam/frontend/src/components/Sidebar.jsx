@@ -69,23 +69,26 @@ const Sidebar = () => {
         },
         {
             code: 'PAGE_TEACHER_SCHEDULE_VIEW',
+            roles: ['Giao_Vien'],
             to: '/teacher/schedule',
             icon: 'bi bi-calendar-event',
             label: 'Quản lý lịch dạy'
         },
         {
             code: 'PAGE_STUDENT_SCHEDULE_VIEW',
+            roles: ['Hoc_Sinh'],
             to: '/student/schedule',
             icon: 'bi bi-calendar3',
             label: 'Quản lý lịch học'
         },
         {
             code: 'PAGE_PARENT_SCHEDULE_VIEW',
+            roles: ['Phu_Huynh'],
             to: '/parent/schedule',
             icon: 'bi bi-calendar3',
             label: 'Xem lịch học'
         }
-    ].filter((item) => hasPermission(item.code));
+    ].filter((item) => hasPermission(item.code) && (!item.roles || item.roles.includes(user?.role)));
 
     return (
         <div className="col-md-3 col-lg-2 bg-white d-flex flex-column vh-100 sticky-top border-end shadow-sm p-3" style={{ fontFamily: "'Montserrat', sans-serif" }}>
@@ -141,7 +144,6 @@ const Sidebar = () => {
                         <>
                             <li className="nav-item"><NavLink to="/admin/functions" className={getNavLinkClass}><i className="bi bi-toggle-on me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý chức năng</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/admin/courses" className={getNavLinkClass}><i className="bi bi-journal-bookmark-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý khóa học</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/admin/schedules" className={getNavLinkClass}><i className="bi bi-calendar-check-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Lịch dạy và học</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/admin/content" className={getNavLinkClass}><i className="bi bi-file-earmark-richtext-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Nội dung học tập</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/admin/exams" className={getNavLinkClass}><i className="bi bi-journal-code me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Bài tập - Đề thi</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/admin/attendance" className={getNavLinkClass}><i className="bi bi-clipboard-check-fill me-3 fs-5"></i> <span style={{ fontSize: '14px' }}>Quản lý Điểm danh</span></NavLink></li>

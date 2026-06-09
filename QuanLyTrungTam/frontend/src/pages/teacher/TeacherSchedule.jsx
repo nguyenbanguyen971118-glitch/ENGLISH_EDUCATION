@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import ScheduleTable from '../../components/ScheduleTable';
 import { useAuth } from '../../context/AuthContext';
 import apiClient from '../../api/BaseApi';
+import { formatPeriodLabel, getAvailablePeriodRanges, getSessionLabelFromPeriod } from '../../constants/scheduleTime';
 
 const TeacherSchedule = () => {
     const { user } = useAuth();
-    const [currentDate, setCurrentDate] = useState(new Date("2026-05-06"));
+    const [currentDate, setCurrentDate] = useState(() => new Date());
     const [classes, setClasses] = useState([]);
     const [roomsList, setRoomsList] = useState([]);
 
@@ -39,24 +40,6 @@ const TeacherSchedule = () => {
     const [toast, setToast] = useState({ show: false, msg: '', type: 'success' });
 
     // Định nghĩa chi tiết các tiết theo yêu cầu (id, tên, giờ bắt đầu/kết thúc)
-    const slotDefinitions = [
-        { id: 1, name: 'Tiết 1', start: '07:00:00', end: '07:50:00' },
-        { id: 2, name: 'Tiết 2', start: '07:55:00', end: '08:45:00' },
-        { id: 3, name: 'Tiết 3', start: '08:50:00', end: '09:40:00' },
-        { id: 4, name: 'Tiết 4', start: '09:50:00', end: '10:40:00' },
-        { id: 5, name: 'Tiết 5', start: '10:45:00', end: '11:35:00' },
-        { id: 6, name: 'Tiết 6', start: '12:30:00', end: '13:20:00' },
-        { id: 7, name: 'Tiết 7', start: '13:25:00', end: '14:15:00' },
-        { id: 8, name: 'Tiết 8', start: '14:20:00', end: '15:10:00' },
-        { id: 9, name: 'Tiết 9', start: '15:20:00', end: '16:10:00' },
-        { id: 10, name: 'Tiết 10', start: '16:15:00', end: '17:05:00' },
-        { id: 11, name: 'Tiết 11', start: '17:30:00', end: '18:20:00' },
-        { id: 12, name: 'Tiết 12', start: '18:25:00', end: '19:15:00' },
-        { id: 13, name: 'Tiết 13', start: '19:20:00', end: '20:10:00' },
-        { id: 14, name: 'Tiết 14', start: '20:15:00', end: '21:05:00' }
-    ];
-    // derived labels for single-slot display
-    const timeSlots = slotDefinitions.map(s => `${s.name} (${s.start.slice(0,5)} - ${s.end.slice(0,5)})`);
     const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ Nhật'];
     const reasons = [
         'Có việc gia đình đột xuất', 'Trùng lịch họp chuyên môn', 'Vấn đề sức khỏe (Ốm/Bệnh)', 
@@ -97,21 +80,13 @@ const TeacherSchedule = () => {
     };
 
     // Hàm để filter timeSlots dựa trên số tiết được chọn - trả về objects {id,label}
-    const getAvailableSlots = (slotCount) => {
-        const results = [];
-        const total = slotDefinitions.length;
-        const length = Math.max(1, Math.min(slotCount, total));
-        for (let start = 1; start <= total - length + 1; start++) {
-            const end = start + length - 1;
-            const first = slotDefinitions[start - 1];
-            const last = slotDefinitions[end - 1];
-            const id = length === 1 ? `${start}` : `${start}-${end}`;
-            const label = length === 1
-                ? `${first.name} (${first.start.slice(0,5)} - ${first.end.slice(0,5)})`
-                : `${first.name}-${last.name.split(' ')[1]} (${first.start.slice(0,5)} - ${last.end.slice(0,5)})`;
-            results.push({ id, label });
-        }
-        return results;
+    const getAvailableSlots = (slotCount) => getAvailablePeriodRanges(slotCount);
+
+    const formatDateForApi = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}T00:00:00`;
     };
 
     // Handler khi chọn tiết học từ dropdown
@@ -133,22 +108,27 @@ const TeacherSchedule = () => {
         const fetchTeacherSchedule = async () => {
             try {
                 const weekStartDate = new Date(currentDate);
-                weekStartDate.setDate(currentDate.getDate() - currentDate.getDay() + 1); // Monday
+                const dayOfWeek = weekStartDate.getDay();
+                const diff = weekStartDate.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+                weekStartDate.setDate(diff);
+                weekStartDate.setHours(0, 0, 0, 0);
                 
                 // Lấy teacher ID từ multiple sources
-                const teacherId = user?.id || user?.userId || user?.teacherId || user?.sub;
+                const teacherId = user?.profileId || user?.teacherId || user?.id || user?.userId || user?.sub;
                 
                 console.log('User:', user);
                 console.log('TeacherId:', teacherId);
                 
-                const params = { weekStart: weekStartDate.toISOString() };
+                const query = new URLSearchParams({
+                    weekStart: formatDateForApi(weekStartDate),
+                });
                 if (teacherId) {
-                    params.teacherId = teacherId;
+                    query.set('teacherId', teacherId);
                 }
                 
-                console.log('Params:', params);
+                console.log('Params:', Object.fromEntries(query.entries()));
                 
-                const response = await apiClient.get('Schedule/teacher-board', { params });
+                const response = await apiClient.get(`Schedule/teacher-board?${query.toString()}`);
 
 // In thẳng response ra để xem (không chấm data nữa)
 console.log('API response gốc:', response);
@@ -165,12 +145,7 @@ const responseData = response.data ? response.data : response;
 
     // Sửa chữ response.data thành responseData
     const transformed = responseData.schedules.map(schedule => {
-        let slot = 'Sáng'; // default
-        if (schedule.slotId >= 4 && schedule.slotId <= 6) {
-            slot = 'Chiều';
-        } else if (schedule.slotId >= 7) {
-            slot = 'Tối';
-        }
+        const slot = getSessionLabelFromPeriod(schedule.slotId);
             // Ensure every class has a code: prefer API's classCode, else try to map by class name
             let code = schedule.classCode;
             if (!code) {
@@ -187,7 +162,7 @@ const responseData = response.data ? response.data : response;
                 teacher: (schedule.teacher && schedule.teacher !== 'Giáo viên') ? schedule.teacher : teacherNameFallback,
                 maPhongHoc: schedule.maPhongHoc || null,
                 room: schedule.room,
-                period: `Tiết ${schedule.slotId}${schedule.slotEndId ? '-' + schedule.slotEndId : ''}`,
+                period: formatPeriodLabel(schedule.slotId, schedule.slotEndId),
                 time: `${schedule.slotId}:00`,
                 date: schedule.ngayHoc,
                 slot: slot,
@@ -364,7 +339,7 @@ const responseData = response.data ? response.data : response;
                     </button>
 
                     <button className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm hover-scale" 
-                            onClick={() => setCurrentDate(new Date("2026-02-26"))} style={{ height: '40px' }}>
+                            onClick={() => setCurrentDate(new Date())} style={{ height: '40px' }}>
                         Hiện tại
                     </button>
                     

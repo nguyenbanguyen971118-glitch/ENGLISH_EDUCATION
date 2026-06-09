@@ -1,4 +1,5 @@
 import React, { useMemo } from 'react';
+import { SESSION_LABELS } from '../constants/scheduleTime';
 
 const ScheduleTable = ({ data = [], currentViewDate }) => {
     // Logic tính toán 7 ngày trong tuần (từ Thứ 2 đến Chủ Nhật)
@@ -24,7 +25,7 @@ const ScheduleTable = ({ data = [], currentViewDate }) => {
     }, [currentViewDate]);
 
     
-    const sessions = ['Sáng', 'Chiều', 'Tối'];
+    const sessions = SESSION_LABELS;
 
     return (
         <div className="table-responsive border bg-white shadow-sm" style={{ borderRadius: '12px' }}>

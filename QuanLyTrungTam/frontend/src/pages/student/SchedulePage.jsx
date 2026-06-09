@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import apiClient from "../../api/BaseApi";
 import ScheduleTable from "../../components/ScheduleTable";
 import { useAuth } from "../../context/AuthContext";
+import { formatPeriodLabel, getSessionLabelFromPeriod } from "../../constants/scheduleTime";
 
 const SchedulePage = () => {
     const [viewDate, setViewDate] = useState(new Date());
@@ -52,13 +53,6 @@ const SchedulePage = () => {
                 const day = String(date.getDate()).padStart(2, '0');
                 return `${year}-${month}-${day}`;
             };
-
-            const getSessionLabel = (slotId) => {
-                if (slotId >= 7) return 'Tối';
-                if (slotId >= 4) return 'Chiều';
-                return 'Sáng';
-            };
-
             // Transform API data to match ScheduleTable format
             let transformedData = (data?.schedules || []).map(schedule => ({
                 id: schedule.id,
@@ -66,10 +60,10 @@ const SchedulePage = () => {
                 subject: schedule.subject,
                 teacher: schedule.teacher,
                 room: schedule.room,
-                period: `Tiết ${schedule.slotId}${schedule.slotEndId ? '-' + schedule.slotEndId : ''}`,
+                period: formatPeriodLabel(schedule.slotId, schedule.slotEndId),
                 time: `${schedule.slotId}:00`,
                 date: formatDateForTable(schedule.ngayHoc),
-                slot: getSessionLabel(schedule.slotId),
+                slot: getSessionLabelFromPeriod(schedule.slotId),
                 type: 'theory'
             }));
 

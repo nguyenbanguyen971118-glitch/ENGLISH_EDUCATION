@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import apiClient from '../api/BaseApi';
+import { formatPeriodLabel } from '../constants/scheduleTime';
 
 const StudentClassDetail = ({ classId }) => {
     const [classDetail, setClassDetail] = useState(null);
@@ -170,7 +171,7 @@ const StudentClassDetail = ({ classId }) => {
                                                         </span>
                                                         <span>
                                                             <i className="bi bi-clock me-1"></i>
-                                                            Ca {schedule.slotId}-{schedule.slotEndId}
+                                                            {formatPeriodLabel(schedule.slotId, schedule.slotEndId)}
                                                         </span>
                                                         <span>
                                                             <i className="bi bi-door-closed me-1"></i>

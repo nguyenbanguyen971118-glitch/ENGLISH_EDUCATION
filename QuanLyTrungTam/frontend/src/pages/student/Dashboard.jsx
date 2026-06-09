@@ -5,16 +5,20 @@ import { useAuth } from '../../context/AuthContext';
 import { useStudentClass } from '../../context/StudentClassContext';
 import NotificationPanel from '../../components/NotificationPanel';
 import BaseApi from '../../api/BaseApi';
+import { p0Api } from '../../api/p0Api';
 
 const Dashboard = () => {
     const { user } = useAuth();
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [attendanceRows, setAttendanceRows] = useState([]);
+    const [attendanceLoading, setAttendanceLoading] = useState(true);
     const { classes, currentClass, selectClass, loading, error } = useStudentClass();
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchUnreadCount();
+        fetchAttendanceRows();
     }, []);
 
     const fetchUnreadCount = async () => {
@@ -45,6 +49,28 @@ const Dashboard = () => {
 
     const handleViewSchedule = () => {
         navigate('/student/schedule');
+    };
+
+    const fetchAttendanceRows = async () => {
+        setAttendanceLoading(true);
+        try {
+            setAttendanceRows(await p0Api.students.attendance());
+        } catch (err) {
+            console.error('Error fetching student attendance:', err);
+            setAttendanceRows([]);
+        } finally {
+            setAttendanceLoading(false);
+        }
+    };
+
+    const renderAttendanceBadge = (status, label) => {
+        const className = {
+            present: 'bg-success',
+            absent: 'bg-danger',
+            late: 'bg-warning text-dark',
+            excused: 'bg-primary',
+        }[status] || 'bg-secondary';
+        return <span className={`badge ${className}`}>{label || 'Chua diem danh'}</span>;
     };
 
     return (
@@ -203,6 +229,44 @@ const Dashboard = () => {
             </div>
 
             {/* LỚP HỌC HÔM NAY */}
+            <div className="mb-4">
+                <div className="d-flex align-items-center mb-4">
+                    <div className="bg-success rounded-3 p-2 me-3"><i className="bi bi-clipboard-check text-white"></i></div>
+                    <h5 className="fw-bold mb-0 text-dark">Diem danh gan day</h5>
+                </div>
+
+                <div className="bg-white rounded-5 p-4 shadow-sm border">
+                    {attendanceLoading ? (
+                        <div className="text-center py-4">Dang tai diem danh...</div>
+                    ) : attendanceRows.length === 0 ? (
+                        <div className="text-center text-muted py-4">Chua co du lieu diem danh. Khi giao vien diem danh, trang thai se hien thi tai day.</div>
+                    ) : (
+                        <div className="table-responsive">
+                            <table className="table align-middle mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Lop</th>
+                                        <th>Ngay hoc</th>
+                                        <th>Trang thai</th>
+                                        <th>Ghi chu</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {attendanceRows.slice(0, 5).map((row) => (
+                                        <tr key={`${row.classId}-${row.sessionId}`}>
+                                            <td>{row.className}</td>
+                                            <td>{row.sessionDate}</td>
+                                            <td>{renderAttendanceBadge(row.status, row.statusLabel)}</td>
+                                            <td>{row.note || '-'}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
+                </div>
+            </div>
+
             <div className="mb-4">
                 <div className="d-flex align-items-center mb-4">
                     <div className="bg-danger rounded-3 p-2 me-3"><i className="bi bi-calendar2-check text-white"></i></div>

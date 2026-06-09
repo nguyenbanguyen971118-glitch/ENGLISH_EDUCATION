@@ -1,9 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import apiClient from '../../api/BaseApi';
+import { PERIODS as SHARED_PERIODS } from '../../constants/scheduleTime';
 
 // Admin schedules should be assigned by individual periods (tiết) rather than sessions (ca).
 // Define 12 periods per day; times can be adjusted if you have exact mappings.
-const PERIODS = Array.from({ length: 12 }).map((_, i) => ({ id: i + 1, name: `Tiết ${i + 1}`, time: '' }));
+const PERIODS = SHARED_PERIODS.map((period) => ({
+    id: period.id,
+    name: period.name,
+    time: `${period.start} - ${period.end}`,
+}));
 
 const getWeekStart = (dateInWeek) => {
     const date = new Date(dateInWeek);
