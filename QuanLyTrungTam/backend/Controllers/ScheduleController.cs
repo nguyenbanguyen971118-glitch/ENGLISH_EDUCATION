@@ -74,11 +74,51 @@ namespace backend.Controllers
             return room ?? "Chưa gán phòng";
         }
 
+        private async Task EnsureTietHocSeedAsync()
+        {
+            var existing = await _db.Tiethocs.Select(t => t.MaTiet).ToListAsync();
+            var slots = new (int Id, string Name, string Start, string End)[]
+            {
+                (1, "Tiet 1", "07:00:00", "07:50:00"),
+                (2, "Tiet 2", "07:55:00", "08:45:00"),
+                (3, "Tiet 3", "08:50:00", "09:40:00"),
+                (4, "Tiet 4", "09:50:00", "10:40:00"),
+                (5, "Tiet 5", "10:45:00", "11:35:00"),
+                (6, "Tiet 6", "12:30:00", "13:20:00"),
+                (7, "Tiet 7", "13:25:00", "14:15:00"),
+                (8, "Tiet 8", "14:20:00", "15:10:00"),
+                (9, "Tiet 9", "15:20:00", "16:10:00"),
+                (10, "Tiet 10", "16:15:00", "17:05:00"),
+                (11, "Tiet 11", "17:30:00", "18:20:00"),
+                (12, "Tiet 12", "18:25:00", "19:15:00"),
+                (13, "Tiet 13", "19:20:00", "20:10:00"),
+                (14, "Tiet 14", "20:15:00", "21:05:00")
+            };
+
+            foreach (var slot in slots.Where(s => !existing.Contains(s.Id)))
+            {
+                _db.Tiethocs.Add(new Tiethoc
+                {
+                    MaTiet = slot.Id,
+                    TenTiet = slot.Name,
+                    GioBatDau = TimeOnly.Parse(slot.Start),
+                    GioKetThuc = TimeOnly.Parse(slot.End),
+                    TrangThai = true,
+                    DaXoa = false,
+                    ThoiGianTao = DateTime.UtcNow
+                });
+            }
+
+            await _db.SaveChangesAsync();
+        }
+
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateBuoiHocDto dto)
         {
             if (dto.MaTietBatDau > dto.MaTietKetThuc)
                 return BadRequest(new { error = "MaTietBatDau must be <= MaTietKetThuc" });
+
+            await EnsureTietHocSeedAsync();
 
             var date = DateOnly.FromDateTime(dto.NgayHoc.Date);
 
@@ -853,15 +893,15 @@ namespace backend.Controllers
                 .ThenInclude(hs => hs.MaNguoiDungNavigation)
                 .ToListAsync();
 
-            var studentNamesById = await _db.Hocsinhlophocs
-                .Where(h => parentStudents.Contains(h.MaHocSinh) && 
-                           (h.DaXoa == null || h.DaXoa == false) && 
+            var studentNamesById = await _db.Hocsinhs
+                .Where(h => parentStudents.Contains(h.MaHocSinh) &&
+                           (h.DaXoa == null || h.DaXoa == false) &&
                            (h.TrangThai == null || h.TrangThai == true))
                 .Select(h => new
                 {
                     h.MaHocSinh,
-                    HoTen = h.MaHocSinhNavigation.MaNguoiDungNavigation.HoTen,
-                    TenDangNhap = h.MaHocSinhNavigation.MaNguoiDungNavigation.TenDangNhap
+                    HoTen = h.MaNguoiDungNavigation.HoTen,
+                    TenDangNhap = h.MaNguoiDungNavigation.TenDangNhap
                 })
                 .ToDictionaryAsync(
                     x => x.MaHocSinh,

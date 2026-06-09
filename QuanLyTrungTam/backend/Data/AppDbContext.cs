@@ -1712,10 +1712,12 @@ public partial class AppDbContext : DbContext
             entity.HasKey(e => e.MaYeuCau).HasName("PRIMARY");
 
             entity.ToTable("yeucaulichday");
+            entity.Ignore(e => e.GhiChuAdmin);
+            entity.Ignore(e => e.LoaiYeuCau);
+            entity.Ignore(e => e.MaPhongHocDeXuat);
+            entity.Ignore(e => e.MaPhongHocDeXuatNavigation);
 
             entity.HasIndex(e => e.MaBuoiHoc, "MaBuoiHoc");
-
-                entity.HasIndex(e => e.MaPhongHocDeXuat, "MaPhongHocDeXuat");
 
             entity.HasIndex(e => e.MaGiangVien, "MaGiangVien");
 
@@ -1731,9 +1733,6 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.DaXoa).HasDefaultValueSql("'0'");
             entity.Property(e => e.LyDo).HasColumnType("text");
             entity.Property(e => e.MaBuoiHoc)
-                .UseCollation("ascii_general_ci")
-                .HasCharSet("ascii");
-            entity.Property(e => e.MaPhongHocDeXuat)
                 .UseCollation("ascii_general_ci")
                 .HasCharSet("ascii");
             entity.Property(e => e.MaGiangVien)
@@ -1779,9 +1778,6 @@ public partial class AppDbContext : DbContext
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("yeucaulichday_ibfk_5");
 
-            entity.HasOne(d => d.MaPhongHocDeXuatNavigation).WithMany()
-                .HasForeignKey(d => d.MaPhongHocDeXuat)
-                .HasConstraintName("FK_yeucaulichday_phonghoc_MaPhongHocDeXuat");
         });
 
         OnModelCreatingPartial(modelBuilder);
