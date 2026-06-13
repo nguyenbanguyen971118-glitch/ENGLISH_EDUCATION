@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authApi } from '../api';
+import studentService from '../api/studentService';
+import teacherService from '../api/teacherService';
+import parentService from '../api/parentService';
 
 // Import tài nguyên ảnh
 import anhNen1 from '../assets/avtLogin2.jpg'; 
@@ -16,7 +19,7 @@ const Login = () => {
     const [loading, setLoading] = useState(false);
     const [formError, setFormError] = useState('');
     const [remember, setRemember] = useState(false);
-    const { login } = useAuth();
+    const { login, updateUser } = useAuth();
     const navigate = useNavigate();
 
     const bannerImages = [avtLogin,anhNen1, anhNen2, anhNen3];
@@ -62,7 +65,44 @@ const Login = () => {
                 // 2. Lưu thông tin người dùng vào Context
                 login(userData);
 
-                // 3. ĐIỀU HƯỚNG TỰ ĐỘNG THEO VAI TRÒ (ROLE)
+                // 3. Lấy dữ liệu profile theo role để cập nhật avatar
+                try {
+                    let profileData = null;
+                    let profileService = studentService;
+
+                    if (userData.role === 'Hoc_Sinh') {
+                        // Bổ sung luồng học sinh để avatar/tên hiển thị đúng ngay sau đăng nhập.
+                        profileData = await studentService.getProfile();
+                        profileService = studentService;
+                    } else if (userData.role === 'Giao_Vien') {
+                        // Bổ sung luồng giảng viên để avatar/tên hiển thị đúng ngay sau đăng nhập.
+                        profileData = await teacherService.getProfile();
+                        profileService = teacherService;
+                    } else if (userData.role === 'Phu_Huynh') {
+                        // Bổ sung luồng phụ huynh để avatar/tên hiển thị đúng ngay sau đăng nhập.
+                        profileData = await parentService.getProfile();
+                        profileService = parentService;
+                    }
+                    
+                    // Nếu lấy được profile data, cập nhật context với thông tin avatar
+                    if (profileData) {
+                        updateUser((prevUser) => ({
+                            ...prevUser,
+                            hoTen: profileData?.HoTen || profileData?.hoTen || prevUser?.hoTen,
+                            fullName: profileData?.HoTen || profileData?.hoTen || prevUser?.fullName,
+                            name: profileData?.HoTen || profileData?.hoTen || prevUser?.name,
+                            AnhDaiDien: profileData?.AnhDaiDien || profileData?.anhDaiDien || prevUser?.AnhDaiDien,
+                            anhDaiDien: profileData?.AnhDaiDien || profileData?.anhDaiDien || prevUser?.anhDaiDien,
+                            avatarUrl: profileData?.AnhDaiDien || profileData?.anhDaiDien || prevUser?.avatarUrl,
+                            avatar: profileService.resolveStoredFileUrl(profileData?.AnhDaiDien || profileData?.anhDaiDien) || prevUser?.avatar,
+                        }));
+                    }
+                } catch (profileError) {
+                    // Nếu lỗi khi lấy profile, vẫn tiếp tục (không block login)
+                    console.error('Lỗi khi lấy profile:', profileError);
+                }
+
+                // 4. ĐIỀU HƯỚNG TỰ ĐỘNG THEO VAI TRÒ (ROLE)
                 // Lưu ý: data.role trả về từ Backend phải khớp với các case bên dưới
                 switch (userData.role) {
                     case 'Admin':

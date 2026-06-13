@@ -46,6 +46,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseMySql(connectionString, ServerVersion.Parse("8.0.45-mysql"))
 );
 
+
 // 4. Đăng ký các tầng Repository / Service / Helper.
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IPermissionRepository, PermissionRepository>();
@@ -65,6 +66,7 @@ builder.Services.AddSingleton<IFirebasePushService, FirebasePushService>();
 builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<PermissionBootstrapService>();
+builder.Services.AddScoped<AssignmentCatalogBootstrapService>();
 builder.Services.AddScoped<UserBootstrapHelper>();
 builder.Services.AddScoped<PermissionHelper>(); // Helper kiểm tra quyền chi tiết.
 builder.Services.AddScoped<IScheduleChangeRequestService, ScheduleChangeRequestService>();
@@ -150,6 +152,9 @@ using (var scope = app.Services.CreateScope())
     var bootstrapService = scope.ServiceProvider.GetRequiredService<PermissionBootstrapService>();
     await bootstrapService.EnsureInitializedAsync();
 
+    var assignmentCatalogBootstrapService = scope.ServiceProvider.GetRequiredService<AssignmentCatalogBootstrapService>();
+    await assignmentCatalogBootstrapService.EnsureInitializedAsync();
+
     var userBootstrapHelper = scope.ServiceProvider.GetRequiredService<UserBootstrapHelper>();
     var isUserBootstrapInitialized = await userBootstrapHelper.IsInitializedAsync();
     if (!isUserBootstrapInitialized)
@@ -178,6 +183,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseMiddleware<AuthorizationMiddleware>();  
 app.UseAuthorization();
+app.UseStaticFiles();
 
 // 8. Map controller endpoints.
 app.MapControllers();

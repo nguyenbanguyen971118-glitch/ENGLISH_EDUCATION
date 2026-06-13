@@ -39,6 +39,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Dapan> Dapans { get; set; }
 
+    public virtual DbSet<Dapandiendkhuyet> Dapandiendkhuyets { get; set; }
+
     public virtual DbSet<Diemdanh> Diemdanhs { get; set; }
 
     public virtual DbSet<Dinhkem> Dinhkems { get; set; }
@@ -105,7 +107,6 @@ public partial class AppDbContext : DbContext
     {
         // Connection được cấu hình từ Program.cs qua AddDbContext.
     }
-
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder
@@ -386,7 +387,7 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.MaChiTiet)
                 .UseCollation("ascii_general_ci")
                 .HasCharSet("ascii");
-            entity.Property(e => e.CauTraLoiDienKhuyet).HasColumnType("text");
+            entity.Property(e => e.CauTraLoiHocSinh).HasColumnType("text");
             entity.Property(e => e.DaXoa).HasDefaultValueSql("'0'");
             entity.Property(e => e.DiemDatDuoc)
                 .HasPrecision(5, 2)
@@ -481,11 +482,16 @@ public partial class AppDbContext : DbContext
 
             entity.HasIndex(e => e.MaKhoaHoc, "MaKhoaHoc1");
 
+            entity.HasIndex(e => e.MaLopHoc, "idx_ChuongHoc_MaLopHoc");
+
             entity.Property(e => e.MaChuong)
                 .UseCollation("ascii_general_ci")
                 .HasCharSet("ascii");
             entity.Property(e => e.DaXoa).HasDefaultValueSql("'0'");
             entity.Property(e => e.MaKhoaHoc)
+                .UseCollation("ascii_general_ci")
+                .HasCharSet("ascii");
+            entity.Property(e => e.MaLopHoc)
                 .UseCollation("ascii_general_ci")
                 .HasCharSet("ascii");
             entity.Property(e => e.MoTa).HasColumnType("text");
@@ -506,6 +512,10 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.MaKhoaHoc)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("chuonghoc_ibfk_1");
+
+            entity.HasOne(d => d.MaLopHocNavigation).WithMany(p => p.Chuonghocs)
+                .HasForeignKey(d => d.MaLopHoc)
+                .HasConstraintName("chuonghoc_ibfk_2");
         });
 
         modelBuilder.Entity<Dapan>(entity =>
@@ -516,10 +526,13 @@ public partial class AppDbContext : DbContext
 
             entity.HasIndex(e => e.MaCauHoi, "MaCauHoi");
 
+            entity.HasIndex(e => new { e.MaCauHoi, e.DaXoa, e.TrangThai }, "idx_DapAn_CauHoi_Active");
+
             entity.Property(e => e.MaDapAn)
                 .UseCollation("ascii_general_ci")
                 .HasCharSet("ascii");
             entity.Property(e => e.DaXoa).HasDefaultValueSql("'0'");
+            entity.Property(e => e.GiaTriDoiChieu).HasMaxLength(255);
             entity.Property(e => e.LaDapAnDung).HasDefaultValueSql("'0'");
             entity.Property(e => e.MaCauHoi)
                 .UseCollation("ascii_general_ci")
@@ -531,16 +544,56 @@ public partial class AppDbContext : DbContext
                 .UseCollation("ascii_general_ci")
                 .HasCharSet("ascii");
             entity.Property(e => e.NoiDungDapAn).HasColumnType("text");
+            entity.Property(e => e.TenDapAn).HasMaxLength(10);
             entity.Property(e => e.ThoiGianSua).HasColumnType("datetime");
             entity.Property(e => e.ThoiGianTao)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime");
+            entity.Property(e => e.ThuTu).HasDefaultValueSql("'0'");
             entity.Property(e => e.TrangThai).HasDefaultValueSql("'1'");
 
             entity.HasOne(d => d.MaCauHoiNavigation).WithMany(p => p.Dapans)
                 .HasForeignKey(d => d.MaCauHoi)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("dapan_ibfk_1");
+        });
+
+        modelBuilder.Entity<Dapandiendkhuyet>(entity =>
+        {
+            entity.HasKey(e => e.MaDapAnDien).HasName("PRIMARY");
+
+            entity.ToTable("dapandiendkhuyet");
+
+            entity.HasIndex(e => e.MaCauHoi, "MaCauHoi1");
+
+            entity.HasIndex(e => new { e.MaCauHoi, e.DaXoa, e.TrangThai }, "idx_DapAnDienKhuyet_CauHoi_Active");
+
+            entity.Property(e => e.MaDapAnDien)
+                .UseCollation("ascii_general_ci")
+                .HasCharSet("ascii");
+            entity.Property(e => e.DaXoa).HasDefaultValueSql("'0'");
+            entity.Property(e => e.DapAnChuan).HasColumnType("text");
+            entity.Property(e => e.DapAnThayThe).HasColumnType("text");
+            entity.Property(e => e.MaCauHoi)
+                .UseCollation("ascii_general_ci")
+                .HasCharSet("ascii");
+            entity.Property(e => e.NguoiSua)
+                .UseCollation("ascii_general_ci")
+                .HasCharSet("ascii");
+            entity.Property(e => e.NguoiTao)
+                .UseCollation("ascii_general_ci")
+                .HasCharSet("ascii");
+            entity.Property(e => e.PhanBietHoaThuong).HasDefaultValueSql("'0'");
+            entity.Property(e => e.ThoiGianSua).HasColumnType("datetime");
+            entity.Property(e => e.ThoiGianTao)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("datetime");
+            entity.Property(e => e.TrangThai).HasDefaultValueSql("'1'");
+
+            entity.HasOne(d => d.MaCauHoiNavigation).WithMany(p => p.Dapandiendkhuyets)
+                .HasForeignKey(d => d.MaCauHoi)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("dapandiendkhuyet_ibfk_1");
         });
 
         modelBuilder.Entity<Diemdanh>(entity =>
@@ -932,14 +985,21 @@ public partial class AppDbContext : DbContext
 
             entity.HasIndex(e => e.MaKhoaHoc, "MaKhoaHoc2");
 
+            entity.HasIndex(e => e.MaCauHoiCha, "MaCauHoiCha");
+
             entity.HasIndex(e => e.MucDo, "MucDo");
 
             entity.Property(e => e.MaCauHoi)
                 .UseCollation("ascii_general_ci")
                 .HasCharSet("ascii");
+            entity.Property(e => e.AmThanhLink).HasMaxLength(255);
             entity.Property(e => e.DaXoa).HasDefaultValueSql("'0'");
             entity.Property(e => e.GiaiThichDapAn).HasColumnType("text");
+            entity.Property(e => e.HinhAnhLink).HasMaxLength(255);
             entity.Property(e => e.LoaiCauHoi).HasComment("Trỏ về ChiTietDanhMuc");
+            entity.Property(e => e.MaCauHoiCha)
+                .UseCollation("ascii_general_ci")
+                .HasCharSet("ascii");
             entity.Property(e => e.MaKhoaHoc)
                 .UseCollation("ascii_general_ci")
                 .HasCharSet("ascii");
@@ -956,11 +1016,16 @@ public partial class AppDbContext : DbContext
             entity.Property(e => e.ThoiGianTao)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP")
                 .HasColumnType("datetime");
+            entity.Property(e => e.ThuTu).HasDefaultValueSql("'0'");
             entity.Property(e => e.TrangThai).HasDefaultValueSql("'1'");
 
             entity.HasOne(d => d.LoaiCauHoiNavigation).WithMany(p => p.NganhangcauhoiLoaiCauHoiNavigations)
                 .HasForeignKey(d => d.LoaiCauHoi)
                 .HasConstraintName("nganhangcauhoi_ibfk_2");
+
+            entity.HasOne(d => d.MaCauHoiChaNavigation).WithMany(p => p.InverseMaCauHoiChaNavigation)
+                .HasForeignKey(d => d.MaCauHoiCha)
+                .HasConstraintName("nganhangcauhoi_ibfk_4");
 
             entity.HasOne(d => d.MaKhoaHocNavigation).WithMany(p => p.Nganhangcauhois)
                 .HasForeignKey(d => d.MaKhoaHoc)

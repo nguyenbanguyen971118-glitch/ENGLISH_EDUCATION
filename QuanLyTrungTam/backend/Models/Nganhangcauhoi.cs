@@ -25,6 +25,14 @@ public partial class Nganhangcauhoi
 
     public string? GiaiThichDapAn { get; set; }
 
+    public string? AmThanhLink { get; set; }
+
+    public string? HinhAnhLink { get; set; }
+
+    public Guid? MaCauHoiCha { get; set; }
+
+    public int? ThuTu { get; set; }
+
     public Guid? NguoiTao { get; set; }
 
     public DateTime? ThoiGianTao { get; set; }
@@ -43,7 +51,13 @@ public partial class Nganhangcauhoi
 
     public virtual ICollection<Dapan> Dapans { get; set; } = new List<Dapan>();
 
+    public virtual ICollection<Dapandiendkhuyet> Dapandiendkhuyets { get; set; } = new List<Dapandiendkhuyet>();
+
+    public virtual ICollection<Nganhangcauhoi> InverseMaCauHoiChaNavigation { get; set; } = new List<Nganhangcauhoi>();
+
     public virtual Chitietdanhmuc? LoaiCauHoiNavigation { get; set; }
+
+    public virtual Nganhangcauhoi? MaCauHoiChaNavigation { get; set; }
 
     public virtual Khoahoc MaKhoaHocNavigation { get; set; } = null!;
 

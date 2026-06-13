@@ -1,265 +1,525 @@
-import React, { useState } from 'react';
-import { 
-  Folder, FileText, Video, Plus, Edit, Trash2, 
-  Eye, Download, Search, Upload, Globe, Link as LinkIcon,
-  FileCode, Music, FileSpreadsheet, File 
+﻿import React, { useEffect, useState } from 'react';
+import {
+    AlertCircle,
+    ChevronLeft,
+    ChevronRight,
+    Download,
+    Eye,
+    File,
+    FileArchive,
+    FileCode,
+    FileSpreadsheet,
+    FileText,
+    Folder,
+    Music,
+    Presentation,
+    Search,
+    ShieldCheck,
+    Video
 } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext'; 
+import adminStudyContentService from '../../api/adminStudyContentService';
+import { useAuth } from '../../context/AuthContext';
+
+const ITEMS_PER_PAGE = 5;
+
+const EMPTY_OVERVIEW = {
+    maKhoaHoc: '',
+    tenKhoaHoc: '',
+    maLopHoc: '',
+    tenLớp: '',
+    noiDungHocTap: []
+};
+
+const normalizeDocument = (document) => ({
+    maTaiLieu: document?.MaTaiLieu || document?.maTaiLieu || '',
+    maChuongHoc: document?.MaChuongHoc || document?.maChuongHoc || '',
+    tenTaiLieu: document?.TenTaiLieu || document?.tenTaiLieu || '',
+    linkTaiLieu: document?.LinkTaiLieu || document?.linkTaiLieu || '',
+    moTa: document?.MoTa || document?.moTa || '',
+    loaiTaiLieu: document?.LoaiTaiLieu || document?.loaiTaiLieu || 'File',
+    ngayDang: document?.NgayDang || document?.ngayDang || '',
+    ngayDangHienThi: document?.NgayDangHienThi || document?.ngayDangHienThi || '',
+    laLinkNgoai: Boolean(document?.LaLinkNgoai ?? document?.laLinkNgoai)
+});
+
+const normalizeChapter = (chapter) => ({
+    maChuong: chapter?.MaChuong || chapter?.maChuong || '',
+    maKhoaHoc: chapter?.MaKhoaHoc || chapter?.maKhoaHoc || '',
+    maLopHoc: chapter?.MaLopHoc || chapter?.maLopHoc || '',
+    tenLớp: chapter?.TenLop || chapter?.tenLop || '',
+    tenChuong: chapter?.TenChuong || chapter?.tenChuong || '',
+    moTa: chapter?.MoTa || chapter?.moTa || '',
+    thuTu: chapter?.ThuTu ?? chapter?.thuTu ?? null,
+    taiLieu: Array.isArray(chapter?.TaiLieu || chapter?.taiLieu)
+        ? (chapter.TaiLieu || chapter.taiLieu).map(normalizeDocument)
+        : []
+});
+
+const normalizeOverview = (overview) => ({
+    maKhoaHoc: overview?.MaKhoaHoc || overview?.maKhoaHoc || '',
+    tenKhoaHoc: overview?.TenKhoaHoc || overview?.tenKhoaHoc || '',
+    maLopHoc: overview?.MaLopHoc || overview?.maLopHoc || '',
+    tenLớp: overview?.TenLop || overview?.tenLop || '',
+    noiDungHocTap: Array.isArray(overview?.NoiDungHocTap || overview?.noiDungHocTap)
+        ? (overview.NoiDungHocTap || overview.noiDungHocTap).map(normalizeChapter)
+        : []
+});
+
+const normalizeCourse = (course) => ({
+    id: course?.MaKhoaHoc || course?.maKhoaHoc || '',
+    ten: course?.TenKhoaHoc || course?.tenKhoaHoc || '',
+    soLopHoc: course?.SoLopHoc ?? course?.soLopHoc ?? 0,
+    soChuongHoc: course?.SoChuongHoc ?? course?.soChuongHoc ?? 0
+});
+
+const normalizeClass = (classInfo) => ({
+    id: classInfo?.MaLopHoc || classInfo?.maLopHoc || '',
+    maKhoaHoc: classInfo?.MaKhoaHoc || classInfo?.maKhoaHoc || '',
+    ten: classInfo?.TenLop || classInfo?.tenLop || '',
+    ngayBatDau: classInfo?.NgayBatDau || classInfo?.ngayBatDau || '',
+    ngayKetThuc: classInfo?.NgayKetThuc || classInfo?.ngayKetThuc || ''
+});
+
+const getFileIcon = (fileType) => {
+    switch (fileType) {
+        case 'PDF':
+            return <FileText size={18} className="text-danger me-2" />;
+        case 'Video':
+            return <Video size={18} className="text-info me-2" />;
+        case 'Word':
+            return <FileCode size={18} className="text-primary me-2" />;
+        case 'Excel':
+            return <FileSpreadsheet size={18} className="text-success me-2" />;
+        case 'Audio':
+            return <Music size={18} className="text-warning me-2" />;
+        case 'PowerPoint':
+            return <Presentation size={18} className="text-warning me-2" />;
+        case 'Archive':
+            return <FileArchive size={18} className="text-secondary me-2" />;
+        default:
+            return <File size={18} className="text-secondary me-2" />;
+    }
+};
 
 const AdminStudyContent = () => {
-  const { user } = useAuth(); 
-  const isAdmin = user?.role === 'Admin';
-  const isTeacher = user?.role === 'Giao_Vien';
+    const { user } = useAuth();
+    const [courses, setCourses] = useState([]);
+    const [classes, setClasses] = useState([]);
+    const [overview, setOverview] = useState(EMPTY_OVERVIEW);
+    const [selectedCourse, setSelectedCourse] = useState('');
+    const [selectedClass, setSelectedClass] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [loadingCourses, setLoadingCourses] = useState(true);
+    const [loadingClasses, setLoadingClasses] = useState(false);
+    const [loadingContents, setLoadingContents] = useState(false);
+    const [downloadingId, setDownloadingId] = useState('');
+    const [error, setError] = useState('');
 
-  // --- QUẢN LÝ STATE ---
-  const [selectedCourse, setSelectedCourse] = useState("");
-  const [selectedClass, setSelectedClass] = useState("");
-  const [isRefreshing, setIsRefreshing] = useState(false);
-  
-  const [showModal, setShowModal] = useState(false);
-  const [modalMode, setModalMode] = useState('add'); 
-  const [editDocData, setEditDocData] = useState(null);
+    useEffect(() => {
+        let isMounted = true;
 
-  // State cho việc Xem tài liệu (Preview)
-  const [previewDoc, setPreviewDoc] = useState(null);
-  const [showPreview, setShowPreview] = useState(false);
+        const fetchCourses = async () => {
+            try {
+                const courseOptions = await adminStudyContentService.getCourses();
+                if (!isMounted) {
+                    return;
+                }
 
-  // --- DỮ LIỆU GIẢ LẬP ---
-  const courses = [{ id: "KH01", ten: "IELTS Academic" }, { id: "KH02", ten: "TOEIC Target 650" }];
-  const classes = [{ id: "L01", maKH: "KH01", ten: "IELTS_Sáng_T246" }, { id: "L02", maKH: "KH02", ten: "TOEIC_Tối_T357" }];
-  const chapters = [
-    { id: "C1", maLop: "L01", ten: "Chương 1: Vocabulary & Grammar Foundation" },
-    { id: "C2", maLop: "L01", ten: "Chương 2: Listening Practice" },
-  ];
+                setCourses(Array.isArray(courseOptions) ? courseOptions.map(normalizeCourse) : []);
+                setError('');
+            } catch (err) {
+                if (isMounted) {
+                    setError(err.message || 'Không thể tải danh sách khóa học.');
+                }
+            } finally {
+                if (isMounted) {
+                    setLoadingCourses(false);
+                }
+            }
+        };
 
-  const [studyData, setStudyData] = useState([
-    {
-      maChuong: "C1",
-      tenChuong: "Chương 1: Vocabulary & Grammar Foundation",
-      taiLieu: [
-        { id: 1, ten: "Slide bài giảng Unit 1.pdf", loai: "PDF", date: "21/03/2026", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-        { id: 2, ten: "Video hướng dẫn.mp4", loai: "Video", date: "22/03/2026", url: "https://www.w3schools.com/html/mov_bbb.mp4" }
-      ]
-    }
-  ]);
+        fetchCourses();
 
-  // --- LOGIC XỬ LÝ XEM VÀ TẢI ---
-  const handleView = (doc) => {
-    if (!doc.url) {
-      alert("Tài liệu này chưa có đường dẫn (URL) để xem!");
-      return;
-    }
-    setPreviewDoc(doc);
-    setShowPreview(true);
-  };
+        return () => {
+            isMounted = false;
+        };
+    }, []);
 
-  const handleDownload = (doc) => {
-    if (!doc.url) {
-        alert("Không tìm thấy file để tải!");
-        return;
-    }
-    const link = document.createElement('a');
-    link.href = doc.url;
-    link.setAttribute('download', doc.ten);
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-  };
+    useEffect(() => {
+        let isMounted = true;
 
-  const getFileIcon = (loai) => {
-    switch (loai) {
-      case 'PDF': return <FileText size={16} className="text-danger me-2"/>;
-      case 'Word': return <FileCode size={16} className="text-primary me-2"/>;
-      case 'Excel': return <FileSpreadsheet size={16} className="text-success me-2"/>;
-      case 'Audio': return <Music size={16} className="text-warning me-2"/>;
-      case 'Video': return <Video size={16} className="text-info me-2"/>;
-      default: return <File size={16} className="text-secondary me-2"/>;
-    }
-  };
+        if (!selectedCourse) {
+            setClasses([]);
+            return () => {
+                isMounted = false;
+            };
+        }
 
-  // --- LOGIC CRUD ---
-  const handleOpenAdd = () => { setModalMode('add'); setEditDocData(null); setShowModal(true); };
-  const handleOpenEdit = (doc) => { setModalMode('edit'); setEditDocData(doc); setShowModal(true); };
-  const handleDelete = (chuongId, docId) => {
-    if (window.confirm("Bạn có chắc chắn muốn xóa?")) {
-      setStudyData(prev => prev.map(c => c.maChuong === chuongId ? { ...c, taiLieu: c.taiLieu.filter(d => d.id !== docId) } : c));
-    }
-  };
+        const fetchClasses = async () => {
+            try {
+                setLoadingClasses(true);
+                const classOptions = await adminStudyContentService.getClassesByCourse(selectedCourse);
+                if (!isMounted) {
+                    return;
+                }
 
-  const handleSaveDocument = (newDoc) => {
-    if (modalMode === 'add') {
-      const docToAdd = { id: Date.now(), ...newDoc, date: new Date().toLocaleDateString('en-GB') };
-      setStudyData(prev => prev.map(c => c.maChuong === newDoc.maChuong ? { ...c, taiLieu: [...c.taiLieu, docToAdd] } : c));
-    } else {
-      setStudyData(prev => prev.map(c => ({ ...c, taiLieu: c.taiLieu.map(d => d.id === newDoc.id ? { ...d, ...newDoc } : d) })));
-    }
-    setShowModal(false);
-  };
+                setClasses(Array.isArray(classOptions) ? classOptions.map(normalizeClass) : []);
+                setError('');
+            } catch (err) {
+                if (isMounted) {
+                    setClasses([]);
+                    setError(err.message || 'Không thể tải danh sách lớp học.');
+                }
+            } finally {
+                if (isMounted) {
+                    setLoadingClasses(false);
+                }
+            }
+        };
 
-  return (
-    <div className="container-fluid p-4 bg-light min-vh-100">
-      {/* HEADER */}
-      <div className="d-flex justify-content-between align-items-center mb-4 bg-white p-3 rounded shadow-sm">
-        <div>
-          <h4 className="fw-bold text-primary mb-1">{isAdmin ? "GIÁM SÁT HỌC LIỆU" : "QUẢN LÝ TÀI LIỆU"}</h4>
-          <p className="text-muted mb-0 small text-uppercase">Hệ thống học liệu trực tuyến</p>
-        </div>
-        {isTeacher && (
-          <button className="btn btn-primary d-flex align-items-center gap-2" onClick={handleOpenAdd}>
-            <Plus size={18} /> Thêm tài liệu
-          </button>
-        )}
-      </div>
+        fetchClasses();
 
-      {/* BỘ LỌC */}
-      <div className="card shadow-sm border-0 mb-4 p-3">
-        <div className="row g-3">
-          <div className="col-md-4">
-            <select className="form-select" value={selectedCourse} onChange={(e) => {setSelectedCourse(e.target.value); setSelectedClass("");}}>
-              <option value="">-- Chọn Khóa học --</option>
-              {courses.map(c => <option key={c.id} value={c.id}>{c.ten}</option>)}
-            </select>
-          </div>
-          <div className="col-md-4">
-            <select className="form-select" disabled={!selectedCourse} value={selectedClass} onChange={(e) => setSelectedClass(e.target.value)}>
-              <option value="">-- Chọn lớp --</option>
-              {classes.filter(l => l.maKH === selectedCourse).map(l => <option key={l.id} value={l.id}>{l.ten}</option>)}
-            </select>
-          </div>
-        </div>
-      </div>
+        return () => {
+            isMounted = false;
+        };
+    }, [selectedCourse]);
 
-      {/* BẢNG DỮ LIỆU */}
-      {selectedClass ? (
-        <div className="card shadow-sm border-0">
-          <table className="table table-hover align-middle mb-0">
-            <thead className="table-light">
-              <tr>
-                <th className="ps-4">Tên tài liệu</th>
-                <th>Định dạng</th>
-                <th className="text-center">Hành động</th>
-              </tr>
-            </thead>
-            <tbody>
-              {studyData.map((chuong) => (
-                <React.Fragment key={chuong.maChuong}>
-                  <tr className="table-info border-0"><td colSpan="3" className="fw-bold ps-4"><Folder size={18} className="me-2"/>{chuong.tenChuong}</td></tr>
-                  {chuong.taiLieu.map((doc) => (
-                    <tr key={doc.id}>
-                      <td className="ps-5">{getFileIcon(doc.loai)} {doc.ten}</td>
-                      <td><span className="badge bg-light text-dark border">{doc.loai}</span></td>
-                      <td className="text-center">
-                        <div className="btn-group">
-                          <button className="btn btn-sm btn-outline-primary" onClick={() => handleView(doc)}><Eye size={14}/></button>
-                          <button className="btn btn-sm btn-outline-secondary" onClick={() => handleDownload(doc)}><Download size={14}/></button>
-                          {isTeacher && (
-                            <>
-                              <button className="btn btn-sm btn-outline-warning" onClick={() => handleOpenEdit(doc)}><Edit size={14}/></button>
-                              <button className="btn btn-sm btn-outline-danger" onClick={() => handleDelete(chuong.maChuong, doc.id)}><Trash2 size={14}/></button>
-                            </>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </React.Fragment>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      ) : (
-        <div className="text-center py-5 bg-white rounded border border-dashed"><Search size={40} className="text-muted opacity-25 mb-2"/><p>Vui lòng chọn khóa và lớp</p></div>
-      )}
+    useEffect(() => {
+        let isMounted = true;
 
-      {/* MODAL THÊM/SỬA */}
-      {showModal && <DocumentModal mode={modalMode} initialData={editDocData} courses={courses} classes={classes} chapters={chapters} defaultCourse={selectedCourse} defaultClass={selectedClass} onClose={() => setShowModal(false)} onSave={handleSaveDocument} />}
+        if (!selectedCourse) {
+            setOverview(EMPTY_OVERVIEW);
+            setCurrentPage(1);
+            return () => {
+                isMounted = false;
+            };
+        }
 
-      {/* MODAL XEM TRƯỚC (PREVIEW) */}
-      {showPreview && <PreviewModal doc={previewDoc} onClose={() => setShowPreview(false)} />}
-    </div>
-  );
-};
+        const fetchContents = async () => {
+            try {
+                setLoadingContents(true);
+                const contentOverview = await adminStudyContentService.getContents(selectedCourse, selectedClass);
+                if (!isMounted) {
+                    return;
+                }
 
-// --- COMPONENT MODAL XEM TRƯỚC ---
-const PreviewModal = ({ doc, onClose }) => {
-  if (!doc) return null;
-  const getPreviewUrl = () => {
-    if (doc.loai === 'Word' || doc.loai === 'Excel') {
-      return `https://docs.google.com/viewer?url=${encodeURIComponent(doc.url)}&embedded=true`;
-    }
-    return doc.url;
-  };
+                setOverview(contentOverview ? normalizeOverview(contentOverview) : EMPTY_OVERVIEW);
+                setCurrentPage(1);
+                setError('');
+            } catch (err) {
+                if (isMounted) {
+                    setOverview(EMPTY_OVERVIEW);
+                    setError(err.message || 'Không thể tải nội dung học tập.');
+                }
+            } finally {
+                if (isMounted) {
+                    setLoadingContents(false);
+                }
+            }
+        };
 
-  return (
-    <div className="modal d-block" style={{ backgroundColor: 'rgba(0,0,0,0.8)', zIndex: 1060 }}>
-      <div className="modal-dialog modal-xl modal-dialog-centered" style={{ height: '90vh' }}>
-        <div className="modal-content h-100">
-          <div className="modal-header bg-dark text-white py-2">
-            <span className="small">Đang xem: {doc.ten}</span>
-            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
-          </div>
-          <div className="modal-body p-0 bg-secondary">
-            {doc.loai === 'Video' ? (
-              <video controls className="w-100 h-100" autoPlay><source src={doc.url} type="video/mp4" /></video>
+        fetchContents();
+
+        return () => {
+            isMounted = false;
+        };
+    }, [selectedCourse, selectedClass]);
+
+    const totalPages = Math.max(1, Math.ceil(overview.noiDungHocTap.length / ITEMS_PER_PAGE));
+    const safeCurrentPage = Math.min(currentPage, totalPages);
+    const currentChapters = overview.noiDungHocTap.slice((safeCurrentPage - 1) * ITEMS_PER_PAGE, safeCurrentPage * ITEMS_PER_PAGE);
+    const totalDocuments = overview.noiDungHocTap.reduce((sum, chapter) => sum + chapter.taiLieu.length, 0);
+
+    useEffect(() => {
+        if (currentPage > totalPages) {
+            setCurrentPage(totalPages);
+        }
+    }, [currentPage, totalPages]);
+
+    const handleCourseChange = (event) => {
+        setSelectedCourse(event.target.value);
+        setSelectedClass('');
+        setCurrentPage(1);
+        setOverview(EMPTY_OVERVIEW);
+        setError('');
+    };
+
+    const handleClassChange = (event) => {
+        setSelectedClass(event.target.value);
+        setCurrentPage(1);
+        setError('');
+    };
+
+    const handleView = (documentInfo) => {
+        try {
+            adminStudyContentService.viewDocument(documentInfo);
+        } catch (err) {
+            setError(err.message || 'Không thể mở tài liệu.');
+        }
+    };
+
+    const handleDownload = async (documentInfo) => {
+        try {
+            setDownloadingId(documentInfo.maTaiLieu);
+            setError('');
+            await adminStudyContentService.downloadDocument(documentInfo);
+        } catch (err) {
+            setError(err.message || 'Không thể tải tài liệu.');
+        } finally {
+            setDownloadingId('');
+        }
+    };
+
+    const isLoading = loadingCourses || loadingClasses || loadingContents;
+
+    return (
+        <div className="container-fluid p-4 bg-light min-vh-100">
+            <div className="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h3 className="fw-bold text-primary mb-0 text-uppercase">Giám sát học liệu</h3>
+                    <p className="text-muted small mb-0">HỆ THỐNG HỌC LIỆU TRỰC TUYẾN</p>
+                    <div className="mt-2 small fw-bold text-secondary">
+                        <ShieldCheck size={14} className="me-1 text-success" />
+                        Admin: {user?.name || 'Admin'}
+                    </div>
+                </div>
+                <div className="badge bg-primary text-white px-3 py-2 rounded shadow-sm">
+                    CHẾ ĐỘ CHỈ XEM
+                </div>
+            </div>
+
+            {error ? (
+                <div className="alert alert-danger d-flex align-items-start gap-2 shadow-sm border-0">
+                    <AlertCircle size={18} className="mt-1 flex-shrink-0" />
+                    <div>{error}</div>
+                </div>
+            ) : null}
+
+            <div className="row g-3 mb-4">
+                <div className="col-md-6">
+                    <select
+                        className="form-select border-0 shadow-sm py-3 px-3 rounded-3 fw-medium"
+                        value={selectedCourse}
+                        onChange={handleCourseChange}
+                        disabled={loadingCourses}
+                    >
+                        <option value="">-- Chọn khóa học --</option>
+                        {courses.map((course) => (
+                            <option key={course.id} value={course.id}>
+                                {course.ten} ({course.soChuongHoc} chương, {course.soLopHoc} lớp)
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="col-md-6">
+                    <select
+                        className="form-select border-0 shadow-sm py-3 px-3 rounded-3 fw-medium"
+                        value={selectedClass}
+                        onChange={handleClassChange}
+                        disabled={!selectedCourse || loadingClasses}
+                    >
+                        <option value="">-- Tất cả lớp của khóa học --</option>
+                        {classes.map((classInfo) => (
+                            <option key={classInfo.id} value={classInfo.id}>
+                                {classInfo.ten}
+                            </option>
+                        ))}
+                    </select>
+                </div>
+            </div>
+
+            {!selectedCourse ? (
+                <div className="text-center py-5 bg-white rounded border border-dashed shadow-sm">
+                    <Search size={48} className="text-primary opacity-25 mb-3" />
+                    <h5 className="text-muted">Vui lòng chọn khóa học để xem học liệu</h5>
+                    <p className="text-muted small mb-0">Bạn có thể chọn thêm lớp học nếu muốn đối chiếu theo từng lớp cụ thể.</p>
+                </div>
             ) : (
-              <iframe src={getPreviewUrl()} width="100%" height="100%" style={{ border: 'none' }}></iframe>
+                <div className="card shadow-sm border-0">
+                    <div className="border-bottom px-4 py-3 bg-white">
+                        <div className="fw-semibold text-dark">{overview.tenKhoaHoc || 'Nội dung học tập'}</div>
+                        <div className="small text-muted">
+                            {overview.tenLop
+                                ? `Lớp: ${overview.tenLop}`
+                                : 'Đang hiển thị nội dung học tập của tất cả lớp trong khóa học đã chọn'}
+                        </div>
+                    </div>
+
+                    {isLoading ? (
+                        <div className="d-flex flex-column align-items-center justify-content-center py-5">
+                            <div className="spinner-border text-primary mb-3" role="status" />
+                            <div className="text-muted small">Đang tải nội dung học tập...</div>
+                        </div>
+                    ) : overview.noiDungHocTap.length === 0 ? (
+                        <div className="text-center py-5 bg-white">
+                            <Search size={42} className="text-secondary opacity-25 mb-3" />
+                            <h5 className="text-muted">Chưa có chương học nào cho lựa chọn này</h5>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="table-responsive">
+                                <table className="table table-hover align-middle mb-0">
+                                    <thead className="bg-white">
+                                        <tr className="text-uppercase small fw-bold border-bottom">
+                                            <th className="ps-4 py-3">Nội dung</th>
+                                            <th>Định dạng</th>
+                                            <th>Ngày đăng</th>
+                                            <th className="text-center">Thao tác</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {currentChapters.map((chapter) => (
+                                            <React.Fragment key={chapter.maChuong}>
+                                                <tr className="bg-info-subtle border-0">
+                                                    <td colSpan="4" className="ps-4 py-3">
+                                                        <div className="d-flex flex-wrap align-items-center gap-2">
+                                                            <div className="fw-bold text-dark small">
+                                                                <Folder size={16} className="me-2 text-primary" />
+                                                                {chapter.tenChuong}
+                                                            </div>
+                                                            {!selectedClass && chapter.tenLop ? (
+                                                                <span className="badge bg-white text-primary border">
+                                                                    {chapter.tenLop}
+                                                                </span>
+                                                            ) : null}
+                                                            {chapter.thuTu ? (
+                                                                <span className="badge bg-light text-dark border">
+                                                                    Thứ tự {chapter.thuTu}
+                                                                </span>
+                                                            ) : null}
+                                                        </div>
+                                                        {chapter.moTa ? (
+                                                            <div className="small text-muted mt-1 ps-4">{chapter.moTa}</div>
+                                                        ) : null}
+                                                    </td>
+                                                </tr>
+
+                                                {chapter.taiLieu.length > 0 ? (
+                                                    chapter.taiLieu.map((documentInfo) => (
+                                                        <tr key={documentInfo.maTaiLieu} className="border-bottom">
+                                                            <td className="ps-5 py-3 fw-medium text-dark">
+                                                                <div className="d-flex align-items-center">
+                                                                    {getFileIcon(documentInfo.loaiTaiLieu)}
+                                                                    <div>
+                                                                        <div>{documentInfo.tenTaiLieu}</div>
+                                                                        {documentInfo.moTa ? (
+                                                                            <div className="text-muted small mt-1">{documentInfo.moTa}</div>
+                                                                        ) : null}
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            <td>
+                                                                <span className="badge bg-light text-dark border fw-normal">
+                                                                    {documentInfo.loaiTaiLieu}
+                                                                </span>
+                                                            </td>
+                                                            <td className="text-muted small">
+                                                                {documentInfo.ngayDangHienThi || '--/--/----'}
+                                                            </td>
+                                                            <td className="text-center">
+                                                                <div className="btn-group border rounded shadow-sm">
+                                                                    <button
+                                                                        className="btn btn-sm btn-white border-end px-3"
+                                                                        onClick={() => handleView(documentInfo)}
+                                                                        title="Xem tài liệu"
+                                                                    >
+                                                                        <Eye size={16} className="text-primary" />
+                                                                    </button>
+                                                                    <button
+                                                                        className="btn btn-sm btn-white px-3"
+                                                                        onClick={() => handleDownload(documentInfo)}
+                                                                        disabled={downloadingId === documentInfo.maTaiLieu}
+                                                                        title="Tải xuống"
+                                                                    >
+                                                                        <Download size={16} className="text-success" />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))
+                                                ) : (
+                                                    <tr>
+                                                        <td colSpan="4" className="ps-5 py-4 text-muted">
+                                                            Chương này chưa có tài liệu nào.
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </React.Fragment>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div className="d-flex justify-content-between align-items-center p-3 bg-white border-top">
+                                <div className="small text-muted d-none d-md-block">
+                                    Đang xem <b>{currentChapters.length}</b> / <b>{overview.noiDungHocTap.length}</b> chương, tổng <b>{totalDocuments}</b> tài liệu
+                                </div>
+
+                                <nav aria-label="Page navigation">
+                                    <ul className="pagination pagination-sm mb-0 gap-1">
+                                        <li className={`page-item ${safeCurrentPage === 1 ? 'disabled' : ''}`}>
+                                            <button
+                                                className="page-link border-0 shadow-sm rounded-3 d-flex align-items-center justify-content-center bg-light text-dark"
+                                                style={{ width: '32px', height: '32px' }}
+                                                onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
+                                            >
+                                                <ChevronLeft size={16} />
+                                            </button>
+                                        </li>
+
+                                        {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                                            <li key={pageNumber} className={`page-item ${safeCurrentPage === pageNumber ? 'active' : ''}`}>
+                                                <button
+                                                    className="page-link border-0 shadow-sm rounded-3 d-flex align-items-center justify-content-center fw-bold ms-1"
+                                                    style={{
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        backgroundColor: safeCurrentPage === pageNumber ? '#0d6efd' : '#f8f9fa',
+                                                        color: safeCurrentPage === pageNumber ? 'white' : '#495057'
+                                                    }}
+                                                    onClick={() => setCurrentPage(pageNumber)}
+                                                >
+                                                    {pageNumber}
+                                                </button>
+                                            </li>
+                                        ))}
+
+                                        <li className={`page-item ${safeCurrentPage === totalPages ? 'disabled' : ''}`}>
+                                            <button
+                                                className="page-link border-0 shadow-sm rounded-3 d-flex align-items-center justify-content-center bg-light text-dark ms-1"
+                                                style={{ width: '32px', height: '32px' }}
+                                                onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
+                                            >
+                                                <ChevronRight size={16} />
+                                            </button>
+                                        </li>
+                                    </ul>
+                                </nav>
+
+                                <div className="d-flex align-items-center gap-2">
+                                    <span className="small text-muted d-none d-sm-inline">Đi đến</span>
+                                    <select
+                                        className="form-select form-select-sm border-light-subtle shadow-sm"
+                                        style={{ width: '65px', borderRadius: '6px' }}
+                                        value={safeCurrentPage}
+                                        onChange={(event) => setCurrentPage(Number(event.target.value))}
+                                    >
+                                        {Array.from({ length: totalPages }, (_, index) => index + 1).map((pageNumber) => (
+                                            <option key={pageNumber} value={pageNumber}>
+                                                {pageNumber}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                        </>
+                    )}
+                </div>
             )}
-          </div>
         </div>
-      </div>
-    </div>
-  );
-};
-
-// --- COMPONENT MODAL FORM (CHỌN 3 CẤP) ---
-const DocumentModal = ({ mode, initialData, courses, classes, chapters, defaultCourse, defaultClass, onClose, onSave }) => {
-  const [formData, setFormData] = useState(initialData || { maKH: defaultCourse || "", maLop: defaultClass || "", maChuong: "", ten: "", loai: "PDF", url: "" });
-  const fileAccepts = { 'PDF': '.pdf', 'Word': '.doc,.docx', 'Excel': '.xls,.xlsx', 'Audio': '.mp3', 'Video': '.mp4' };
-
-  return (
-    <div className="modal d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-      <div className="modal-dialog modal-dialog-centered shadow-lg">
-        <div className="modal-content border-0">
-          <div className="modal-header bg-primary text-white">
-            <h5 className="modal-title fw-bold">{mode === 'add' ? 'Thêm Tài Liệu' : 'Sửa Tài Liệu'}</h5>
-            <button type="button" className="btn-close btn-close-white" onClick={onClose}></button>
-          </div>
-          <div className="modal-body p-4">
-            <div className="row g-2 mb-3">
-                <div className="col-md-6">
-                    <select className="form-select form-select-sm" value={formData.maKH} onChange={(e) => setFormData({...formData, maKH: e.target.value, maLop: "", maChuong: ""})}>
-                        <option value="">-- Khóa học --</option>
-                        {courses.map(c => <option key={c.id} value={c.id}>{c.ten}</option>)}
-                    </select>
-                </div>
-                <div className="col-md-6">
-                    <select className="form-select form-select-sm" disabled={!formData.maKH} value={formData.maLop} onChange={(e) => setFormData({...formData, maLop: e.target.value, maChuong: ""})}>
-                        <option value="">-- Lớp học --</option>
-                        {classes.filter(l => l.maKH === formData.maKH).map(l => <option key={l.id} value={l.id}>{l.ten}</option>)}
-                    </select>
-                </div>
-                <div className="col-12 mt-2">
-                    <select className="form-select form-select-sm border-primary" disabled={!formData.maLop} value={formData.maChuong} onChange={(e) => setFormData({...formData, maChuong: e.target.value})}>
-                        <option value="">-- Chọn Chương học (*) --</option>
-                        {chapters.filter(ch => ch.maLop === formData.maLop).map(ch => <option key={ch.id} value={ch.id}>{ch.ten}</option>)}
-                    </select>
-                </div>
-            </div>
-            <div className="mb-3">
-                <label className="form-label small fw-bold">Loại file</label>
-                <div className="d-flex gap-2">{Object.keys(fileAccepts).map(t => <button key={t} className={`btn btn-sm ${formData.loai === t ? 'btn-primary' : 'btn-outline-secondary'}`} onClick={() => setFormData({...formData, loai: t})}>{t}</button>)}</div>
-            </div>
-            <input type="text" className="form-control mb-3" placeholder="Tên hiển thị..." value={formData.ten} onChange={(e) => setFormData({...formData, ten: e.target.value})} />
-            <div className="border border-dashed p-3 text-center bg-light position-relative">
-                <Upload size={20} className="text-muted"/> <span className="small d-block">Chọn file {formData.loai}</span>
-                <input type="file" className="position-absolute top-0 start-0 w-100 h-100 opacity-0 cursor-pointer" accept={fileAccepts[formData.loai]} onChange={(e) => e.target.files[0] && setFormData({...formData, ten: e.target.files[0].name})} />
-            </div>
-          </div>
-          <div className="modal-footer"><button className="btn btn-light" onClick={onClose}>Hủy</button><button className="btn btn-primary px-4" onClick={() => onSave(formData)}>Lưu</button></div>
-        </div>
-      </div>
-    </div>
-  );
+    );
 };
 
 export default AdminStudyContent;
+
+

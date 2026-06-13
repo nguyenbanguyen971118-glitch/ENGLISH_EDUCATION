@@ -30,3 +30,5 @@ Thumbs.db
 
 # Database dump / export
 /HeThongHocOnline_Final.sql
+/appsettings.json
+QuanLyTrungTam/backend/appsettings.json

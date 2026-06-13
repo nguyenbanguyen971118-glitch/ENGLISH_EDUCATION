@@ -202,6 +202,35 @@ public class UserBootstrapHelper
                     ThoiGianTao = DateTime.UtcNow
                 });
             }
+
+            if (seed.TenVaiTro == "Giao_Vien")
+            {
+                var teacherProfile = await _context.Giangviens
+                    .FirstOrDefaultAsync(x => x.MaNguoiDung == user.MaNguoiDung);
+
+                if (teacherProfile == null)
+                {
+                    _context.Giangviens.Add(new Giangvien
+                    {
+                        MaGiangVien = Guid.NewGuid(),
+                        MaNguoiDung = user.MaNguoiDung,
+                        SoDienThoai = null,
+                        QueQuan = null,
+                        TrinhDoChuyenMon = string.Empty,
+                        HocVi = null,
+                        KinhNghiemGiangDay = null,
+                        TrangThai = true,
+                        DaXoa = false,
+                        ThoiGianTao = DateTime.UtcNow
+                    });
+                }
+                else if (teacherProfile.DaXoa == true)
+                {
+                    teacherProfile.DaXoa = false;
+                    teacherProfile.TrangThai = true;
+                    teacherProfile.ThoiGianSua = DateTime.UtcNow;
+                }
+            }
         }
 
         await _context.SaveChangesAsync();

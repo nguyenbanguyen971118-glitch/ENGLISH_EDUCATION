@@ -5,6 +5,15 @@ import apiClient from '../api/BaseApi';
 
 const AuthContext = createContext();
 
+const sanitizeUserForStorage = (userData) => {
+    if (!userData) {
+        return null;
+    }
+
+    const { avatarPreview, ...persistedUser } = userData;
+    return persistedUser;
+};
+
 export const AuthProvider = ({ children }) => {
     if (!React || typeof React.useState !== 'function') {
         console.error('AuthContext: React import is invalid or hooks not available', React);
@@ -29,7 +38,7 @@ export const AuthProvider = ({ children }) => {
         // Kiểm tra xem đã đăng nhập trước đó chưa (trong localStorage)
         const savedUser = localStorage.getItem('user');
         if (savedUser) {
-            setUser(JSON.parse(savedUser));
+            setUser(sanitizeUserForStorage(JSON.parse(savedUser)));
         }
         // Nếu chưa có user nhưng có rememberedCredentials (chỉ token), khôi phục tạm thời
         if (!savedUser) {
@@ -55,7 +64,23 @@ export const AuthProvider = ({ children }) => {
 
     const login = (userData) => {
         setUser(userData);
-        localStorage.setItem('user', JSON.stringify(userData));
+        localStorage.setItem('user', JSON.stringify(sanitizeUserForStorage(userData)));
+    };
+
+    const updateUser = (updater) => {
+        setUser((prevUser) => {
+            const nextUser = typeof updater === 'function'
+                ? updater(prevUser)
+                : { ...(prevUser || {}), ...(updater || {}) };
+
+            if (nextUser) {
+                localStorage.setItem('user', JSON.stringify(sanitizeUserForStorage(nextUser)));
+            } else {
+                localStorage.removeItem('user');
+            }
+
+            return nextUser;
+        });
     };
 
     const logout = () => {
@@ -117,7 +142,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, login, logout, loading, refreshPermissions, refreshAccessToken }}>
+        <AuthContext.Provider value={{ user, login, updateUser, logout, loading, refreshPermissions, refreshAccessToken }}>
             {!loading && children}
         </AuthContext.Provider>
     );

@@ -9,6 +9,8 @@ public partial class Chuonghoc
 
     public Guid MaKhoaHoc { get; set; }
 
+    public Guid? MaLopHoc { get; set; }
+
     public string TenChuong { get; set; } = null!;
 
     public string? MoTa { get; set; }
@@ -28,6 +30,8 @@ public partial class Chuonghoc
     public bool? DaXoa { get; set; }
 
     public virtual Khoahoc MaKhoaHocNavigation { get; set; } = null!;
+
+    public virtual Lophoc? MaLopHocNavigation { get; set; }
 
     public virtual ICollection<Tailieu> Tailieus { get; set; } = new List<Tailieu>();
 }

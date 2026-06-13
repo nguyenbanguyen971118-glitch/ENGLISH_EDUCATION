@@ -9,9 +9,15 @@ public partial class Dapan
 
     public Guid MaCauHoi { get; set; }
 
+    public string? TenDapAn { get; set; }
+
     public string NoiDungDapAn { get; set; } = null!;
 
     public bool? LaDapAnDung { get; set; }
+
+    public string? GiaTriDoiChieu { get; set; }
+
+    public int? ThuTu { get; set; }
 
     public Guid? NguoiTao { get; set; }
 

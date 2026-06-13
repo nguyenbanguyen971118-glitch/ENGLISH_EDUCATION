@@ -453,7 +453,7 @@ namespace backend.Migrations
 
                     MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid>("MaChiTiet"), "ascii");
 
-                    b.Property<string>("CauTraLoiDienKhuyet")
+                    b.Property<string>("CauTraLoiHocSinh")
                         .HasColumnType("text");
 
                     b.Property<bool?>("DaXoa")
@@ -641,6 +641,12 @@ namespace backend.Migrations
 
                     MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid>("MaKhoaHoc"), "ascii");
 
+                    b.Property<Guid?>("MaLopHoc")
+                        .HasColumnType("char(36)")
+                        .UseCollation("ascii_general_ci");
+
+                    MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid?>("MaLopHoc"), "ascii");
+
                     b.Property<string>("MoTa")
                         .HasColumnType("text");
 
@@ -682,6 +688,8 @@ namespace backend.Migrations
 
                     b.HasIndex(new[] { "MaKhoaHoc" }, "MaKhoaHoc1");
 
+                    b.HasIndex(new[] { "MaLopHoc" }, "idx_ChuongHoc_MaLopHoc");
+
                     b.ToTable("chuonghoc", (string)null);
                 });
 
@@ -698,6 +706,10 @@ namespace backend.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValueSql("'0'");
+
+                    b.Property<string>("GiaTriDoiChieu")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
 
                     b.Property<bool?>("LaDapAnDung")
                         .ValueGeneratedOnAdd()
@@ -726,6 +738,82 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasColumnType("text");
 
+                    b.Property<string>("TenDapAn")
+                        .HasMaxLength(10)
+                        .HasColumnType("varchar(10)");
+
+                    b.Property<DateTime?>("ThoiGianSua")
+                        .HasColumnType("datetime");
+
+                    b.Property<DateTime?>("ThoiGianTao")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime")
+                        .HasDefaultValueSql("CURRENT_TIMESTAMP");
+
+                    b.Property<int?>("ThuTu")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValueSql("'0'");
+
+                    b.Property<bool?>("TrangThai")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValueSql("'1'");
+
+                    b.HasKey("MaDapAn")
+                        .HasName("PRIMARY");
+
+                    b.HasIndex(new[] { "MaCauHoi" }, "MaCauHoi");
+
+                    b.HasIndex(new[] { "MaCauHoi", "DaXoa", "TrangThai" }, "idx_DapAn_CauHoi_Active");
+
+                    b.ToTable("dapan", (string)null);
+                });
+
+            modelBuilder.Entity("backend.Models.Dapandiendkhuyet", b =>
+                {
+                    b.Property<Guid>("MaDapAnDien")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("char(36)")
+                        .UseCollation("ascii_general_ci");
+
+                    MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid>("MaDapAnDien"), "ascii");
+
+                    b.Property<bool?>("DaXoa")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValueSql("'0'");
+
+                    b.Property<string>("DapAnChuan")
+                        .IsRequired()
+                        .HasColumnType("text");
+
+                    b.Property<string>("DapAnThayThe")
+                        .HasColumnType("text");
+
+                    b.Property<Guid>("MaCauHoi")
+                        .HasColumnType("char(36)")
+                        .UseCollation("ascii_general_ci");
+
+                    MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid>("MaCauHoi"), "ascii");
+
+                    b.Property<Guid?>("NguoiSua")
+                        .HasColumnType("char(36)")
+                        .UseCollation("ascii_general_ci");
+
+                    MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid?>("NguoiSua"), "ascii");
+
+                    b.Property<Guid?>("NguoiTao")
+                        .HasColumnType("char(36)")
+                        .UseCollation("ascii_general_ci");
+
+                    MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid?>("NguoiTao"), "ascii");
+
+                    b.Property<bool?>("PhanBietHoaThuong")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("tinyint(1)")
+                        .HasDefaultValueSql("'0'");
+
                     b.Property<DateTime?>("ThoiGianSua")
                         .HasColumnType("datetime");
 
@@ -739,12 +827,14 @@ namespace backend.Migrations
                         .HasColumnType("tinyint(1)")
                         .HasDefaultValueSql("'1'");
 
-                    b.HasKey("MaDapAn")
+                    b.HasKey("MaDapAnDien")
                         .HasName("PRIMARY");
 
-                    b.HasIndex(new[] { "MaCauHoi" }, "MaCauHoi");
+                    b.HasIndex(new[] { "MaCauHoi" }, "MaCauHoi1");
 
-                    b.ToTable("dapan", (string)null);
+                    b.HasIndex(new[] { "MaCauHoi", "DaXoa", "TrangThai" }, "idx_DapAnDienKhuyet_CauHoi_Active");
+
+                    b.ToTable("dapandiendkhuyet", (string)null);
                 });
 
             modelBuilder.Entity("backend.Models.Diemdanh", b =>
@@ -1376,6 +1466,10 @@ namespace backend.Migrations
 
                     MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid>("MaCauHoi"), "ascii");
 
+                    b.Property<string>("AmThanhLink")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
                     b.Property<bool?>("DaXoa")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
@@ -1384,9 +1478,19 @@ namespace backend.Migrations
                     b.Property<string>("GiaiThichDapAn")
                         .HasColumnType("text");
 
+                    b.Property<string>("HinhAnhLink")
+                        .HasMaxLength(255)
+                        .HasColumnType("varchar(255)");
+
                     b.Property<int?>("LoaiCauHoi")
                         .HasColumnType("int")
                         .HasComment("Trỏ về ChiTietDanhMuc");
+
+                    b.Property<Guid?>("MaCauHoiCha")
+                        .HasColumnType("char(36)")
+                        .UseCollation("ascii_general_ci");
+
+                    MySqlPropertyBuilderExtensions.HasCharSet(b.Property<Guid?>("MaCauHoiCha"), "ascii");
 
                     b.Property<Guid>("MaKhoaHoc")
                         .HasColumnType("char(36)")
@@ -1427,6 +1531,11 @@ namespace backend.Migrations
                         .HasColumnType("datetime")
                         .HasDefaultValueSql("CURRENT_TIMESTAMP");
 
+                    b.Property<int?>("ThuTu")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValueSql("'0'");
+
                     b.Property<bool?>("TrangThai")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("tinyint(1)")
@@ -1436,6 +1545,8 @@ namespace backend.Migrations
                         .HasName("PRIMARY");
 
                     b.HasIndex(new[] { "LoaiCauHoi" }, "LoaiCauHoi");
+
+                    b.HasIndex(new[] { "MaCauHoiCha" }, "MaCauHoiCha");
 
                     b.HasIndex(new[] { "MaKhoaHoc" }, "MaKhoaHoc2");
 
@@ -2921,7 +3032,14 @@ namespace backend.Migrations
                         .IsRequired()
                         .HasConstraintName("chuonghoc_ibfk_1");
 
+                    b.HasOne("backend.Models.Lophoc", "MaLopHocNavigation")
+                        .WithMany("Chuonghocs")
+                        .HasForeignKey("MaLopHoc")
+                        .HasConstraintName("chuonghoc_ibfk_2");
+
                     b.Navigation("MaKhoaHocNavigation");
+
+                    b.Navigation("MaLopHocNavigation");
                 });
 
             modelBuilder.Entity("backend.Models.Dapan", b =>
@@ -2931,6 +3049,17 @@ namespace backend.Migrations
                         .HasForeignKey("MaCauHoi")
                         .IsRequired()
                         .HasConstraintName("dapan_ibfk_1");
+
+                    b.Navigation("MaCauHoiNavigation");
+                });
+
+            modelBuilder.Entity("backend.Models.Dapandiendkhuyet", b =>
+                {
+                    b.HasOne("backend.Models.Nganhangcauhoi", "MaCauHoiNavigation")
+                        .WithMany("Dapandiendkhuyets")
+                        .HasForeignKey("MaCauHoi")
+                        .IsRequired()
+                        .HasConstraintName("dapandiendkhuyet_ibfk_1");
 
                     b.Navigation("MaCauHoiNavigation");
                 });
@@ -3093,6 +3222,11 @@ namespace backend.Migrations
                         .HasForeignKey("LoaiCauHoi")
                         .HasConstraintName("nganhangcauhoi_ibfk_2");
 
+                    b.HasOne("backend.Models.Nganhangcauhoi", "MaCauHoiChaNavigation")
+                        .WithMany("InverseMaCauHoiChaNavigation")
+                        .HasForeignKey("MaCauHoiCha")
+                        .HasConstraintName("nganhangcauhoi_ibfk_4");
+
                     b.HasOne("backend.Models.Khoahoc", "MaKhoaHocNavigation")
                         .WithMany("Nganhangcauhois")
                         .HasForeignKey("MaKhoaHoc")
@@ -3105,6 +3239,8 @@ namespace backend.Migrations
                         .HasConstraintName("nganhangcauhoi_ibfk_3");
 
                     b.Navigation("LoaiCauHoiNavigation");
+
+                    b.Navigation("MaCauHoiChaNavigation");
 
                     b.Navigation("MaKhoaHocNavigation");
 
@@ -3532,6 +3668,8 @@ namespace backend.Migrations
 
                     b.Navigation("ChitietkhoahocLophocs");
 
+                    b.Navigation("Chuonghocs");
+
                     b.Navigation("Giangvienlophocs");
 
                     b.Navigation("Hocsinhlophocs");
@@ -3547,7 +3685,11 @@ namespace backend.Migrations
 
                     b.Navigation("Chitietnopbais");
 
+                    b.Navigation("Dapandiendkhuyets");
+
                     b.Navigation("Dapans");
+
+                    b.Navigation("InverseMaCauHoiChaNavigation");
                 });
 
             modelBuilder.Entity("backend.Models.Nguoidung", b =>

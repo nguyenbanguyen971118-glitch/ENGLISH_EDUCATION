@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Book, Plus, Edit, Trash, Settings, Save, CheckCircle } from 'lucide-react';
 import AssignAssignmentContent from './AssignAssignmentContent'; 
+import AdminAssignmentModern from './AdminAssignmentModern';
 
 const AdminAssignment = () => {
+  return <AdminAssignmentModern />;
+
   const [baiTaps, setBaiTaps] = useState([]);
   const [khoaHocs, setKhoaHocs] = useState([
     { MaKhoaHoc: 'KH01', TenKhoaHoc: 'Khóa IELTS 6.5' },

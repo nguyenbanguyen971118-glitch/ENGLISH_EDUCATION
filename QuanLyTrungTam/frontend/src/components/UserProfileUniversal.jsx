@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import { User, Mail, Phone, MapPin, Save, CheckCircle, ArrowLeft, Camera, Trash2 } from 'lucide-react';
+import { User, Mail, Phone, MapPin, Save, CheckCircle, ArrowLeft, Camera } from 'lucide-react';
 
-const UserProfileUniversal = ({ userData, userRole, onBack, onSave, onDelete }) => {
+const UserProfileUniversal = ({ userData, userRole, onBack, onSave }) => {
   const [isSaved, setIsSaved] = useState(false);
   const [formData, setFormData] = useState(userData);
 
@@ -52,11 +52,7 @@ const UserProfileUniversal = ({ userData, userRole, onBack, onSave, onDelete }) 
           <h5 className="fw-bold">{formData.HoTen}</h5>
           <p className="badge bg-light text-dark border px-3 py-2">{userRole}</p>
           
-          <div className="mt-4 px-3">
-            <button className="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center" onClick={onDelete}>
-              <Trash2 size={16} className="me-2" /> Xóa tài khoản này
-            </button>
-          </div>
+
         </div>
 
         {/* Info Section */}

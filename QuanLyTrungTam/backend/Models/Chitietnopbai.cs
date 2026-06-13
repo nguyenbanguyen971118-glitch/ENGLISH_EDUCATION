@@ -13,7 +13,7 @@ public partial class Chitietnopbai
 
     public Guid? MaDapAnChon { get; set; }
 
-    public string? CauTraLoiDienKhuyet { get; set; }
+    public string? CauTraLoiHocSinh { get; set; }
 
     public decimal? DiemDatDuoc { get; set; }
 

@@ -38,6 +38,8 @@ public partial class Lophoc
 
     public virtual ICollection<ChitietkhoahocLophoc> ChitietkhoahocLophocs { get; set; } = new List<ChitietkhoahocLophoc>();
 
+    public virtual ICollection<Chuonghoc> Chuonghocs { get; set; } = new List<Chuonghoc>();
+
     public virtual ICollection<Giangvienlophoc> Giangvienlophocs { get; set; } = new List<Giangvienlophoc>();
 
     public virtual ICollection<Hocsinhlophoc> Hocsinhlophocs { get; set; } = new List<Hocsinhlophoc>();

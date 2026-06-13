@@ -83,17 +83,22 @@ public class UserRepository : IUserRepository
     {
         if (roleName == "Hoc_Sinh")
         {
+            // Trả ProfileId học sinh để đồng bộ với luồng login/refresh của các role còn lại.
             var hs = await _context.Hocsinhs.FirstOrDefaultAsync(h => h.MaNguoiDung == userId);
             return hs?.MaHocSinh;
         }
         else if (roleName == "Giao_Vien")
         {
-            var gv = await _context.Giangviens.FirstOrDefaultAsync(g => g.MaNguoiDung == userId);
+            // Trả ProfileId giảng viên để đồng bộ với luồng login/refresh của các role còn lại.
+            var gv = await _context.Giangviens
+                .FirstOrDefaultAsync(g => g.MaNguoiDung == userId && (g.DaXoa == null || g.DaXoa == false));
             return gv?.MaGiangVien;
         }
         else if (roleName == "Phu_Huynh")
         {
-            var ph = await _context.Phuhuynhs.FirstOrDefaultAsync(p => p.MaNguoiDung == userId);
+            // Bổ sung ProfileId cho phụ huynh để đồng bộ với luồng login/refresh của các role khác.
+            var ph = await _context.Phuhuynhs
+                .FirstOrDefaultAsync(p => p.MaNguoiDung == userId && (p.DaXoa == null || p.DaXoa == false));
             return ph?.MaPhuHuynh;
         }
         return null;
