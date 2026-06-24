@@ -28,6 +28,7 @@ import AdminCreateUser from "./pages/admin/AdminCreateUser";
 import AdminNotifcations from "./pages/admin/AdminNotifications";
 import AdminAssignment from "./pages/admin/AdminAssignment";
 import AdminFunctions from './pages/admin/AdminFunctions';
+import AdminSchedule from './pages/admin/AdminSchedule';
 
 // Import Teacher Pages
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
@@ -97,6 +98,8 @@ function App() {
             <Route path="/admin/content" element={<PrivateRoute allowedRoles={['Admin']}><AdminStudyContent /></PrivateRoute>} />
             {/* ĐÃ TÍCH HỢP TRANG TIN NHẮN TẠI ĐÂY */}
             <Route path="/admin/messages" element={<PrivateRoute allowedRoles={['Admin']}><AdminMessages /></PrivateRoute>} />
+
+            <Route path="/admin/schedules" element={<PrivateRoute allowedRoles={['Admin']}><AdminSchedule /></PrivateRoute>} />
 
             <Route path="/admin/profile" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Hồ sơ cá nhân" /></PrivateRoute>} />
             {/* nmkhue: Route để tạo người dùng mới 

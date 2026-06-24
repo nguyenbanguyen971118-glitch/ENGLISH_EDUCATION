@@ -24,6 +24,37 @@ const AdminClasses = () => {
     }
   };
 
+  const formatServerDate = (val) => {
+    if (!val) return null;
+    try {
+      if (typeof val === 'string') {
+        // try ISO or yyyy-MM-dd
+        const parsed = new Date(val);
+        if (!isNaN(parsed.getTime())) {
+          return parsed.toISOString().slice(0, 10);
+        }
+        // fallback: return raw
+        return val;
+      }
+      if (typeof val === 'object') {
+        // DateOnly-like shapes: { Year, Month, Day } or { year, month, day }
+        const y = val.Year ?? val.year ?? val.Year;
+        const m = val.Month ?? val.month ?? val.Month;
+        const d = val.Day ?? val.day ?? val.Day;
+        if (y && m && d) {
+          const mm = String(m).padStart(2, '0');
+          const dd = String(d).padStart(2, '0');
+          return `${y}-${mm}-${dd}`;
+        }
+        // fallback: if object has ToString-able fields
+        if (val.toString) return String(val);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  };
+
   useEffect(() => {
     loadClasses();
   }, []);
@@ -131,7 +162,7 @@ const AdminClasses = () => {
                     <td>{index + 1}</td>
                     <td className="fw-semibold"><i className="bi bi-mortarboard text-primary me-2"></i>{cls.name}</td>
                     <td>{(cls.courses || []).map((course) => <span key={course.id} className="badge bg-info me-1">{course.name}</span>)}</td>
-                    <td>{cls.startDate || "-"} {cls.endDate ? `- ${cls.endDate}` : ""}</td>
+                    <td>{formatServerDate(cls.startDate) || "-"} {formatServerDate(cls.endDate) ? `- ${formatServerDate(cls.endDate)}` : ""}</td>
                     <td>{(cls.teachers || []).map((teacher) => <span key={teacher.id} className="badge bg-secondary me-1">{teacher.name}</span>)}</td>
                     <td><span className="badge bg-info">{cls.currentSize}/{cls.capacity || "Khong gioi han"}</span></td>
                     <td><span className={`badge ${cls.active ? "bg-success" : "bg-warning text-dark"}`}>{cls.active ? "Dang hoat dong" : "Tam dung"}</span></td>

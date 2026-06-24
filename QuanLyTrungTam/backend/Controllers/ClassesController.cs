@@ -86,28 +86,59 @@ public class ClassesController : ControllerBase
             return BadRequest(validation);
         }
 
-        var classEntity = new Lophoc
+        // Start a transaction so that class + schedules are saved atomically
+        await using var tx = await _db.Database.BeginTransactionAsync();
+        try
         {
-            MaLopHoc = Guid.NewGuid(),
-            TenLop = request.Name.Trim(),
-            NgayBatDau = request.StartDate,
-            NgayKetThuc = request.EndDate,
-            SiSoHienTai = 0,
-            SiSoToiDa = request.Capacity,
-            TrangThai = request.Active,
-            DaXoa = false,
-            ThoiGianTao = DateTime.UtcNow
-        };
+            var classEntity = new Lophoc
+            {
+                MaLopHoc = Guid.NewGuid(),
+                TenLop = request.Name.Trim(),
+                NgayBatDau = request.StartDate,
+                NgayKetThuc = request.EndDate,
+                SiSoHienTai = 0,
+                SiSoToiDa = request.Capacity,
+                TrangThai = request.Active,
+                DaXoa = false,
+                ThoiGianTao = DateTime.UtcNow
+            };
 
-        _db.Lophocs.Add(classEntity);
-        await _db.SaveChangesAsync();
+            _db.Lophocs.Add(classEntity);
+            await _db.SaveChangesAsync();
 
-        await ReplaceCourseLinksAsync(classEntity.MaLopHoc, request.CourseIds);
-        await ReplaceTeacherLinksAsync(classEntity.MaLopHoc, request.TeacherIds);
-        await _db.SaveChangesAsync();
+            await ReplaceCourseLinksAsync(classEntity.MaLopHoc, request.CourseIds);
+            await ReplaceTeacherLinksAsync(classEntity.MaLopHoc, request.TeacherIds);
+            await _db.SaveChangesAsync();
 
-        var created = await LoadClassAsync(classEntity.MaLopHoc);
-        return CreatedAtAction(nameof(GetById), new { id = classEntity.MaLopHoc }, ApiResponseDto<ClassDto>.Ok(ToDto(created!)));
+            // Generate schedules if configuration provided and TotalPeriods > 0
+            var scheduleGenerator = HttpContext.RequestServices.GetRequiredService<backend.Services.ScheduleGeneratorService>();
+            if ((request.ScheduleConfigs != null && request.ScheduleConfigs.Count > 0) && (request.TotalPeriods.HasValue && request.TotalPeriods.Value > 0))
+            {
+                var (Success, Error, EndDate) = await scheduleGenerator.GenerateAndPersistAsync(classEntity.MaLopHoc, request);
+                if (!Success)
+                {
+                    await tx.RollbackAsync();
+                    return BadRequest(ApiResponseDto<object>.Fail(Error ?? "Khong the tao lich.", "SCHEDULE_GENERATION_FAILED"));
+                }
+
+                if (EndDate.HasValue)
+                {
+                    classEntity.NgayKetThuc = EndDate.Value;
+                    _db.Lophocs.Update(classEntity);
+                    await _db.SaveChangesAsync();
+                }
+            }
+
+            await tx.CommitAsync();
+
+            var created = await LoadClassAsync(classEntity.MaLopHoc);
+            return CreatedAtAction(nameof(GetById), new { id = classEntity.MaLopHoc }, ApiResponseDto<ClassDto>.Ok(ToDto(created!)));
+        }
+        catch (Exception ex)
+        {
+            await tx.RollbackAsync();
+            return BadRequest(ApiResponseDto<object>.Fail(ex.Message ?? "Loi khi tao lop.", "CREATE_CLASS_FAILED"));
+        }
     }
 
     [HttpPut("{id:guid}")]
@@ -176,6 +207,14 @@ public class ClassesController : ControllerBase
             link.ThoiGianSua = DateTime.UtcNow;
         }
 
+        // Xóa tất cả lịch học của lớp này
+        foreach (var schedule in await _db.Buoihocs.Where(x => x.MaLopHoc == id && x.DaXoa != true).ToListAsync())
+        {
+            schedule.DaXoa = true;
+            schedule.TrangThai = false;
+            schedule.ThoiGianSua = DateTime.UtcNow;
+        }
+
         await _db.SaveChangesAsync();
         return Ok(ApiResponseDto<object>.Ok(new { id }, "Da xoa mem lop hoc."));
     }
@@ -220,6 +259,8 @@ public class ClassesController : ControllerBase
                 return ApiResponseDto<object>.Fail("Mot hoac nhieu giao vien khong ton tai.", "TEACHER_NOT_FOUND");
             }
         }
+
+        // No mandatory requirement for TotalPeriods here — Admin may input freely.
 
         return null;
     }

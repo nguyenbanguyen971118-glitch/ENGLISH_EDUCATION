@@ -78,7 +78,7 @@ public sealed class TeacherItemDto
     public string Name { get; set; } = string.Empty;
 }
 
-public sealed class UpsertClassRequestDto
+public sealed partial class UpsertClassRequestDto
 {
     public string Name { get; set; } = string.Empty;
     public DateOnly? StartDate { get; set; }
@@ -87,6 +87,22 @@ public sealed class UpsertClassRequestDto
     public bool Active { get; set; } = true;
     public List<Guid> CourseIds { get; set; } = new();
     public List<Guid> TeacherIds { get; set; } = new();
+}
+
+public sealed class ScheduleConfigDto
+{
+    public List<string> Days { get; set; } = new();
+    public List<int> Periods { get; set; } = new();
+    public Guid? RoomId { get; set; }
+}
+
+public sealed partial class UpsertClassRequestDto
+{
+    // Total number of periods (BR01/BR02). Required if not defined on course.
+    public int? TotalPeriods { get; set; }
+
+    // Schedule configuration: multiple rows each containing days and periods.
+    public List<ScheduleConfigDto> ScheduleConfigs { get; set; } = new();
 }
 
 public sealed class ClassStudentDto

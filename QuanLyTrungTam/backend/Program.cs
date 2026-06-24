@@ -70,6 +70,7 @@ builder.Services.AddScoped<AssignmentCatalogBootstrapService>();
 builder.Services.AddScoped<UserBootstrapHelper>();
 builder.Services.AddScoped<PermissionHelper>(); // Helper kiểm tra quyền chi tiết.
 builder.Services.AddScoped<IScheduleChangeRequestService, ScheduleChangeRequestService>();
+builder.Services.AddScoped<ScheduleGeneratorService>();
 
 builder.Services.AddControllers();
 builder.Services.AddSignalR();

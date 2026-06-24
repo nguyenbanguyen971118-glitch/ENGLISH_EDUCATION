@@ -252,6 +252,14 @@ const AdminSchedule = () => {
 
     const getLookupLabel = (list, id) => list.find(item => String(item.id) === String(id))?.name || '';
 
+    // Return true if a schedule occupies the given dayIdx and slotId (considering slot ranges).
+    const isScheduleInCell = (schedule, dayIdx, slotId) => {
+        const sDay = Number(schedule.dayIdx ?? schedule.dayIdx);
+        const sStart = Number(schedule.slotId ?? schedule.maTietBatDau ?? schedule.MaTietBatDau);
+        const sEnd = Number(schedule.slotEndId ?? schedule.maTietKetThuc ?? schedule.MaTietKetThuc ?? sStart);
+        return Number(dayIdx) === sDay && Number(slotId) >= sStart && Number(slotId) <= sEnd;
+    };
+
     const getSelectedScheduleDate = (dayIdx) => {
         const weekStart = getWeekStart(currentDate);
         const selectedDate = new Date(weekStart);
@@ -330,7 +338,7 @@ const AdminSchedule = () => {
         const normalizedDayIdx = toNumberOrNull(dayIdx) ?? 0;
         const normalizedSlotId = toNumberOrNull(slotId) ?? 1;
         const targetDate = getSelectedScheduleDate(normalizedDayIdx);
-        const cellSchedules = schedules.filter((schedule) => schedule.dayIdx === normalizedDayIdx && schedule.slotId === normalizedSlotId);
+        const cellSchedules = schedules.filter((schedule) => isScheduleInCell(schedule, normalizedDayIdx, normalizedSlotId));
 
         setSelectedCell({
             dayIdx: normalizedDayIdx,
@@ -526,7 +534,7 @@ const AdminSchedule = () => {
             const refreshedBoard = await loadBoardData(currentDate);
 
             if (selectedCell && refreshedBoard?.schedules) {
-                const refreshed = refreshedBoard.schedules.filter((schedule) => schedule.dayIdx === selectedCell.dayIdx && schedule.slotId === selectedCell.slotId);
+                const refreshed = refreshedBoard.schedules.filter((schedule) => isScheduleInCell(schedule, selectedCell.dayIdx, selectedCell.slotId));
                 setSelectedCellSchedules(refreshed);
             }
 
@@ -567,7 +575,7 @@ const AdminSchedule = () => {
 
             if (showCellModal && selectedCell) {
                 const refreshedSchedules = schedules.filter((schedule) => schedule.id !== scheduleId);
-                setSelectedCellSchedules(refreshedSchedules.filter((schedule) => schedule.dayIdx === selectedCell.dayIdx && schedule.slotId === selectedCell.slotId));
+                setSelectedCellSchedules(refreshedSchedules.filter((schedule) => isScheduleInCell(schedule, selectedCell.dayIdx, selectedCell.slotId)));
             }
 
             await loadBoardData(currentDate);
@@ -669,7 +677,7 @@ const AdminSchedule = () => {
     // 4. RENDER UI
     // ==========================================
     const renderTimeSlot = (dayIdx, slotId) => {
-        const classInSlot = schedules.filter(c => c.dayIdx === dayIdx && c.slotId === slotId);
+        const classInSlot = schedules.filter(c => isScheduleInCell(c, dayIdx, slotId));
         
         if (classInSlot.length === 0) return (
             <div onClick={() => openCellDetail(dayIdx, slotId)} onDragOver={handleDragOver} onDrop={(e) => handleDrop(e, dayIdx, slotId)}
@@ -1166,6 +1174,89 @@ const AdminSchedule = () => {
                                 </button>
                                 <button className="btn btn-dark rounded-pill px-4 fw-bold" onClick={closeCellDetail}>Đóng</button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* MODAL XẾP LỊCH MỚI */}
+            {showModal && (
+                <div className="modal-backdrop-custom d-flex align-items-center justify-content-center animate__animated animate__fadeIn">
+                    <div className="bg-white rounded-4 shadow-lg overflow-hidden animate__animated animate__slideInUp" style={{ width: '600px', maxWidth: '95vw', zIndex: 1050 }}>
+                        <div className="p-3 px-4 d-flex justify-content-between align-items-center bg-dark text-white">
+                            <h5 className="fw-bold mb-0">
+                                <i className="bi bi-calendar-plus me-2"></i>
+                                {modalMode === 'add' ? 'Xếp lịch dạy mới' : 'Chỉnh sửa lịch dạy'}
+                            </h5>
+                            <button className="btn-close btn-close-white" onClick={() => setShowModal(false)}></button>
+                        </div>
+
+                        <div className="p-4" style={{ maxHeight: '75vh', overflowY: 'auto' }}>
+                            {errorMsg && <div className="alert alert-danger rounded-3" role="alert">{errorMsg}</div>}
+
+                            <div className="mb-3">
+                                <label className="form-label fw-bold text-dark">Lớp học <span className="text-danger">*</span></label>
+                                <select className="form-select rounded-3" value={formData.classId} onChange={(e) => setFormData({...formData, classId: e.target.value})}>
+                                    <option value="">Chọn lớp học</option>
+                                    {classesList.map(c => <option key={c.id} value={c.id}>{c.name} ({c.code})</option>)}
+                                </select>
+                            </div>
+
+                            <div className="row g-3">
+                                <div className="col-md-6">
+                                    <label className="form-label fw-bold text-dark">Tiết bắt đầu <span className="text-danger">*</span></label>
+                                    <select className="form-select rounded-3" value={formData.slotId} onChange={(e) => setFormData({...formData, slotId: e.target.value})}>
+                                        <option value="">Chọn tiết</option>
+                                        {PERIODS.map(p => <option key={p.id} value={p.id}>{p.name} ({p.time})</option>)}
+                                    </select>
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label fw-bold text-dark">Tiết kết thúc <span className="text-danger">*</span></label>
+                                    <select className="form-select rounded-3" value={formData.slotEndId} onChange={(e) => setFormData({...formData, slotEndId: e.target.value})}>
+                                        <option value="">Chọn tiết</option>
+                                        {PERIODS.map(p => <option key={p.id} value={p.id}>{p.name} ({p.time})</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div className="row g-3 mt-2">
+                                <div className="col-md-6">
+                                    <label className="form-label fw-bold text-dark">Giảng viên <span className="text-danger">*</span></label>
+                                    {availabilityLoading ? (
+                                        <div className="text-muted py-2"><i className="spinner-border spinner-border-sm me-2"></i>Đang tải...</div>
+                                    ) : (
+                                        <select className="form-select rounded-3" value={formData.teacherId} onChange={(e) => setFormData({...formData, teacherId: e.target.value})}>
+                                            <option value="">Chọn giảng viên</option>
+                                            {visibleTeachers.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                                        </select>
+                                    )}
+                                </div>
+                                <div className="col-md-6">
+                                    <label className="form-label fw-bold text-dark">
+                                        Phòng học
+                                        {visibleRooms.length > 0 && <span className="badge bg-success ms-2" style={{fontSize: '10px'}}>Tự động gán: {visibleRooms[0]?.name || 'N/A'}</span>}
+                                    </label>
+                                    {availabilityLoading ? (
+                                        <div className="text-muted py-2"><i className="spinner-border spinner-border-sm me-2"></i>Đang tải...</div>
+                                    ) : (
+                                        <select className="form-select rounded-3" value={formData.roomId} onChange={(e) => setFormData({...formData, roomId: e.target.value})}>
+                                            <option value="">Không gán phòng</option>
+                                            {visibleRooms.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                                        </select>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div className="alert alert-info rounded-3 mt-3">
+                                <small><i className="bi bi-info-circle me-2"></i><strong>Lưu ý:</strong> Hệ thống sẽ tự động gán phòng học trống đầu tiên nếu bạn không chọn.</small>
+                            </div>
+                        </div>
+
+                        <div className="p-4 bg-light border-top d-flex justify-content-end gap-2">
+                            <button className="btn btn-secondary rounded-pill px-4 fw-bold" onClick={() => setShowModal(false)}>Hủy</button>
+                            <button className="btn btn-primary rounded-pill px-4 fw-bold d-flex align-items-center" onClick={handleSaveSchedule}>
+                                <i className="bi bi-check-lg me-2"></i> {modalMode === 'add' ? 'Thêm lịch' : 'Cập nhật'}
+                            </button>
                         </div>
                     </div>
                 </div>

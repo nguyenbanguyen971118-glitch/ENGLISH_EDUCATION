@@ -205,7 +205,24 @@ const getApiBaseUrl = () => {
     return normalizeApiBaseUrl(envBaseUrl || DEFAULT_BACKEND_BASE_URL);
 };
 
-const getSignalRBaseUrl = () => getApiBaseUrl().replace(/\/api$/i, '');
+const getSignalRBaseUrl = () => {
+    const apiBase = getApiBaseUrl();
+
+    // In dev the API may be proxied under `/api` (Vite proxy). In that case
+    // SignalR hubs are served from the backend origin (not the vite dev server),
+    // so return the backend origin based on VITE_API_BASE_URL or default.
+    if (import.meta.env.DEV) {
+        const envBase = import.meta.env.VITE_API_BASE_URL?.trim();
+        const devBackend = envBase && !envBase.includes('/api') ? envBase.replace(/\/+$/, '') : 'http://localhost:5050';
+
+        // If apiBase is the proxied `/api`, use explicit backend origin for SignalR.
+        if (apiBase === '/api' || apiBase === normalizeApiBaseUrl('/api')) {
+            return devBackend;
+        }
+    }
+
+    return apiBase.replace(/\/api$/i, '');
+};
 
 const apiClient = new BaseApi(getApiBaseUrl());
 

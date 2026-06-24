@@ -263,7 +263,7 @@ const responseData = response.data ? response.data : response;
                 const payload = {
                     MaBuoiHoc: selectedClass.buoiHocId,
                     LoaiYeuCau: 2,
-                    MaPhongHocDeXuat: Number(formData.newRoom),
+                    MaPhongHocDeXuat: formData.newRoom,
                     LyDo: formData.reason
                 };
 
@@ -278,7 +278,7 @@ const responseData = response.data ? response.data : response;
                     const payload = {
                         MaBuoiHoc: selectedClass.buoiHocId,
                         LoaiYeuCau: 1,
-                        NgayHocDeXuat: formData.newDay,
+                        NgayHocDeXuat: formatDateForApi(new Date(formData.newDay)),
                         MaTietBatDauDeXuat: range.start,
                         MaTietKetThucDeXuat: range.end,
                         LyDo: formData.reason
