@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { StudentClassProvider } from './context/StudentClassContext';
+import { TestProvider } from './context/TestContext';
 import PrivateRoute from './routes/PrivateRoute';
 import MainLayout from './components/MainLayout';
 
@@ -45,6 +46,7 @@ import ParentProfile from './pages/parent/ParentProfile';
 // Import Student Pages
 import StudentProfile from './pages/student/StudentProfile';
 import StudentStudyContent from './pages/student/StudentStudyContent';
+import StudentAssignmentPage from './pages/student/StudentAssignmentPage';
 // Component Placeholder để tránh lỗi khi chưa có file trang cụ thể
 const Placeholder = ({ title }) => (
   <div className="p-4 animate__animated animate__fadeIn">
@@ -73,8 +75,9 @@ function App() {
   return (
     <AuthProvider>
       <StudentClassProvider>
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-        <Routes>
+        <TestProvider>
+          <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<HomeRedirect />} />
 
@@ -132,7 +135,7 @@ function App() {
             {/* --- NHÓM HỌC SINH (STUDENT) --- */}
             <Route path="/student" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentDashboard /></PrivateRoute>} />
             <Route path="/student/schedule" element={<PrivateRoute requiredPermissions={['PAGE_STUDENT_SCHEDULE_VIEW']}><SchedulePage /></PrivateRoute>} />
-            <Route path="/student/homework-list" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><Placeholder title="Quản lý bài tập/bài thi" /></PrivateRoute>} />
+            <Route path="/student/homework-list" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentAssignmentPage /></PrivateRoute>} />
             <Route path="/student/reports" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><Placeholder title="Báo cáo thống kê" /></PrivateRoute>} />
             <Route path="/student/homework" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentStudyContent /></PrivateRoute>} />
             <Route path="/student/notifications" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><Placeholder title="Thông báo" /></PrivateRoute>} />
@@ -152,8 +155,9 @@ function App() {
           {/* Error Routes & Catch-All */}
           <Route path="/unauthorized" element={<div className="d-flex align-items-center justify-content-center" style={{ height: '100vh' }}><div className="text-center"><i className="bi bi-shield-lock-fill fs-1 text-danger"></i><h1 className="mt-3">403 - Không có quyền truy cập</h1><p className="text-muted">Bạn không có quyền truy cập trang này</p></div></div>} />
           <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+          </Routes>
         </Router>
+        </TestProvider>
       </StudentClassProvider>
     </AuthProvider>
   );
