@@ -575,6 +575,121 @@ namespace backend.Controllers
             return Ok(new { message = "Đã xóa buổi học.", id });
         }
 
+        [HttpGet("rooms")]
+        public async Task<IActionResult> GetRooms()
+        {
+            var rooms = await _db.Phonghocs
+                .Where(x => x.DaXoa == null || x.DaXoa == false)
+                .OrderBy(x => x.TenPhong)
+                .Select(x => new
+                {
+                    id = x.MaPhongHoc,
+                    tenPhong = x.TenPhong,
+                    sucChua = x.SucChua,
+                    active = x.TrangThai
+                })
+                .ToListAsync();
+
+            return Ok(rooms);
+        }
+
+        [HttpPost("rooms/create")]
+        public async Task<IActionResult> CreateRoom([FromBody] CreateRoomDto dto)
+        {
+            if (string.IsNullOrWhiteSpace(dto.TenPhong))
+            {
+                return BadRequest(ApiResponseDto<object>.Fail("Tên phòng học không được để trống.", "ROOM_NAME_REQUIRED"));
+            }
+
+            var roomName = dto.TenPhong.Trim();
+            if (roomName.Length > 50)
+            {
+                return BadRequest(ApiResponseDto<object>.Fail("Tên phòng học không được vượt quá 50 ký tự.", "ROOM_NAME_TOO_LONG"));
+            }
+
+            if (await _db.Phonghocs.AnyAsync(p => (p.DaXoa == null || p.DaXoa == false) && p.TenPhong == roomName))
+            {
+                return BadRequest(ApiResponseDto<object>.Fail("Tên phòng học đã tồn tại.", "ROOM_NAME_EXISTS"));
+            }
+
+            var room = new Phonghoc
+            {
+                MaPhongHoc = Guid.NewGuid(),
+                TenPhong = roomName,
+                TrangThai = true,
+                DaXoa = false,
+                ThoiGianTao = DateTime.UtcNow
+            };
+
+            _db.Phonghocs.Add(room);
+            await _db.SaveChangesAsync();
+
+            return Ok(ApiResponseDto<object>.Ok(new { roomId = room.MaPhongHoc }, $"Đã tạo phòng học {room.TenPhong} thành công."));
+        }
+
+        [HttpGet("rooms/{id:guid}")]
+        public async Task<IActionResult> GetRoom(Guid id)
+        {
+            var room = await _db.Phonghocs.FindAsync(id);
+            if (room == null || (room.DaXoa != null && room.DaXoa == true))
+                return NotFound(ApiResponseDto<object>.Fail("Không tìm thấy phòng học."));
+
+            return Ok(new
+            {
+                id = room.MaPhongHoc,
+                tenPhong = room.TenPhong,
+                sucChua = room.SucChua,
+                active = room.TrangThai
+            });
+        }
+
+        [HttpPut("rooms/{id:guid}")]
+        public async Task<IActionResult> UpdateRoom(Guid id, [FromBody] UpdateRoomDto dto)
+        {
+            var room = await _db.Phonghocs.FindAsync(id);
+            if (room == null || (room.DaXoa != null && room.DaXoa == true))
+                return NotFound(ApiResponseDto<object>.Fail("Không tìm thấy phòng học."));
+
+            if (!string.IsNullOrWhiteSpace(dto.TenPhong))
+            {
+                var newName = dto.TenPhong.Trim();
+                if (newName.Length > 50)
+                    return BadRequest(ApiResponseDto<object>.Fail("Tên phòng học không được vượt quá 50 ký tự.", "ROOM_NAME_TOO_LONG"));
+
+                var exists = await _db.Phonghocs.AnyAsync(p => p.MaPhongHoc != id && (p.DaXoa == null || p.DaXoa == false) && p.TenPhong == newName);
+                if (exists)
+                    return BadRequest(ApiResponseDto<object>.Fail("Tên phòng học đã tồn tại.", "ROOM_NAME_EXISTS"));
+
+                room.TenPhong = newName;
+            }
+
+            // Note: capacity (SucChua) is no longer editable via API.
+
+            if (dto.TrangThai.HasValue)
+            {
+                room.TrangThai = dto.TrangThai.Value;
+            }
+
+            room.ThoiGianSua = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(ApiResponseDto<object>.Ok(new { roomId = room.MaPhongHoc }, $"Đã cập nhật phòng học {room.TenPhong} thành công."));
+        }
+
+        [HttpDelete("rooms/{id:guid}")]
+        public async Task<IActionResult> DeleteRoom(Guid id)
+        {
+            var room = await _db.Phonghocs.FindAsync(id);
+            if (room == null || (room.DaXoa != null && room.DaXoa == true))
+                return NotFound(ApiResponseDto<object>.Fail("Không tìm thấy phòng học."));
+
+            room.DaXoa = true;
+            room.ThoiGianSua = DateTime.UtcNow;
+            await _db.SaveChangesAsync();
+
+            return Ok(ApiResponseDto<object>.Ok(new { roomId = id }, "Đã xóa phòng học."));
+        }
+
         [HttpGet("available-rooms")]
         public async Task<IActionResult> GetAvailableRooms([FromQuery] DateTime ngayHoc, [FromQuery] int maTietBatDau, [FromQuery] int maTietKetThuc)
         {

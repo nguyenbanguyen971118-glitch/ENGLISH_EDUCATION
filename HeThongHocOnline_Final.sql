@@ -462,8 +462,9 @@ CREATE TABLE NguoiNhanThongBao (
     FOREIGN KEY (MaThongBao) REFERENCES ThongBao(MaThongBao),
     FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung)
 );
-
-
+ALTER TABLE thongbao
+ADD COLUMN DoiTuong LONGTEXT NOT NULL DEFAULT 'Tat_Ca'
+COLLATE utf8mb4_general_ci;
 CREATE INDEX idx_VaiTroQuyen_Quyen_Active ON VaiTroQuyen(MaQuyen, DaXoa, TrangThai);
 CREATE INDEX idx_NguoiDungVaiTro_VaiTro_Active ON NguoiDungVaiTro(MaVaiTro, DaXoa, TrangThai);
 CREATE INDEX idx_HocSinhLopHoc_HocSinh_Active ON HocSinhLopHoc(MaHocSinh, DaXoa, TrangThai);

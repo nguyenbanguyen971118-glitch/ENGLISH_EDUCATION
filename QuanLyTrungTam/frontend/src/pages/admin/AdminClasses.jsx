@@ -1,16 +1,21 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import apiClient from "../../api/BaseApi";
 import { p0Api } from "../../api/p0Api";
 
 const AdminClasses = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [classes, setClasses] = useState([]);
+  const [rooms, setRooms] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [roomsLoading, setRoomsLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const [editing, setEditing] = useState(null);
+  const [showRooms, setShowRooms] = useState(false);
 
   const loadClasses = async () => {
     setLoading(true);
@@ -21,6 +26,23 @@ const AdminClasses = () => {
       setError(err.message || "Khong tai duoc lop hoc.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadRooms = async () => {
+    setRoomsLoading(true);
+    setError("");
+    try {
+      const result = await apiClient.get("Schedule/rooms");
+      const payload = result?.data ?? result ?? [];
+      if (!Array.isArray(payload)) {
+        throw new Error(result?.message || "Khong tai duoc danh sach phong.");
+      }
+      setRooms(payload);
+    } catch (err) {
+      setError(err.message || "Khong tai duoc danh sach phong.");
+    } finally {
+      setRoomsLoading(false);
     }
   };
 
@@ -57,7 +79,15 @@ const AdminClasses = () => {
 
   useEffect(() => {
     loadClasses();
+    loadRooms();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("showRooms") === "1") {
+      setShowRooms(true);
+    }
+  }, [location.search]);
 
   const filtered = useMemo(() => {
     const keyword = search.trim().toLowerCase();
@@ -100,7 +130,7 @@ const AdminClasses = () => {
     try {
       await p0Api.classes.remove(cls.id);
       setClasses((current) => current.filter((item) => item.id !== cls.id));
-      setToast("Da xoa mem lop hoc.");
+      setToast("Đã xoá lớp học thành công");
     } catch (err) {
       setError(err.message || "Xoa lop hoc that bai.");
     } finally {
@@ -115,10 +145,29 @@ const AdminClasses = () => {
           <i className="bi bi-mortarboard-fill me-2"></i>
           Quan ly lop hoc
         </h4>
-        <button className="btn btn-primary" onClick={() => navigate("/admin/classes/create")}>Them lop hoc</button>
+        <div className="d-flex gap-2">
+          <button className="btn btn-outline-secondary" onClick={() => navigate("/admin/rooms/create")}>Tạo phòng học</button>
+          <button className="btn btn-outline-info" onClick={() => setShowRooms(s => !s)}>Danh sách phòng</button>
+          <button className="btn btn-primary" onClick={() => navigate("/admin/classes/create")}>Thêm lớp học</button>
+        </div>
       </div>
 
-      {toast && <div className="alert alert-success py-2">{toast}</div>}
+      {toast && (
+        <div
+          className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center"
+          style={{ backgroundColor: "rgba(0,0,0,.45)", zIndex: 1080 }}
+        >
+          <div className="card shadow-lg border-0" style={{ minWidth: 320, maxWidth: 420 }}>
+            <div className="card-body text-center p-4">
+              <div className="mb-3 text-success">
+                <i className="bi bi-check-circle-fill" style={{ fontSize: 48 }}></i>
+              </div>
+              <div className="fw-semibold mb-4">{toast}</div>
+              <button className="btn btn-primary px-4" onClick={() => setToast("")}>OK</button>
+            </div>
+          </div>
+        </div>
+      )}
       {error && <div className="alert alert-danger py-2">{error}</div>}
 
       <div className="card shadow-sm mb-3">
@@ -134,6 +183,64 @@ const AdminClasses = () => {
           </div>
         </div>
       </div>
+
+      {showRooms && (
+        <div className="card shadow-sm mb-3">
+          <div className="card-body">
+            <h6 className="fw-bold mb-3">Danh sach phong hoc hien co</h6>
+            {roomsLoading ? (
+              <div className="text-center py-4">Dang tai danh sach phong...</div>
+            ) : rooms.length === 0 ? (
+              <div className="text-center text-muted py-4">Chua co phong hoc nao.</div>
+            ) : (
+              <table className="table align-middle">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Ten phong</th>
+                    <th>Trang thai</th>
+                    <th>Thao tac</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rooms.map((room, index) => (
+                    <tr key={room.id || room.maPhongHoc || index}>
+                      <td>{index + 1}</td>
+                      <td className="fw-semibold"><i className="bi bi-door-open text-primary me-2"></i>{room.tenPhong ?? room.TenPhong ?? room.name}</td>
+                      <td>
+                        <span className={`badge ${room.active || room.TrangThai ? "bg-success" : "bg-secondary"}`}>
+                          {(room.active || room.TrangThai) ? "Hoat dong" : "Khong hoat dong"}
+                        </span>
+                      </td>
+                      <td>
+                        <div className="btn-group">
+                          <button className="btn btn-light border" onClick={() => navigate(`/admin/rooms/${room.id || room.maPhongHoc}/edit`)} title="Sua phong"><i className="bi bi-pencil"></i></button>
+                          <button className="btn btn-light border" disabled={roomsLoading} onClick={async () => {
+                            if (!window.confirm(`Xoa phong ${room.tenPhong || room.TenPhong || room.name}?`)) return;
+                            try {
+                              setRoomsLoading(true);
+                              const id = room.id || room.maPhongHoc;
+                              const res = await apiClient.delete(`Schedule/rooms/${id}`);
+                              if (res && res.success === false) throw new Error(res.message || 'Xoa phong that bai');
+                              await loadRooms();
+                              setToast("Đã xoá phòng học thành công");
+                            } catch (err) {
+                              setError(err?.message || 'Xoa phong that bai.');
+                            } finally {
+                              setRoomsLoading(false);
+                            }
+                          }} title="Xoa phong"><i className="bi bi-trash"></i></button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <small className="text-muted">Tong so {rooms.length} phong hoc</small>
+          </div>
+        </div>
+      )}
 
       <div className="card shadow-sm">
         <div className="card-body">

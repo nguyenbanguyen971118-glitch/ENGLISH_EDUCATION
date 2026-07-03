@@ -20,6 +20,8 @@ import AdminCourses from './pages/admin/AdminCourses';
 import AdminClasses from './pages/admin/AdminClasses';
 import AdminCreateClass from "./pages/admin/AdminCreateClass";
 import AdminCreateCourse from "./pages/admin/AdminCreateCourse";
+import AdminCreateRoom from "./pages/admin/AdminCreateRoom";
+import AdminEditRoom from "./pages/admin/AdminEditRoom";
 import AdminAssignStudent from "./pages/admin/AdminAssignStudent";
 import AdminMessages from './pages/admin/AdminMessages'; // Đã import component nhắn tin
 import AdminStudyContent from './pages/admin/AdminStudyContent'; // Đã import trang nội dung học tập 
@@ -92,6 +94,8 @@ function App() {
 
             <Route path="/admin/classes" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_CLASSES_VIEW']}><AdminClasses /></PrivateRoute>} />
             <Route path="/admin/classes/create" element={<PrivateRoute allowedRoles={['Admin']}><AdminCreateClass /></PrivateRoute>} />
+            <Route path="/admin/rooms/create" element={<PrivateRoute allowedRoles={['Admin']}><AdminCreateRoom /></PrivateRoute>} />
+            <Route path="/admin/rooms/:id/edit" element={<PrivateRoute allowedRoles={['Admin']}><AdminEditRoom /></PrivateRoute>} />
             <Route path="/admin/classes/assign-students" element={<PrivateRoute allowedRoles={['Admin']}><AdminAssignStudent /></PrivateRoute>} />
 
             <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><AdminAttendance /></PrivateRoute>} />

@@ -58,6 +58,26 @@ namespace backend.DTOs
         public string TenPhong { get; set; } = null!;
     }
 
+    public class CreateRoomDto
+    {
+        /// <summary>
+        /// Tên phòng học mới.
+        /// </summary>
+        public string TenPhong { get; set; } = null!;
+    }
+
+    public class UpdateRoomDto
+    {
+        /// <summary>
+        /// Tên phòng học (tùy chọn để cập nhật).
+        /// </summary>
+        public string? TenPhong { get; set; }
+        /// <summary>
+        /// Trạng thái hoạt động (tùy chọn).
+        /// </summary>
+        public bool? TrangThai { get; set; }
+    }
+
     public class AvailableTeacherDto
     {
         /// <summary>
