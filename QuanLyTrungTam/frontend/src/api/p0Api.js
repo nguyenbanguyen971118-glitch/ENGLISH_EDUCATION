@@ -55,4 +55,9 @@ export const p0Api = {
     teacherBoard: async () => apiClient.get("Schedule/teacher-board"),
     create: async (payload) => unwrap(await apiClient.post("Schedule", payload)),
   },
+  reports: {
+    adminOverview: async () => unwrap(await apiClient.get("reports/admin/overview")),
+    teacherClassOverview: async (classId) => unwrap(await apiClient.get(`reports/teacher/classes/${classId}/overview`)),
+    studentOverview: async () => unwrap(await apiClient.get("reports/student/overview")),
+  },
 };

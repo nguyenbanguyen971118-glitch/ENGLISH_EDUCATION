@@ -32,6 +32,7 @@ import AdminNotifcations from "./pages/admin/AdminNotifications";
 import AdminAssignment from "./pages/admin/AdminAssignment";
 import AdminFunctions from './pages/admin/AdminFunctions';
 import AdminSchedule from './pages/admin/AdminSchedule';
+import AdminReports from './pages/admin/AdminReports';
 
 // Import Teacher Pages
 import TeacherAttendance from './pages/teacher/TeacherAttendance';
@@ -40,6 +41,7 @@ import TeacherProfile from './pages/teacher/TeacherProfile';
 import TeacherMessages from './pages/teacher/TeacherMessages';
 import TeacherExams from './pages/teacher/TeacherExams';
 import TeacherStudyContent from './pages/teacher/TeacherStudyContent'; // Đã import trang nội dung  học tập của giáo viên
+import TeacherReports from './pages/teacher/TeacherReports';
 // Import Parent Pages
 import ParentAttendance from './pages/parent/ParentAttendance';
 import ParentMessages from './pages/parent/ParentMessages';
@@ -49,6 +51,7 @@ import ParentProfile from './pages/parent/ParentProfile';
 import StudentProfile from './pages/student/StudentProfile';
 import StudentStudyContent from './pages/student/StudentStudyContent';
 import StudentAssignmentPage from './pages/student/StudentAssignmentPage';
+import StudentReports from './pages/student/StudentReports';
 // Component Placeholder để tránh lỗi khi chưa có file trang cụ thể
 const Placeholder = ({ title }) => (
   <div className="p-4 animate__animated animate__fadeIn">
@@ -100,7 +103,7 @@ function App() {
 
             <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><AdminAttendance /></PrivateRoute>} />
             <Route path="/admin/exams" element={<PrivateRoute allowedRoles={['Admin']}><AdminAssignment /></PrivateRoute>} />
-            <Route path="/admin/reports" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_REPORTS_VIEW']}><Placeholder title="Báo cáo và thống kê" /></PrivateRoute>} />
+            <Route path="/admin/reports" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_REPORTS_VIEW']}><AdminReports /></PrivateRoute>} />
             <Route path="/admin/notifications" element={<PrivateRoute allowedRoles={['Admin']}><AdminNotifcations /></PrivateRoute>} />
             <Route path="/admin/content" element={<PrivateRoute allowedRoles={['Admin']}><AdminStudyContent /></PrivateRoute>} />
             {/* ĐÃ TÍCH HỢP TRANG TIN NHẮN TẠI ĐÂY */}
@@ -132,7 +135,7 @@ function App() {
             <Route path="/teacher/notifications" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Thông báo" /></PrivateRoute>} />
             <Route path="/teacher/messages" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherMessages /></PrivateRoute>} />
             <Route path="/teacher/attendance" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherAttendance /></PrivateRoute>} />
-            <Route path="/teacher/reports" element={<PrivateRoute allowedRoles={['Giao_Vien']} requiredPermissions={['PAGE_ADMIN_REPORTS_VIEW']}><Placeholder title="Báo cáo và thống kê" /></PrivateRoute>} />
+            <Route path="/teacher/reports" element={<PrivateRoute allowedRoles={['Giao_Vien']} requiredPermissions={['PAGE_ADMIN_REPORTS_VIEW']}><TeacherReports /></PrivateRoute>} />
             {/* Trang hồ sơ giảng viên dùng API thật và chỉ cho role Giao_Vien truy cập. */}
             <Route path="/teacher/profile" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherProfile /></PrivateRoute>} />
 
@@ -140,7 +143,7 @@ function App() {
             <Route path="/student" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentDashboard /></PrivateRoute>} />
             <Route path="/student/schedule" element={<PrivateRoute requiredPermissions={['PAGE_STUDENT_SCHEDULE_VIEW']}><SchedulePage /></PrivateRoute>} />
             <Route path="/student/homework-list" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentAssignmentPage /></PrivateRoute>} />
-            <Route path="/student/reports" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><Placeholder title="Báo cáo thống kê" /></PrivateRoute>} />
+            <Route path="/student/reports" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentReports /></PrivateRoute>} />
             <Route path="/student/homework" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentStudyContent /></PrivateRoute>} />
             <Route path="/student/notifications" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><Placeholder title="Thông báo" /></PrivateRoute>} />
             {/* Trang hồ sơ học sinh dùng API thật và chỉ cho role Hoc_Sinh truy cập. */}

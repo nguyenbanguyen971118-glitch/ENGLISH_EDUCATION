@@ -40,6 +40,11 @@ public class UserService : IUserService
             return ApiResponseDto<AuthResultDto>.Fail("Email hoặc mật khẩu không đúng!", "AUTH_INVALID_CREDENTIALS");
         }
 
+        if (user.TrangThai == false)
+        {
+            return ApiResponseDto<AuthResultDto>.Fail("Tài khoản của bạn đã bị khóa hoặc vô hiệu hóa.", "AUTH_USER_DISABLED");
+        }
+
         // Bước 2: Kiểm tra mật khẩu.
         // Hỗ trợ giai đoạn chuyển đổi từ plain text sang bcrypt để tránh làm gãy tài khoản cũ.
         if (!_passwordService.VerifyPassword(password, user.MatKhauHash))
@@ -119,9 +124,9 @@ public class UserService : IUserService
         }
 
         var user = await _userRepository.GetByIdAsync(userId);
-        if (user == null)
+        if (user == null || user.TrangThai == false)
         {
-            return ApiResponseDto<RefreshTokenResultDto>.Fail("Người dùng không tồn tại.", "AUTH_USER_NOT_FOUND");
+            return ApiResponseDto<RefreshTokenResultDto>.Fail("Người dùng không tồn tại hoặc đã bị vô hiệu hóa.", "AUTH_USER_NOT_FOUND");
         }
 
         var role = await _userRepository.GetUserRoleAsync(user.MaNguoiDung);

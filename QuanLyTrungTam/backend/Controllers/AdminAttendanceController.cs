@@ -1,5 +1,6 @@
-﻿// Controllers/AdminAttendanceController.cs
+// Controllers/AdminAttendanceController.cs
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using backend.DTOs;
 using backend.Services;
 
@@ -7,6 +8,7 @@ namespace backend.Controllers
 {
     [ApiController]
     [Route("api/admin/attendance")]
+    [Authorize(Roles = "Admin")]
     public class AdminAttendanceController : ControllerBase
     {
         private readonly IAdminAttendanceService _attendanceService;

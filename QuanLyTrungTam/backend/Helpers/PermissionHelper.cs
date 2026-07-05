@@ -37,7 +37,9 @@ public class PermissionHelper
 
             var user = await _context.Nguoidungs
                 .Include(x => x.Nguoidungvaitros)
-                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId);
+                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId 
+                    && (x.DaXoa == null || x.DaXoa == false) 
+                    && x.TrangThai == true);
 
             if (user == null)
                 return false;
@@ -84,7 +86,9 @@ public class PermissionHelper
 
             var user = await _context.Nguoidungs
                 .Include(x => x.Nguoidungvaitros)
-                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId);
+                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId 
+                    && (x.DaXoa == null || x.DaXoa == false) 
+                    && x.TrangThai == true);
 
             if (user == null)
                 return false;
@@ -129,7 +133,9 @@ public class PermissionHelper
         {
             var user = await _context.Nguoidungs
                 .Include(x => x.Nguoidungvaitros)
-                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId);
+                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId 
+                    && (x.DaXoa == null || x.DaXoa == false) 
+                    && x.TrangThai == true);
 
             if (user == null)
                 return result;
@@ -184,7 +190,9 @@ public class PermissionHelper
     public async Task<string?> GetUserPrimaryRoleAsync(Guid userId)
     {
         var role = await _context.Nguoidungs
-            .Where(x => x.MaNguoiDung == userId)
+            .Where(x => x.MaNguoiDung == userId 
+                && (x.DaXoa == null || x.DaXoa == false) 
+                && x.TrangThai == true)
             .Include(x => x.Nguoidungvaitros)
             .ThenInclude(x => x.MaVaiTroNavigation)
             .SelectMany(x => x.Nguoidungvaitros)
@@ -204,7 +212,9 @@ public class PermissionHelper
     public async Task<bool> HasRoleAsync(Guid userId, string roleName)
     {
         return await _context.Nguoidungs
-            .Where(x => x.MaNguoiDung == userId)
+            .Where(x => x.MaNguoiDung == userId 
+                && (x.DaXoa == null || x.DaXoa == false) 
+                && x.TrangThai == true)
             .Include(x => x.Nguoidungvaitros)
             .ThenInclude(x => x.MaVaiTroNavigation)
             .SelectMany(x => x.Nguoidungvaitros)

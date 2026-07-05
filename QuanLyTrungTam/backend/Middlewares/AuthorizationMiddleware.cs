@@ -46,6 +46,18 @@ public class AuthorizationMiddleware
 
             if (authAttribute != null)
             {
+                // Kiểm tra xem người dùng đã đăng nhập chưa.
+                if (context.User.Identity == null || !context.User.Identity.IsAuthenticated)
+                {
+                    context.Response.StatusCode = StatusCodes.Status401Unauthorized;
+                    await context.Response.WriteAsJsonAsync(new
+                    {
+                        message = "Bạn chưa đăng nhập hoặc phiên làm việc đã hết hạn.",
+                        statusCode = 401
+                    });
+                    return;
+                }
+
                 var result = await CheckPermissionAsync(context, authAttribute, permissionHelper);
                 if (!result)
                 {
