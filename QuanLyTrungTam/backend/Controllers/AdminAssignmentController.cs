@@ -179,6 +179,132 @@ public class AdminAssignmentController : ControllerBase
         return Ok(ApiResponseDto<List<AdminAssignmentQuestionBankItemDto>>.Ok(items, "Lay ngan hang cau hoi thanh cong."));
     }
 
+    [HttpGet("question-bank/{questionId:guid}")]
+    public async Task<IActionResult> GetQuestionBankDetail(Guid questionId)
+    {
+        var detail = await BuildQuestionBankDetailAsync(questionId);
+        if (detail == null)
+        {
+            return NotFound(ApiResponseDto<object>.Fail("Khong tim thay cau hoi trong ngan hang.", "ADMIN_QUESTION_NOT_FOUND"));
+        }
+
+        return Ok(ApiResponseDto<AdminAssignmentQuestionBankDetailDto>.Ok(detail, "Lay chi tiet cau hoi thanh cong."));
+    }
+
+    [HttpPost("question-bank")]
+    public async Task<IActionResult> CreateQuestionBankItem([FromBody] AdminAssignmentQuestionBankUpsertRequestDto request)
+    {
+        var result = await UpsertQuestionBankItemAsync(null, request);
+        if (result.ErrorResult != null)
+        {
+            return result.ErrorResult;
+        }
+
+        return Ok(ApiResponseDto<AdminAssignmentQuestionBankDetailDto>.Ok(result.Detail!, "Tao cau hoi thanh cong."));
+    }
+
+    [HttpPut("question-bank/{questionId:guid}")]
+    public async Task<IActionResult> UpdateQuestionBankItem(Guid questionId, [FromBody] AdminAssignmentQuestionBankUpsertRequestDto request)
+    {
+        var result = await UpsertQuestionBankItemAsync(questionId, request);
+        if (result.ErrorResult != null)
+        {
+            return result.ErrorResult;
+        }
+
+        return Ok(ApiResponseDto<AdminAssignmentQuestionBankDetailDto>.Ok(result.Detail!, "Cap nhat cau hoi thanh cong."));
+    }
+
+    [HttpDelete("question-bank/{questionId:guid}")]
+    public async Task<IActionResult> DeleteQuestionBankItem(Guid questionId)
+    {
+        var userId = User.GetUserId();
+        if (!userId.HasValue)
+        {
+            return Unauthorized(ApiResponseDto<object>.Fail("Khong xac dinh duoc nguoi dung hien tai.", "ADMIN_ASSIGNMENT_USER_INVALID"));
+        }
+
+        var question = await _context.Nganhangcauhois
+            .Include(x => x.Dapans)
+            .Include(x => x.Dapandiendkhuyets)
+            .FirstOrDefaultAsync(x => x.MaCauHoi == questionId && x.DaXoa != true && x.TrangThai != false);
+
+        if (question == null)
+        {
+            return NotFound(ApiResponseDto<object>.Fail("Khong tim thay cau hoi trong ngan hang.", "ADMIN_QUESTION_NOT_FOUND"));
+        }
+
+        var isUsedByAssignments = await _context.Baitapcauhois
+            .AsNoTracking()
+            .AnyAsync(x => x.MaCauHoi == questionId && x.DaXoa != true && x.TrangThai != false);
+
+        if (isUsedByAssignments)
+        {
+            return BadRequest(ApiResponseDto<object>.Fail("Cau hoi dang duoc su dung trong bai tap/de thi, khong the xoa.", "ADMIN_QUESTION_IN_USE"));
+        }
+
+        var now = DateTime.Now;
+        question.DaXoa = true;
+        question.TrangThai = false;
+        question.NguoiSua = userId.Value;
+        question.ThoiGianSua = now;
+
+        foreach (var answer in question.Dapans)
+        {
+            answer.DaXoa = true;
+            answer.TrangThai = false;
+            answer.NguoiSua = userId.Value;
+            answer.ThoiGianSua = now;
+        }
+
+        foreach (var answer in question.Dapandiendkhuyets)
+        {
+            answer.DaXoa = true;
+            answer.TrangThai = false;
+            answer.NguoiSua = userId.Value;
+            answer.ThoiGianSua = now;
+        }
+
+        await _context.SaveChangesAsync();
+        return Ok(ApiResponseDto<object>.Ok(new { questionId }, "Xoa cau hoi thanh cong."));
+    }
+
+    [HttpPost("question-bank/import")]
+    public async Task<IActionResult> ImportQuestionBank([FromBody] AdminAssignmentQuestionBankImportRequestDto request)
+    {
+        if (request.Questions.Count == 0)
+        {
+            return BadRequest(ApiResponseDto<object>.Fail("Danh sach cau hoi import dang rong.", "ADMIN_QUESTION_IMPORT_EMPTY"));
+        }
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        var imported = new List<AdminAssignmentQuestionBankDetailDto>();
+
+        for (var index = 0; index < request.Questions.Count; index++)
+        {
+            var result = await UpsertQuestionBankItemAsync(null, request.Questions[index]);
+            if (result.ErrorResult != null)
+            {
+                await transaction.RollbackAsync();
+                return BadRequest(ApiResponseDto<object>.Fail(
+                    $"Import that bai o dong {index + 1}. Hay kiem tra lai du lieu cau hoi.",
+                    "ADMIN_QUESTION_IMPORT_FAILED"));
+            }
+
+            imported.Add(result.Detail!);
+        }
+
+        await transaction.CommitAsync();
+
+        return Ok(ApiResponseDto<AdminAssignmentQuestionBankImportResultDto>.Ok(
+            new AdminAssignmentQuestionBankImportResultDto
+            {
+                ImportedCount = imported.Count,
+                ImportedQuestions = imported
+            },
+            "Import ngan hang cau hoi thanh cong."));
+    }
+
     [HttpGet("assignments")]
     public async Task<IActionResult> GetAssignments(
         [FromQuery] Guid? courseId,
@@ -492,6 +618,341 @@ public class AdminAssignmentController : ControllerBase
         }
 
         return null;
+    }
+
+    private async Task<QuestionBankUpsertResult> UpsertQuestionBankItemAsync(Guid? questionId, AdminAssignmentQuestionBankUpsertRequestDto request)
+    {
+        var userId = User.GetUserId();
+        if (!userId.HasValue)
+        {
+            return QuestionBankUpsertResult.Fail(Unauthorized(ApiResponseDto<object>.Fail("Khong xac dinh duoc nguoi dung hien tai.", "ADMIN_ASSIGNMENT_USER_INVALID")));
+        }
+
+        var validationError = await ValidateQuestionBankRequestAsync(questionId, request);
+        if (validationError != null)
+        {
+            return QuestionBankUpsertResult.Fail(validationError);
+        }
+
+        var questionTypeCode = request.LoaiCauHoiCode.Trim();
+        var difficultyCode = request.MucDoCode.Trim();
+        var questionTypeId = await ResolveCategoryIdAsync("LOAI_CAU_HOI", questionTypeCode);
+        var difficultyId = await ResolveCategoryIdAsync("MUC_DO_CAU_HOI", difficultyCode);
+
+        if (!questionTypeId.HasValue || !difficultyId.HasValue)
+        {
+            return QuestionBankUpsertResult.Fail(BadRequest(ApiResponseDto<object>.Fail("Loai cau hoi hoac muc do cau hoi khong hop le.", "ADMIN_QUESTION_CATEGORY_INVALID")));
+        }
+
+        var question = questionId.HasValue
+            ? await _context.Nganhangcauhois
+                .Include(x => x.Dapans)
+                .Include(x => x.Dapandiendkhuyets)
+                .FirstOrDefaultAsync(x => x.MaCauHoi == questionId.Value && x.DaXoa != true && x.TrangThai != false)
+            : null;
+
+        if (questionId.HasValue && question == null)
+        {
+            return QuestionBankUpsertResult.Fail(NotFound(ApiResponseDto<object>.Fail("Khong tim thay cau hoi trong ngan hang.", "ADMIN_QUESTION_NOT_FOUND")));
+        }
+
+        var now = DateTime.Now;
+        question ??= new Nganhangcauhoi
+        {
+            MaCauHoi = Guid.NewGuid(),
+            NguoiTao = userId.Value,
+            ThoiGianTao = now,
+            TrangThai = true,
+            DaXoa = false
+        };
+
+        question.MaKhoaHoc = request.MaKhoaHoc;
+        question.LoaiCauHoi = questionTypeId.Value;
+        question.MucDo = difficultyId.Value;
+        question.NoiDungCauHoi = request.NoiDungCauHoi.Trim();
+        question.GiaiThichDapAn = NormalizeOptional(request.GiaiThichDapAn);
+        question.AmThanhLink = NormalizeOptional(request.AmThanhLink);
+        question.HinhAnhLink = NormalizeOptional(request.HinhAnhLink);
+        question.MaCauHoiCha = request.MaCauHoiCha;
+        question.ThuTu = request.ThuTu ?? 0;
+        question.NguoiSua = userId.Value;
+        question.ThoiGianSua = now;
+        question.TrangThai = true;
+        question.DaXoa = false;
+
+        if (!questionId.HasValue)
+        {
+            _context.Nganhangcauhois.Add(question);
+        }
+
+        SyncQuestionBankAnswers(question, request, questionTypeCode, userId.Value, now);
+        await _context.SaveChangesAsync();
+
+        var detail = await BuildQuestionBankDetailAsync(question.MaCauHoi);
+        return QuestionBankUpsertResult.Success(detail!);
+    }
+
+    private async Task<IActionResult?> ValidateQuestionBankRequestAsync(Guid? questionId, AdminAssignmentQuestionBankUpsertRequestDto request)
+    {
+        if (string.IsNullOrWhiteSpace(request.NoiDungCauHoi))
+        {
+            return BadRequest(ApiResponseDto<object>.Fail("Noi dung cau hoi khong duoc de trong.", "ADMIN_QUESTION_CONTENT_REQUIRED"));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.LoaiCauHoiCode))
+        {
+            return BadRequest(ApiResponseDto<object>.Fail("Can chon loai cau hoi.", "ADMIN_QUESTION_TYPE_REQUIRED"));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.MucDoCode))
+        {
+            return BadRequest(ApiResponseDto<object>.Fail("Can chon muc do cau hoi.", "ADMIN_QUESTION_DIFFICULTY_REQUIRED"));
+        }
+
+        var courseExists = await _context.Khoahocs
+            .AsNoTracking()
+            .AnyAsync(x => x.MaKhoaHoc == request.MaKhoaHoc && x.DaXoa != true && x.TrangThai != false);
+
+        if (!courseExists)
+        {
+            return NotFound(ApiResponseDto<object>.Fail("Khong tim thay khoa hoc de gan cau hoi.", "ADMIN_QUESTION_COURSE_NOT_FOUND"));
+        }
+
+        if (request.MaCauHoiCha.HasValue)
+        {
+            if (questionId.HasValue && request.MaCauHoiCha.Value == questionId.Value)
+            {
+                return BadRequest(ApiResponseDto<object>.Fail("Cau hoi cha khong duoc trung voi cau hoi hien tai.", "ADMIN_QUESTION_PARENT_INVALID"));
+            }
+
+            var parentExists = await _context.Nganhangcauhois
+                .AsNoTracking()
+                .AnyAsync(x =>
+                    x.MaCauHoi == request.MaCauHoiCha.Value &&
+                    x.MaKhoaHoc == request.MaKhoaHoc &&
+                    x.DaXoa != true &&
+                    x.TrangThai != false);
+
+            if (!parentExists)
+            {
+                return BadRequest(ApiResponseDto<object>.Fail("Cau hoi cha khong ton tai hoac khong thuoc khoa hoc da chon.", "ADMIN_QUESTION_PARENT_NOT_FOUND"));
+            }
+        }
+
+        var questionTypeCode = request.LoaiCauHoiCode.Trim();
+        var normalizedChoiceAnswers = NormalizeChoiceAnswers(request.ChoiceAnswers);
+        var normalizedTextAnswers = NormalizeTextAnswers(request.TextAnswers);
+
+        if (IsChoiceBasedQuestionTypeCode(questionTypeCode))
+        {
+            if (normalizedChoiceAnswers.Count == 0)
+            {
+                return BadRequest(ApiResponseDto<object>.Fail("Loai cau hoi nay can it nhat mot dap an lua chon.", "ADMIN_QUESTION_ANSWER_REQUIRED"));
+            }
+
+            if (string.Equals(questionTypeCode, "LCH_MCQ", StringComparison.OrdinalIgnoreCase))
+            {
+                if (normalizedChoiceAnswers.Count < 2)
+                {
+                    return BadRequest(ApiResponseDto<object>.Fail("Cau hoi trac nghiem can toi thieu 2 dap an.", "ADMIN_QUESTION_MCQ_MIN_OPTIONS"));
+                }
+
+                if (!normalizedChoiceAnswers.Any(x => x.LaDapAnDung))
+                {
+                    return BadRequest(ApiResponseDto<object>.Fail("Can chon it nhat mot dap an dung cho cau hoi trac nghiem.", "ADMIN_QUESTION_MCQ_CORRECT_REQUIRED"));
+                }
+            }
+
+            if (string.Equals(questionTypeCode, "LCH_MATCHING", StringComparison.OrdinalIgnoreCase) &&
+                normalizedChoiceAnswers.Any(x => string.IsNullOrWhiteSpace(x.GiaTriDoiChieu)))
+            {
+                return BadRequest(ApiResponseDto<object>.Fail("Cau hoi noi/ghep can nhap gia tri doi chieu cho tung dap an.", "ADMIN_QUESTION_MATCHING_VALUE_REQUIRED"));
+            }
+        }
+
+        if (IsTextBasedQuestionTypeCode(questionTypeCode) && normalizedTextAnswers.Count == 0)
+        {
+            return BadRequest(ApiResponseDto<object>.Fail("Loai cau hoi nay can it nhat mot dap an nhap lieu.", "ADMIN_QUESTION_TEXT_ANSWER_REQUIRED"));
+        }
+
+        return null;
+    }
+
+    private void SyncQuestionBankAnswers(
+        Nganhangcauhoi question,
+        AdminAssignmentQuestionBankUpsertRequestDto request,
+        string questionTypeCode,
+        Guid userId,
+        DateTime now)
+    {
+        foreach (var answer in question.Dapans)
+        {
+            answer.DaXoa = true;
+            answer.TrangThai = false;
+            answer.NguoiSua = userId;
+            answer.ThoiGianSua = now;
+        }
+
+        foreach (var answer in question.Dapandiendkhuyets)
+        {
+            answer.DaXoa = true;
+            answer.TrangThai = false;
+            answer.NguoiSua = userId;
+            answer.ThoiGianSua = now;
+        }
+
+        if (IsChoiceBasedQuestionTypeCode(questionTypeCode))
+        {
+            var choiceAnswers = NormalizeChoiceAnswers(request.ChoiceAnswers);
+            for (var index = 0; index < choiceAnswers.Count; index++)
+            {
+                var item = choiceAnswers[index];
+                question.Dapans.Add(new Dapan
+                {
+                    MaDapAn = Guid.NewGuid(),
+                    MaCauHoi = question.MaCauHoi,
+                    TenDapAn = NormalizeOptional(item.TenDapAn),
+                    NoiDungDapAn = item.NoiDungDapAn.Trim(),
+                    LaDapAnDung = item.LaDapAnDung,
+                    GiaTriDoiChieu = NormalizeOptional(item.GiaTriDoiChieu),
+                    ThuTu = item.ThuTu ?? index + 1,
+                    NguoiTao = userId,
+                    ThoiGianTao = now,
+                    TrangThai = true,
+                    DaXoa = false
+                });
+            }
+        }
+
+        if (IsTextBasedQuestionTypeCode(questionTypeCode))
+        {
+            foreach (var item in NormalizeTextAnswers(request.TextAnswers))
+            {
+                question.Dapandiendkhuyets.Add(new Dapandiendkhuyet
+                {
+                    MaDapAnDien = Guid.NewGuid(),
+                    MaCauHoi = question.MaCauHoi,
+                    DapAnChuan = item.DapAnChuan.Trim(),
+                    DapAnThayThe = NormalizeOptional(item.DapAnThayThe),
+                    PhanBietHoaThuong = item.PhanBietHoaThuong,
+                    NguoiTao = userId,
+                    ThoiGianTao = now,
+                    TrangThai = true,
+                    DaXoa = false
+                });
+            }
+        }
+    }
+
+    private async Task<AdminAssignmentQuestionBankDetailDto?> BuildQuestionBankDetailAsync(Guid questionId)
+    {
+        var question = await _context.Nganhangcauhois
+            .AsNoTracking()
+            .Include(x => x.MaKhoaHocNavigation)
+            .Include(x => x.LoaiCauHoiNavigation)
+            .Include(x => x.MucDoNavigation)
+            .Include(x => x.MaCauHoiChaNavigation)
+            .Include(x => x.Dapans)
+            .Include(x => x.Dapandiendkhuyets)
+            .FirstOrDefaultAsync(x => x.MaCauHoi == questionId && x.DaXoa != true && x.TrangThai != false);
+
+        if (question == null)
+        {
+            return null;
+        }
+
+        var activeChoiceAnswers = question.Dapans
+            .Where(x => x.DaXoa != true && x.TrangThai != false)
+            .OrderBy(x => x.ThuTu ?? int.MaxValue)
+            .ThenBy(x => x.NoiDungDapAn)
+            .Select(x => new AdminAssignmentQuestionChoiceAnswerDto
+            {
+                MaDapAn = x.MaDapAn,
+                TenDapAn = x.TenDapAn,
+                NoiDungDapAn = x.NoiDungDapAn,
+                LaDapAnDung = x.LaDapAnDung == true,
+                GiaTriDoiChieu = x.GiaTriDoiChieu,
+                ThuTu = x.ThuTu
+            })
+            .ToList();
+
+        var activeTextAnswers = question.Dapandiendkhuyets
+            .Where(x => x.DaXoa != true && x.TrangThai != false)
+            .OrderBy(x => x.ThoiGianTao ?? DateTime.MinValue)
+            .Select(x => new AdminAssignmentQuestionTextAnswerDto
+            {
+                MaDapAnDien = x.MaDapAnDien,
+                DapAnChuan = x.DapAnChuan,
+                DapAnThayThe = x.DapAnThayThe,
+                PhanBietHoaThuong = x.PhanBietHoaThuong == true
+            })
+            .ToList();
+
+        return new AdminAssignmentQuestionBankDetailDto
+        {
+            MaCauHoi = question.MaCauHoi,
+            MaKhoaHoc = question.MaKhoaHoc,
+            TenKhoaHoc = question.MaKhoaHocNavigation.TenKhoaHoc,
+            LoaiCauHoiCode = question.LoaiCauHoiNavigation?.MaCode ?? string.Empty,
+            LoaiCauHoiLabel = question.LoaiCauHoiNavigation?.TenChiTiet ?? string.Empty,
+            MucDoCode = question.MucDoNavigation?.MaCode ?? string.Empty,
+            MucDoLabel = question.MucDoNavigation?.TenChiTiet ?? string.Empty,
+            NoiDungCauHoi = question.NoiDungCauHoi,
+            GiaiThichDapAn = question.GiaiThichDapAn,
+            AmThanhLink = question.AmThanhLink,
+            HinhAnhLink = question.HinhAnhLink,
+            MaCauHoiCha = question.MaCauHoiCha,
+            NoiDungCauHoiCha = question.MaCauHoiChaNavigation?.NoiDungCauHoi,
+            ThuTu = question.ThuTu,
+            LaCauHoiTuLuan = IsEssayTypeCode(question.LoaiCauHoiNavigation?.MaCode),
+            SoDapAnLuaChon = activeChoiceAnswers.Count,
+            SoDapAnNhapLieu = activeTextAnswers.Count,
+            ThoiGianTao = question.ThoiGianTao,
+            ChoiceAnswers = activeChoiceAnswers,
+            TextAnswers = activeTextAnswers
+        };
+    }
+
+    private static List<AdminAssignmentQuestionChoiceAnswerUpsertRequestDto> NormalizeChoiceAnswers(
+        IEnumerable<AdminAssignmentQuestionChoiceAnswerUpsertRequestDto>? answers)
+    {
+        return (answers ?? [])
+            .Where(x => !string.IsNullOrWhiteSpace(x.NoiDungDapAn))
+            .Select(x => new AdminAssignmentQuestionChoiceAnswerUpsertRequestDto
+            {
+                TenDapAn = NormalizeOptional(x.TenDapAn),
+                NoiDungDapAn = x.NoiDungDapAn.Trim(),
+                LaDapAnDung = x.LaDapAnDung,
+                GiaTriDoiChieu = NormalizeOptional(x.GiaTriDoiChieu),
+                ThuTu = x.ThuTu
+            })
+            .ToList();
+    }
+
+    private static List<AdminAssignmentQuestionTextAnswerUpsertRequestDto> NormalizeTextAnswers(
+        IEnumerable<AdminAssignmentQuestionTextAnswerUpsertRequestDto>? answers)
+    {
+        return (answers ?? [])
+            .Where(x => !string.IsNullOrWhiteSpace(x.DapAnChuan))
+            .Select(x => new AdminAssignmentQuestionTextAnswerUpsertRequestDto
+            {
+                DapAnChuan = x.DapAnChuan.Trim(),
+                DapAnThayThe = NormalizeOptional(x.DapAnThayThe),
+                PhanBietHoaThuong = x.PhanBietHoaThuong
+            })
+            .ToList();
+    }
+
+    private static bool IsChoiceBasedQuestionTypeCode(string? questionTypeCode)
+    {
+        return string.Equals(questionTypeCode, "LCH_MCQ", StringComparison.OrdinalIgnoreCase) ||
+               string.Equals(questionTypeCode, "LCH_MATCHING", StringComparison.OrdinalIgnoreCase);
+    }
+
+    private static bool IsTextBasedQuestionTypeCode(string? questionTypeCode)
+    {
+        return string.Equals(questionTypeCode, "LCH_GAPFILL", StringComparison.OrdinalIgnoreCase) ||
+               IsEssayTypeCode(questionTypeCode);
     }
 
     private void SyncQuestionSelections(Baitap assignment, AdminAssignmentUpsertRequestDto request, Guid userId, DateTime now)
@@ -1061,5 +1522,15 @@ public class AdminAssignmentController : ControllerBase
         public static UpsertResult Fail(IActionResult errorResult) => new() { ErrorResult = errorResult };
 
         public static UpsertResult Success(AdminAssignmentDetailDto detail) => new() { Detail = detail };
+    }
+
+    private sealed class QuestionBankUpsertResult
+    {
+        public IActionResult? ErrorResult { get; private init; }
+        public AdminAssignmentQuestionBankDetailDto? Detail { get; private init; }
+
+        public static QuestionBankUpsertResult Fail(IActionResult errorResult) => new() { ErrorResult = errorResult };
+
+        public static QuestionBankUpsertResult Success(AdminAssignmentQuestionBankDetailDto detail) => new() { Detail = detail };
     }
 }

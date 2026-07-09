@@ -46,6 +46,31 @@ public class AdminAssignmentQuestionBankItemDto
     public DateTime? ThoiGianTao { get; set; }
 }
 
+public class AdminAssignmentQuestionChoiceAnswerDto
+{
+    public Guid MaDapAn { get; set; }
+    public string? TenDapAn { get; set; }
+    public string NoiDungDapAn { get; set; } = string.Empty;
+    public bool LaDapAnDung { get; set; }
+    public string? GiaTriDoiChieu { get; set; }
+    public int? ThuTu { get; set; }
+}
+
+public class AdminAssignmentQuestionTextAnswerDto
+{
+    public Guid MaDapAnDien { get; set; }
+    public string DapAnChuan { get; set; } = string.Empty;
+    public string? DapAnThayThe { get; set; }
+    public bool PhanBietHoaThuong { get; set; }
+}
+
+public class AdminAssignmentQuestionBankDetailDto : AdminAssignmentQuestionBankItemDto
+{
+    public string? NoiDungCauHoiCha { get; set; }
+    public List<AdminAssignmentQuestionChoiceAnswerDto> ChoiceAnswers { get; set; } = new();
+    public List<AdminAssignmentQuestionTextAnswerDto> TextAnswers { get; set; } = new();
+}
+
 public class AdminAssignmentSubmissionStatsDto
 {
     public int TotalStudents { get; set; }
@@ -122,6 +147,48 @@ public class AdminAssignmentQuestionSelectionRequestDto
     public Guid MaCauHoi { get; set; }
     public int? ThuTu { get; set; }
     public decimal? DiemCuaCau { get; set; }
+}
+
+public class AdminAssignmentQuestionChoiceAnswerUpsertRequestDto
+{
+    public string? TenDapAn { get; set; }
+    public string NoiDungDapAn { get; set; } = string.Empty;
+    public bool LaDapAnDung { get; set; }
+    public string? GiaTriDoiChieu { get; set; }
+    public int? ThuTu { get; set; }
+}
+
+public class AdminAssignmentQuestionTextAnswerUpsertRequestDto
+{
+    public string DapAnChuan { get; set; } = string.Empty;
+    public string? DapAnThayThe { get; set; }
+    public bool PhanBietHoaThuong { get; set; }
+}
+
+public class AdminAssignmentQuestionBankUpsertRequestDto
+{
+    public Guid MaKhoaHoc { get; set; }
+    public string LoaiCauHoiCode { get; set; } = string.Empty;
+    public string MucDoCode { get; set; } = string.Empty;
+    public string NoiDungCauHoi { get; set; } = string.Empty;
+    public string? GiaiThichDapAn { get; set; }
+    public string? AmThanhLink { get; set; }
+    public string? HinhAnhLink { get; set; }
+    public Guid? MaCauHoiCha { get; set; }
+    public int? ThuTu { get; set; }
+    public List<AdminAssignmentQuestionChoiceAnswerUpsertRequestDto> ChoiceAnswers { get; set; } = new();
+    public List<AdminAssignmentQuestionTextAnswerUpsertRequestDto> TextAnswers { get; set; } = new();
+}
+
+public class AdminAssignmentQuestionBankImportRequestDto
+{
+    public List<AdminAssignmentQuestionBankUpsertRequestDto> Questions { get; set; } = new();
+}
+
+public class AdminAssignmentQuestionBankImportResultDto
+{
+    public int ImportedCount { get; set; }
+    public List<AdminAssignmentQuestionBankDetailDto> ImportedQuestions { get; set; } = new();
 }
 
 public class AdminAssignmentUpsertRequestDto
