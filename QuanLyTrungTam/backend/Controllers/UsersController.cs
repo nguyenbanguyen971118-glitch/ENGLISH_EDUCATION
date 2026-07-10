@@ -1,3 +1,4 @@
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Models;
@@ -23,6 +24,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
+    [AuthorizeByPermission("PAGE_ADMIN_USERS_VIEW")]
     public async Task<IActionResult> GetAll()
     {
         var users = await _db.Nguoidungs
@@ -40,6 +42,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet("{id:guid}")]
+    [AuthorizeByPermission("PAGE_ADMIN_USERS_VIEW")]
     public async Task<IActionResult> GetById(Guid id)
     {
         var user = await _db.Nguoidungs
@@ -57,6 +60,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPost]
+    [AuthorizeByPermission("USERS_CREATE")]
     public async Task<IActionResult> Create([FromBody] CreateUserRequestDto request)
     {
         var validation = await ValidateCreateAsync(request);
@@ -90,6 +94,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
+    [AuthorizeByPermission("USERS_EDIT")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateUserRequestDto request)
     {
         var user = await _db.Nguoidungs.FirstOrDefaultAsync(u => u.MaNguoiDung == id && u.DaXoa != true);
@@ -117,6 +122,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
+    [AuthorizeByPermission("USERS_DELETE")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var user = await _db.Nguoidungs.FirstOrDefaultAsync(u => u.MaNguoiDung == id && u.DaXoa != true);
@@ -142,6 +148,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{id:guid}/roles")]
+    [AuthorizeByPermission("USERS_EDIT")]
     public async Task<IActionResult> UpdateRoles(Guid id, [FromBody] UpdateUserRolesRequestDto request)
     {
         var exists = await _db.Nguoidungs.AnyAsync(u => u.MaNguoiDung == id && u.DaXoa != true);

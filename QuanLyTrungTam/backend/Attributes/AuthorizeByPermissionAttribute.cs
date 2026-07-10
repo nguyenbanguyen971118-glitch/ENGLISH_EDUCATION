@@ -20,4 +20,18 @@ public class AuthorizeByPermissionAttribute : Attribute
     /// Nếu user có đủ toàn bộ mã quyền trong danh sách này thì được phép.
     /// </summary>
     public int[] PermissionIds { get; set; } = Array.Empty<int>();
+
+    /// <summary>
+    /// Mã quyền dạng chuỗi (ví dụ: USERS_CREATE, PAGE_PARENT_SCHEDULE_VIEW)
+    /// </summary>
+    public string PermissionCode { get; set; } = string.Empty;
+
+    public AuthorizeByPermissionAttribute()
+    {
+    }
+
+    public AuthorizeByPermissionAttribute(string permissionCode)
+    {
+        PermissionCode = permissionCode;
+    }
 }

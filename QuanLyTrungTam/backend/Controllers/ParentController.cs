@@ -227,7 +227,7 @@ namespace QuanLyTrungTam.Controllers
         }
 
         [HttpGet("child-summary/{userId}")]
-        [AuthorizeByPermission(MaChucNang = 2, PermissionIds = new[] { 8 })]
+        [AuthorizeByPermission("PAGE_PARENT_SCHEDULE_VIEW")]
         public async Task<IActionResult> GetChildSummary(string userId)
         {
             if (!Guid.TryParse(userId, out var parsedUserId))

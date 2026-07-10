@@ -35,30 +35,16 @@ public class PermissionHelper
                 return false;
             }
 
-            var user = await _context.Nguoidungs
-                .Include(x => x.Nguoidungvaitros)
-                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId 
-                    && (x.DaXoa == null || x.DaXoa == false) 
-                    && x.TrangThai == true);
-
-            if (user == null)
-                return false;
-
-            var roleIds = user.Nguoidungvaitros
-                .Where(x => x.DaXoa == null || x.DaXoa == false)
-                .Select(x => x.MaVaiTro)
-                .ToList();
-
-            if (!roleIds.Any())
-                return false;
-
-            return await _context.Vaitroquyens
-                .Include(x => x.MaQuyenNavigation)
-                .AnyAsync(x =>
-                    roleIds.Contains(x.MaVaiTro) &&
-                    x.MaQuyen == permissionId &&
-                    (maChucNang <= 0 || x.MaQuyenNavigation.MaChucNang == maChucNang) &&
-                    (x.DaXoa == null || x.DaXoa == false)
+            return await _context.Nguoidungvaitros
+                .Where(uv => uv.MaNguoiDung == userId && (uv.DaXoa == null || uv.DaXoa == false))
+                .Join(_context.Vaitroquyens,
+                    uv => uv.MaVaiTro,
+                    vq => vq.MaVaiTro,
+                    (uv, vq) => vq)
+                .AnyAsync(vq =>
+                    vq.MaQuyen == permissionId &&
+                    (maChucNang <= 0 || vq.MaQuyenNavigation.MaChucNang == maChucNang) &&
+                    (vq.DaXoa == null || vq.DaXoa == false)
                 );
         }
         catch
@@ -84,35 +70,17 @@ public class PermissionHelper
                 return false;
             }
 
-            var user = await _context.Nguoidungs
-                .Include(x => x.Nguoidungvaitros)
-                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId 
-                    && (x.DaXoa == null || x.DaXoa == false) 
-                    && x.TrangThai == true);
-
-            if (user == null)
-                return false;
-
-            // Lấy tất cả vai trò đang còn hiệu lực của người dùng.
-            var roleIds = user.Nguoidungvaitros
-                .Where(x => x.DaXoa == null || x.DaXoa == false)
-                .Select(x => x.MaVaiTro)
-                .ToList();
-
-            if (!roleIds.Any())
-                return false;
-
-            // Kiểm tra xem có vai trò nào gán quyền này cho đúng chức năng hay không.
-            var hasPermission = await _context.Vaitroquyens
-                .Include(x => x.MaQuyenNavigation)
-                .AnyAsync(x =>
-                    roleIds.Contains(x.MaVaiTro) &&
-                    (maChucNang <= 0 || x.MaQuyenNavigation.MaChucNang == maChucNang) &&
-                    ((x.MaQuyenNavigation.TenQuyen ?? string.Empty).Trim().ToUpper()) == normalizedPermissionCode &&
-                    (x.DaXoa == null || x.DaXoa == false)
+            return await _context.Nguoidungvaitros
+                .Where(uv => uv.MaNguoiDung == userId && (uv.DaXoa == null || uv.DaXoa == false))
+                .Join(_context.Vaitroquyens,
+                    uv => uv.MaVaiTro,
+                    vq => vq.MaVaiTro,
+                    (uv, vq) => vq)
+                .AnyAsync(vq =>
+                    (maChucNang <= 0 || vq.MaQuyenNavigation.MaChucNang == maChucNang) &&
+                    vq.MaQuyenNavigation.TenQuyen.Trim().ToUpper() == normalizedPermissionCode &&
+                    (vq.DaXoa == null || vq.DaXoa == false)
                 );
-
-            return hasPermission;
         }
         catch
         {
@@ -133,9 +101,7 @@ public class PermissionHelper
         {
             var user = await _context.Nguoidungs
                 .Include(x => x.Nguoidungvaitros)
-                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId 
-                    && (x.DaXoa == null || x.DaXoa == false) 
-                    && x.TrangThai == true);
+                .FirstOrDefaultAsync(x => x.MaNguoiDung == userId);
 
             if (user == null)
                 return result;
@@ -190,9 +156,7 @@ public class PermissionHelper
     public async Task<string?> GetUserPrimaryRoleAsync(Guid userId)
     {
         var role = await _context.Nguoidungs
-            .Where(x => x.MaNguoiDung == userId 
-                && (x.DaXoa == null || x.DaXoa == false) 
-                && x.TrangThai == true)
+            .Where(x => x.MaNguoiDung == userId)
             .Include(x => x.Nguoidungvaitros)
             .ThenInclude(x => x.MaVaiTroNavigation)
             .SelectMany(x => x.Nguoidungvaitros)
@@ -212,9 +176,7 @@ public class PermissionHelper
     public async Task<bool> HasRoleAsync(Guid userId, string roleName)
     {
         return await _context.Nguoidungs
-            .Where(x => x.MaNguoiDung == userId 
-                && (x.DaXoa == null || x.DaXoa == false) 
-                && x.TrangThai == true)
+            .Where(x => x.MaNguoiDung == userId)
             .Include(x => x.Nguoidungvaitros)
             .ThenInclude(x => x.MaVaiTroNavigation)
             .SelectMany(x => x.Nguoidungvaitros)

@@ -1,3 +1,4 @@
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Helpers;
@@ -77,7 +78,7 @@ public class ClassesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeByPermission("PAGE_ADMIN_CLASSES_VIEW")]
     public async Task<IActionResult> Create([FromBody] UpsertClassRequestDto request)
     {
         var validation = await ValidateRequestAsync(request);
@@ -142,7 +143,7 @@ public class ClassesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeByPermission("PAGE_ADMIN_CLASSES_VIEW")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpsertClassRequestDto request)
     {
         var classEntity = await _db.Lophocs.FirstOrDefaultAsync(c => c.MaLopHoc == id && c.DaXoa != true);
@@ -180,7 +181,7 @@ public class ClassesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeByPermission("PAGE_ADMIN_CLASSES_VIEW")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var classEntity = await _db.Lophocs.FirstOrDefaultAsync(c => c.MaLopHoc == id && c.DaXoa != true);

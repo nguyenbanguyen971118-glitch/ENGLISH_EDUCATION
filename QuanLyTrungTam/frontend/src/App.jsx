@@ -103,7 +103,7 @@ function App() {
 
             <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><AdminAttendance /></PrivateRoute>} />
             <Route path="/admin/exams" element={<PrivateRoute allowedRoles={['Admin']}><AdminAssignment /></PrivateRoute>} />
-            <Route path="/admin/reports" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_REPORTS_VIEW']}><AdminReports /></PrivateRoute>} />
+            <Route path="/admin/reports" element={<PrivateRoute allowedRoles={['Admin']} requiredPermissions={['PAGE_ADMIN_REPORTS_VIEW']}><AdminReports /></PrivateRoute>} />
             <Route path="/admin/notifications" element={<PrivateRoute allowedRoles={['Admin']}><AdminNotifcations /></PrivateRoute>} />
             <Route path="/admin/content" element={<PrivateRoute allowedRoles={['Admin']}><AdminStudyContent /></PrivateRoute>} />
             {/* ĐÃ TÍCH HỢP TRANG TIN NHẮN TẠI ĐÂY */}
@@ -135,7 +135,7 @@ function App() {
             <Route path="/teacher/notifications" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Thông báo" /></PrivateRoute>} />
             <Route path="/teacher/messages" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherMessages /></PrivateRoute>} />
             <Route path="/teacher/attendance" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherAttendance /></PrivateRoute>} />
-            <Route path="/teacher/reports" element={<PrivateRoute allowedRoles={['Giao_Vien']} requiredPermissions={['PAGE_ADMIN_REPORTS_VIEW']}><TeacherReports /></PrivateRoute>} />
+            <Route path="/teacher/reports" element={<PrivateRoute allowedRoles={['Giao_Vien']} requiredPermissions={['PAGE_TEACHER_REPORTS_VIEW']}><TeacherReports /></PrivateRoute>} />
             {/* Trang hồ sơ giảng viên dùng API thật và chỉ cho role Giao_Vien truy cập. */}
             <Route path="/teacher/profile" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherProfile /></PrivateRoute>} />
 

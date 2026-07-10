@@ -25,26 +25,31 @@ namespace backend.Services
         }
 
         /// <summary>
-        /// Lấy dữ liệu thống kê tổng quan toàn trung tâm dành cho tài khoản Admin.
-        /// Bao gồm: Tổng số lượng học sinh/giáo viên/lớp học/khóa học, tỷ lệ điểm danh chung, 
-        /// phổ điểm trung bình toàn hệ thống và biểu đồ quy mô sĩ số của từng lớp.
+        /// Phương thức dùng chung để phân tích phân phối phổ điểm từ danh sách điểm số bài tập.
         /// </summary>
-        /// <returns>Đối tượng chứa dữ liệu thống kê tổng quan AdminOverviewReportDto</returns>
-        public async Task<AdminOverviewReportDto> GetAdminOverviewAsync()
+        private ScoreDistributionDto CalculateScoreDistribution(List<double> scores)
         {
-            // Lấy tổng số học sinh, giáo viên, lớp học và khóa học đang hoạt động trong hệ thống
-            var totalStudents = await _context.Hocsinhs.CountAsync(x => x.DaXoa != true);
-            var totalTeachers = await _context.Giangviens.CountAsync(x => x.DaXoa != true);
-            var totalClasses = await _context.Lophocs.CountAsync(x => x.DaXoa != true);
-            var totalCourses = await _context.Khoahocs.CountAsync(x => x.DaXoa != true);
+            var scoreDist = new ScoreDistributionDto();
+            if (scores != null && scores.Any())
+            {
+                scoreDist.Total = scores.Count;
+                scoreDist.AverageScore = Math.Round(scores.Average(), 2);
+                scoreDist.Under5 = scores.Count(s => s < 5.0);
+                scoreDist.From5To7 = scores.Count(s => s >= 5.0 && s < 7.0);
+                scoreDist.From7To85 = scores.Count(s => s >= 7.0 && s < 8.5);
+                scoreDist.Above85 = scores.Count(s => s >= 8.5);
+            }
+            return scoreDist;
+        }
 
-            // Truy vấn toàn bộ lịch sử điểm danh đang hoạt động để phân tích tỷ lệ đi học chung
-            var attendanceRecords = await _context.Diemdanhs
-                .Where(x => x.DaXoa != true)
-                .Include(x => x.MaTrangThaiNavigation)
-                .ToListAsync();
-
+        /// <summary>
+        /// Phương thức dùng chung để phân tích tỷ lệ chuyên cần từ danh sách bản ghi điểm danh.
+        /// </summary>
+        private AttendanceRateDto CalculateAttendanceRate(List<Diemdanh> attendanceRecords)
+        {
             var attendanceRate = new AttendanceRateDto();
+            if (attendanceRecords == null) return attendanceRate;
+
             foreach (var record in attendanceRecords)
             {
                 var code = record.MaTrangThaiNavigation?.MaCode;
@@ -54,45 +59,101 @@ namespace backend.Services
                 else if (code == "DD_LATE") attendanceRate.Late++;
                 else if (code == "DD_EXCUSED") attendanceRate.Excused++;
             }
+            return attendanceRate;
+        }
 
-            // Truy vấn toàn bộ điểm số bài tập của học sinh để phân tích phân phối phổ điểm
-            var scores = await _context.Nopbais
-                .Where(x => x.DaXoa != true && x.DiemSo != null)
-                .Select(x => (double)x.DiemSo!.Value)
-                .ToListAsync();
-
-            var scoreDist = new ScoreDistributionDto();
-            if (scores.Any())
+        /// <summary>
+        /// Phương thức dùng chung để điền đầy các chỉ số cơ bản của BaseOverviewReportDto (Học sinh, chuyên cần, phổ điểm, kích thước lớp).
+        /// Hỗ trợ lọc theo danh sách lớp học được gán (dành cho Giáo viên) hoặc toàn bộ trung tâm (dành cho Admin).
+        /// </summary>
+        private async Task FillBaseOverviewReportAsync(BaseOverviewReportDto report, List<Guid>? limitClassIds = null)
+        {
+            if (limitClassIds != null)
             {
-                scoreDist.Total = scores.Count;
-                scoreDist.AverageScore = Math.Round(scores.Average(), 2);
-                scoreDist.Under5 = scores.Count(s => s < 5.0);
-                scoreDist.From5To7 = scores.Count(s => s >= 5.0 && s < 7.0);
-                scoreDist.From7To85 = scores.Count(s => s >= 7.0 && s < 8.5);
-                scoreDist.Above85 = scores.Count(s => s >= 8.5);
+                if (!limitClassIds.Any()) return;
+
+                report.TotalClasses = limitClassIds.Count;
+
+                // Học sinh duy nhất trong các lớp được giới hạn
+                report.TotalStudents = await _context.Hocsinhlophocs
+                    .Where(x => limitClassIds.Contains(x.MaLopHoc) && x.DaXoa != true && x.TrangThai != false)
+                    .Select(x => x.MaHocSinh)
+                    .Distinct()
+                    .CountAsync();
+
+                // Điểm danh của các lớp được giới hạn
+                var attendanceRecords = await _context.Diemdanhs
+                    .Where(x => x.DaXoa != true && x.MaBuoiHocNavigation.MaLopHoc != null && limitClassIds.Contains(x.MaBuoiHocNavigation.MaLopHoc))
+                    .Include(x => x.MaTrangThaiNavigation)
+                    .ToListAsync();
+                report.AttendanceRate = CalculateAttendanceRate(attendanceRecords);
+
+                // Điểm số của các lớp được giới hạn
+                var scores = await _context.Nopbais
+                    .Where(x => x.DaXoa != true && x.DiemSo != null && limitClassIds.Contains(x.MaSuKienNavigation.MaLopHoc))
+                    .Select(x => (double)x.DiemSo!.Value)
+                    .ToListAsync();
+                report.ScoreDistribution = CalculateScoreDistribution(scores);
+
+                // Quy mô từng lớp được giới hạn
+                report.ClassSizes = await _context.Lophocs
+                    .Where(x => limitClassIds.Contains(x.MaLopHoc) && x.DaXoa != true)
+                    .Select(x => new ClassSizeDto
+                    {
+                        ClassName = x.TenLop,
+                        StudentCount = _context.Hocsinhlophocs.Count(h => h.MaLopHoc == x.MaLopHoc && h.DaXoa != true && h.TrangThai != false),
+                        Capacity = x.SiSoToiDa ?? 0
+                    })
+                    .ToListAsync();
             }
-
-            // Lấy thông tin quy mô sĩ số (số học viên thực tế vs sức chứa tối đa) của các lớp
-            var classes = await _context.Lophocs
-                .Where(x => x.DaXoa != true)
-                .Select(x => new ClassSizeDto
-                {
-                    ClassName = x.TenLop,
-                    StudentCount = _context.Hocsinhlophocs.Count(h => h.MaLopHoc == x.MaLopHoc && h.DaXoa != true && h.TrangThai != false),
-                    Capacity = x.SiSoToiDa ?? 0
-                })
-                .ToListAsync();
-
-            return new AdminOverviewReportDto
+            else
             {
-                TotalStudents = totalStudents,
-                TotalTeachers = totalTeachers,
-                TotalClasses = totalClasses,
-                TotalCourses = totalCourses,
-                AttendanceRate = attendanceRate,
-                ScoreDistribution = scoreDist,
-                ClassSizes = classes
-            };
+                // Thống kê toàn trung tâm (Admin)
+                report.TotalClasses = await _context.Lophocs.CountAsync(x => x.DaXoa != true);
+                report.TotalStudents = await _context.Hocsinhs.CountAsync(x => x.DaXoa != true);
+
+                var attendanceRecords = await _context.Diemdanhs
+                    .Where(x => x.DaXoa != true)
+                    .Include(x => x.MaTrangThaiNavigation)
+                    .ToListAsync();
+                report.AttendanceRate = CalculateAttendanceRate(attendanceRecords);
+
+                var scores = await _context.Nopbais
+                    .Where(x => x.DaXoa != true && x.DiemSo != null)
+                    .Select(x => (double)x.DiemSo!.Value)
+                    .ToListAsync();
+                report.ScoreDistribution = CalculateScoreDistribution(scores);
+
+                report.ClassSizes = await _context.Lophocs
+                    .Where(x => x.DaXoa != true)
+                    .Select(x => new ClassSizeDto
+                    {
+                        ClassName = x.TenLop,
+                        StudentCount = _context.Hocsinhlophocs.Count(h => h.MaLopHoc == x.MaLopHoc && h.DaXoa != true && h.TrangThai != false),
+                        Capacity = x.SiSoToiDa ?? 0
+                    })
+                    .ToListAsync();
+            }
+        }
+
+        /// <summary>
+        /// Lấy dữ liệu thống kê tổng quan toàn trung tâm dành cho tài khoản Admin.
+        /// Bao gồm: Tổng số lượng học sinh/giáo viên/lớp học/khóa học, tỷ lệ điểm danh chung, 
+        /// phổ điểm trung bình toàn hệ thống và biểu đồ quy mô sĩ số của từng lớp.
+        /// </summary>
+        /// <returns>Đối tượng chứa dữ liệu thống kê tổng quan AdminOverviewReportDto</returns>
+        public async Task<AdminOverviewReportDto> GetAdminOverviewAsync()
+        {
+            var report = new AdminOverviewReportDto();
+            
+            // Điền các trường cơ bản từ lớp cha BaseOverviewReportDto
+            await FillBaseOverviewReportAsync(report);
+            
+            // Bổ sung các chỉ số đặc thù của Admin
+            report.TotalTeachers = await _context.Giangviens.CountAsync(x => x.DaXoa != true);
+            report.TotalCourses = await _context.Khoahocs.CountAsync(x => x.DaXoa != true);
+
+            return report;
         }
 
         /// <summary>
@@ -192,28 +253,11 @@ namespace backend.Services
                 TotalStudents = enrollments.Count
             };
 
-            // Phân tích tỷ lệ điểm danh chung cho biểu đồ tròn chuyên cần của lớp
-            foreach (var record in attendanceRecords)
-            {
-                var code = record.MaTrangThaiNavigation?.MaCode;
-                report.AttendanceRate.Total++;
-                if (code == "DD_PRESENT") report.AttendanceRate.Present++;
-                else if (code == "DD_ABSENT") report.AttendanceRate.Absent++;
-                else if (code == "DD_LATE") report.AttendanceRate.Late++;
-                else if (code == "DD_EXCUSED") report.AttendanceRate.Excused++;
-            }
+            report.AttendanceRate = CalculateAttendanceRate(attendanceRecords);
 
             // Phân tích phổ điểm chung của các bài tập trong lớp
             var classScores = submissions.Where(s => s.DiemSo != null).Select(s => (double)s.DiemSo!.Value).ToList();
-            if (classScores.Any())
-            {
-                report.ScoreDistribution.Total = classScores.Count;
-                report.ScoreDistribution.AverageScore = Math.Round(classScores.Average(), 2);
-                report.ScoreDistribution.Under5 = classScores.Count(s => s < 5.0);
-                report.ScoreDistribution.From5To7 = classScores.Count(s => s >= 5.0 && s < 7.0);
-                report.ScoreDistribution.From7To85 = classScores.Count(s => s >= 7.0 && s < 8.5);
-                report.ScoreDistribution.Above85 = classScores.Count(s => s >= 8.5);
-            }
+            report.ScoreDistribution = CalculateScoreDistribution(classScores);
 
             // Tính tỷ lệ hoàn thành bài tập về nhà chung của cả lớp
             int totalPossibleSubmissions = enrollments.Count * events.Count;
@@ -334,15 +378,7 @@ namespace backend.Services
             };
 
             // Tổng hợp chuyên cần cá nhân
-            foreach (var record in attendanceRecords)
-            {
-                var code = record.MaTrangThaiNavigation?.MaCode;
-                report.AttendanceRate.Total++;
-                if (code == "DD_PRESENT") report.AttendanceRate.Present++;
-                else if (code == "DD_ABSENT") report.AttendanceRate.Absent++;
-                else if (code == "DD_LATE") report.AttendanceRate.Late++;
-                else if (code == "DD_EXCUSED") report.AttendanceRate.Excused++;
-            }
+            report.AttendanceRate = CalculateAttendanceRate(attendanceRecords);
 
             // Tính tỷ lệ hoàn thành bài tập về nhà của bản thân
             int completedHwCount = submissions.Count(s => s.ThoiGianNop != null);
@@ -409,6 +445,79 @@ namespace backend.Services
                 string submitDateStr = trend.SubmitTime.HasValue ? trend.SubmitTime.Value.ToString("yyyy-MM-dd HH:mm:ss") : "Chưa nộp";
                 string scoreStr = trend.Score.HasValue ? trend.Score.Value.ToString("F1") : "Chưa chấm";
                 sb.AppendLine($"\"{trend.AssignmentName.Replace("\"", "\"\"")}\",{submitDateStr},{scoreStr},{trend.MaxScore}");
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Lấy số liệu thống kê tổng quan của tất cả các lớp giảng dạy dành cho Giáo viên.
+        /// </summary>
+        public async Task<TeacherOverviewReportDto> GetTeacherOverviewAsync(Guid teacherProfileId)
+        {
+            // Lấy danh sách mã lớp học giáo viên phụ trách
+            var teacherClassIds = await _context.Giangvienlophocs
+                .Where(x => x.MaGiangVien == teacherProfileId && x.DaXoa != true)
+                .Select(x => x.MaLopHoc)
+                .ToListAsync();
+
+            var report = new TeacherOverviewReportDto();
+            
+            if (teacherClassIds.Any())
+            {
+                // Điền đầy các chỉ số cơ bản của lớp cha dựa vào danh sách lớp giảng dạy
+                await FillBaseOverviewReportAsync(report, teacherClassIds);
+            }
+
+            return report;
+        }
+
+        /// <summary>
+        /// Tạo nội dung báo cáo tổng quan tất cả các lớp giảng dạy dưới dạng chuỗi CSV cho Giáo viên.
+        /// </summary>
+        public async Task<string> ExportTeacherOverviewCsvAsync(Guid teacherProfileId)
+        {
+            var sb = new StringBuilder();
+            sb.Append("\uFEFF"); // UTF-8 BOM
+            sb.AppendLine("DANH SÁCH LỚP PHỤ TRÁCH VÀ THỐNG KÊ CHI TIẾT");
+            sb.AppendLine("Tên Lớp,Sĩ Số Hiện Tại,Sĩ Số Tối Đa,Tỷ Lệ Chuyên Cần (%),Điểm Trung Bình");
+
+            var teacherClassIds = await _context.Giangvienlophocs
+                .Where(x => x.MaGiangVien == teacherProfileId && x.DaXoa != true)
+                .Select(x => x.MaLopHoc)
+                .ToListAsync();
+
+            if (!teacherClassIds.Any())
+            {
+                return sb.ToString();
+            }
+
+            var classes = await _context.Lophocs
+                .Where(x => teacherClassIds.Contains(x.MaLopHoc) && x.DaXoa != true)
+                .ToListAsync();
+
+            foreach (var c in classes)
+            {
+                // Chuyên cần lớp
+                var classAtt = await _context.Diemdanhs
+                    .Where(x => x.DaXoa != true && x.MaBuoiHocNavigation.MaLopHoc == c.MaLopHoc)
+                    .Include(x => x.MaTrangThaiNavigation)
+                    .ToListAsync();
+                
+                int attTotal = classAtt.Count;
+                int attPresent = classAtt.Count(x => x.MaTrangThaiNavigation?.MaCode == "DD_PRESENT" || x.MaTrangThaiNavigation?.MaCode == "DD_LATE");
+                double attRate = attTotal > 0 ? Math.Round((double)attPresent / attTotal * 100, 2) : 0;
+
+                // Điểm trung bình lớp
+                var classScores = await _context.Nopbais
+                    .Where(x => x.DaXoa != true && x.MaSuKienNavigation.MaLopHoc == c.MaLopHoc && x.DiemSo != null)
+                    .Select(x => (double)x.DiemSo!.Value)
+                    .ToListAsync();
+                
+                double avgScore = classScores.Any() ? Math.Round(classScores.Average(), 2) : 0;
+                int currentStudents = await _context.Hocsinhlophocs.CountAsync(h => h.MaLopHoc == c.MaLopHoc && h.DaXoa != true && h.TrangThai != false);
+
+                sb.AppendLine($"\"{c.TenLop.Replace("\"", "\"\"")}\",{currentStudents},{c.SiSoToiDa ?? 0},{attRate},{avgScore}");
             }
 
             return sb.ToString();

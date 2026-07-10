@@ -22,9 +22,8 @@ const TeacherReports = () => {
     try {
       const res = await p0Api.classes.assignedToMe();
       setClasses(res || []);
-      if (res && res.length > 0) {
-        setSelectedClassId(res[0].id);
-      }
+      // Default to "all" to show the overall teaching dashboard first
+      setSelectedClassId('all');
     } catch (err) {
       console.error(err);
       setError(err.message || 'Không thể tải danh sách lớp học giảng dạy.');
@@ -33,16 +32,21 @@ const TeacherReports = () => {
     }
   };
 
-  // Load report for selected class
+  // Load report for selected class or all classes
   const loadClassReport = async (classId) => {
     if (!classId) return;
     setLoadingReport(true);
     try {
-      const res = await p0Api.reports.teacherClassOverview(classId);
+      let res;
+      if (classId === 'all') {
+        res = await p0Api.reports.teacherOverview();
+      } else {
+        res = await p0Api.reports.teacherClassOverview(classId);
+      }
       setReport(res);
     } catch (err) {
       console.error(err);
-      alert(err.message || 'Không thể tải dữ liệu thống kê lớp học.');
+      alert(err.message || 'Không thể tải dữ liệu thống kê.');
     } finally {
       setLoadingReport(false);
     }
@@ -66,7 +70,15 @@ const TeacherReports = () => {
       const token = userData ? JSON.parse(userData)?.token : null;
 
       const baseUrl = getApiBaseUrl();
-      const response = await fetch(`${baseUrl}/reports/teacher/classes/${selectedClassId}/export`, {
+      const exportUrl = selectedClassId === 'all'
+        ? `${baseUrl}/reports/teacher/export`
+        : `${baseUrl}/reports/teacher/classes/${selectedClassId}/export`;
+
+      const filename = selectedClassId === 'all'
+        ? 'BaoCaoTongQuanGiangDay.csv'
+        : `BaoCaoLopHoc_${classes.find(c => c.id === selectedClassId)?.name || 'Export'}.csv`;
+
+      const response = await fetch(exportUrl, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
@@ -80,12 +92,12 @@ const TeacherReports = () => {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `BaoCaoLopHoc_${classes.find(c => c.id === selectedClassId)?.name || 'Export'}.csv`;
+      a.download = filename;
       document.body.appendChild(a);
       a.click();
       a.remove();
     } catch (err) {
-      alert(err.message || 'Lỗi khi xuất báo cáo lớp học.');
+      alert(err.message || 'Lỗi khi xuất báo cáo.');
     } finally {
       setExporting(false);
     }
@@ -152,82 +164,90 @@ const TeacherReports = () => {
       {/* Selection Header */}
       <div className="row g-3 align-items-center mb-4 border-bottom pb-3">
         <div className="col-12 col-md-6">
-          <h2 className="fw-bold text-uppercase text-primary m-0">Thống Kê Lớp Học</h2>
-          <p className="text-muted m-0">Quản lý chuyên cần và tiến trình làm bài của lớp giảng dạy</p>
+          <h2 className="fw-bold text-uppercase text-primary m-0">Thống Kê Giảng Dạy</h2>
+          <p className="text-muted m-0">Quản lý chuyên cần, quy mô sĩ số và tiến trình học tập của học viên</p>
         </div>
         <div className="col-12 col-md-6 d-flex gap-2 justify-content-md-end">
-          {classes.length > 0 ? (
-            <>
-              <select
-                className="form-select rounded-pill px-3 w-auto"
-                value={selectedClassId}
-                onChange={(e) => setSelectedClassId(e.target.value)}
-              >
-                {classes.map((cls) => (
-                  <option key={cls.id} value={cls.id}>
-                    {cls.name}
-                  </option>
-                ))}
-              </select>
-              <button
-                onClick={handleExport}
-                className="btn btn-outline-primary fw-bold shadow-sm"
-                disabled={exporting || loadingReport}
-              >
-                {exporting ? (
-                  <>
-                    <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
-                    Đang xuất...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-download me-2"></i> Xuất báo cáo
-                  </>
-                )}
-              </button>
-            </>
-          ) : (
-            <span className="text-warning fw-semibold">Bạn chưa được phân công lớp học nào</span>
-          )}
+          <select
+            className="form-select rounded-pill px-3 w-auto"
+            value={selectedClassId}
+            onChange={(e) => setSelectedClassId(e.target.value)}
+          >
+            <option value="all">Tất cả các lớp phụ trách</option>
+            {classes.map((cls) => (
+              <option key={cls.id} value={cls.id}>
+                {cls.name}
+              </option>
+            ))}
+          </select>
+          <button
+            onClick={handleExport}
+            className="btn btn-outline-primary fw-bold shadow-sm"
+            disabled={exporting || loadingReport || !report}
+          >
+            {exporting ? (
+              <>
+                <span className="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>
+                Đang xuất...
+              </>
+            ) : (
+              <>
+                <i className="bi bi-download me-2"></i> Xuất báo cáo
+              </>
+            )}
+          </button>
         </div>
       </div>
 
       {loadingReport ? (
         <div className="d-flex align-items-center justify-content-center p-5" style={{ minHeight: '40vh' }}>
           <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Đang tải dữ liệu lớp...</span>
+            <span className="visually-hidden">Đang tải dữ liệu báo cáo...</span>
           </div>
         </div>
       ) : report ? (
         <>
           {/* Top Summary Widgets */}
           <div className="row g-3 mb-4">
-            <div className="col-12 col-md-4">
-              <div className="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
-                <span className="text-muted text-uppercase fw-semibold mb-1">Sĩ Số Học Sinh</span>
+            {/* Widget 1 */}
+            <div className="col-12 col-sm-6 col-md-4 animate__animated animate__fadeInUp" style={{ animationDelay: '50ms' }}>
+              <div className="card border-0 shadow-sm rounded-4 p-3 bg-white text-center dashboard-card-hover transition-all">
+                <span className="text-muted text-uppercase fw-semibold mb-1" style={{ fontSize: '12px' }}>Sĩ Số Học Sinh</span>
                 <h2 className="fw-bold text-primary m-0">{report.totalStudents}</h2>
               </div>
             </div>
-            <div className="col-12 col-md-4">
-              <div className="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
-                <span className="text-muted text-uppercase fw-semibold mb-1">Tỷ Lệ Đi Học Đầy Đủ</span>
-                <h2 className="fw-bold text-success m-0">{report.attendanceRate.PresentPercent}%</h2>
+            {/* Widget 2 */}
+            <div className="col-12 col-sm-6 col-md-4 animate__animated animate__fadeInUp" style={{ animationDelay: '100ms' }}>
+              <div className="card border-0 shadow-sm rounded-4 p-3 bg-white text-center dashboard-card-hover transition-all">
+                <span className="text-muted text-uppercase fw-semibold mb-1" style={{ fontSize: '12px' }}>
+                  {selectedClassId === 'all' ? 'Số Lớp Giảng Dạy' : 'Tỷ Lệ Chuyên Cần'}
+                </span>
+                <h2 className={`fw-bold ${selectedClassId === 'all' ? 'text-info' : 'text-success'} m-0`}>
+                  {selectedClassId === 'all' ? report.totalClasses : `${report.attendanceRate.PresentPercent}%`}
+                </h2>
               </div>
             </div>
-            <div className="col-12 col-md-4">
-              <div className="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
-                <span className="text-muted text-uppercase fw-semibold mb-1">Tỷ Lệ Nộp Bài Tập</span>
-                <h2 className="fw-bold text-warning m-0">{report.homeworkCompletionRate}%</h2>
+            {/* Widget 3 */}
+            <div className="col-12 col-sm-6 col-md-4 animate__animated animate__fadeInUp" style={{ animationDelay: '150ms' }}>
+              <div className="card border-0 shadow-sm rounded-4 p-3 bg-white text-center dashboard-card-hover transition-all">
+                <span className="text-muted text-uppercase fw-semibold mb-1" style={{ fontSize: '12px' }}>
+                  {selectedClassId === 'all' ? 'Tỷ Lệ Chuyên Cần Chung' : 'Tỷ Lệ Nộp Bài Tập'}
+                </span>
+                <h2 className={`fw-bold ${selectedClassId === 'all' ? 'text-success' : 'text-warning'} m-0`}>
+                  {selectedClassId === 'all' ? `${report.attendanceRate.PresentPercent}%` : `${report.homeworkCompletionRate}%`}
+                </h2>
               </div>
             </div>
           </div>
 
           {/* Charts Row */}
           <div className="row g-4 mb-4">
-            {/* Attendance of Selected Class */}
-            <div className="col-12 col-lg-5">
-              <div className="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
-                <h5 className="fw-bold mb-3 text-secondary border-bottom pb-2">Chuyên Cần Lớp</h5>
+            {/* Attendance Chart */}
+            <div className="col-12 col-lg-5 animate__animated animate__fadeInUp" style={{ animationDelay: '200ms' }}>
+              <div className="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white chart-card-hover transition-all">
+                <h5 className="fw-bold mb-3 text-secondary border-bottom pb-2">
+                  {selectedClassId === 'all' ? 'Chuyên Cần Chung' : 'Chuyên Cần Lớp'}
+                </h5>
                 <div style={{ height: '280px' }} className="d-flex align-items-center justify-content-center">
                   {report.attendanceRate.total > 0 ? (
                     <Doughnut
@@ -245,11 +265,11 @@ const TeacherReports = () => {
               </div>
             </div>
 
-            {/* Score Distribution of Selected Class */}
-            <div className="col-12 col-lg-7">
-              <div className="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white">
+            {/* Score Distribution Chart */}
+            <div className="col-12 col-lg-7 animate__animated animate__fadeInUp" style={{ animationDelay: '250ms' }}>
+              <div className="card border-0 shadow-sm rounded-4 p-4 h-100 bg-white chart-card-hover transition-all">
                 <h5 className="fw-bold mb-3 text-secondary border-bottom pb-2">
-                  Phổ Điểm Của Lớp
+                  Phổ Điểm Chung
                   {report.scoreDistribution.total > 0 && (
                     <span className="badge bg-primary ms-3">ĐTB: {report.scoreDistribution.averageScore}</span>
                   )}
@@ -275,37 +295,78 @@ const TeacherReports = () => {
             </div>
           </div>
 
-          {/* Student Progress Table */}
-          <div className="card border-0 shadow-sm rounded-4 p-4 bg-white">
-            <h5 className="fw-bold mb-3 text-secondary border-bottom pb-2">Chi Tiết Từng Học Sinh</h5>
-            <div className="table-responsive">
-              <table className="table table-hover align-middle">
-                <thead className="table-light">
-                  <tr>
-                    <th scope="col">Họ Tên Học Sinh</th>
-                    <th scope="col" className="text-center">Chuyên Cần (%)</th>
-                    <th scope="col" className="text-center">Điểm Trung Bình</th>
-                    <th scope="col" className="text-center">Bài Tập Hoàn Thành</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {report.students.map((student) => (
-                    <tr key={student.studentId}>
-                      <td className="fw-bold text-dark">{student.studentName}</td>
-                      <td className="text-center fw-semibold text-success">{student.attendanceRate}%</td>
-                      <td className="text-center">
-                        <span className={`badge ${student.averageScore >= 8.0 ? 'bg-success' : student.averageScore >= 5.0 ? 'bg-primary' : 'bg-danger'} px-3 py-2 fs-6`}>
-                          {student.averageScore.toFixed(1)}
-                        </span>
-                      </td>
-                      <td className="text-center fw-semibold">
-                        {student.completedHomeworkCount} / {student.totalHomeworkCount}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+          {/* Bottom Table/Progress list */}
+          <div className="animate__animated animate__fadeInUp" style={{ animationDelay: '300ms' }}>
+            {selectedClassId === 'all' ? (
+              /* Quy mô sĩ số lớp học phụ trách */
+              <div className="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h5 className="fw-bold mb-3 text-secondary border-bottom pb-2">Quy Mô Lớp Học Giảng Dạy</h5>
+                <div className="row g-3">
+                  {report.classSizes && report.classSizes.length > 0 ? (
+                    report.classSizes.map((cls, idx) => {
+                      const pct = cls.capacity > 0 ? Math.min(100, Math.round(cls.studentCount / cls.capacity * 100)) : 0;
+                      return (
+                        <div key={idx} className="col-12 col-md-6 mb-2">
+                          <div className="p-3 border rounded-4 bg-light">
+                            <div className="d-flex justify-content-between align-items-center mb-2">
+                              <span className="fw-bold text-dark">{cls.className}</span>
+                              <span className="badge bg-secondary px-3">{cls.studentCount} / {cls.capacity} Học sinh</span>
+                            </div>
+                            <div className="progress rounded-pill" style={{ height: '10px' }}>
+                              <div 
+                                className={`progress-bar rounded-pill ${pct >= 90 ? 'bg-danger' : pct >= 70 ? 'bg-warning' : 'bg-success'}`}
+                                role="progressbar" 
+                                style={{ width: `${pct}%` }} 
+                                aria-valuenow={pct} 
+                                aria-valuemin="0" 
+                                aria-valuemax="100"
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="col-12 text-center p-4 text-muted">
+                      Bạn chưa được phân công lớp học nào hoặc lớp trống.
+                    </div>
+                  )}
+                </div>
+              </div>
+            ) : (
+              /* Student Progress Table */
+              <div className="card border-0 shadow-sm rounded-4 p-4 bg-white">
+                <h5 className="fw-bold mb-3 text-secondary border-bottom pb-2">Chi Tiết Từng Học Sinh</h5>
+                <div className="table-responsive">
+                  <table className="table table-hover align-middle">
+                    <thead className="table-light">
+                      <tr>
+                        <th scope="col">Họ Tên Học Sinh</th>
+                        <th scope="col" className="text-center">Chuyên Cần (%)</th>
+                        <th scope="col" className="text-center">Điểm Trung Bình</th>
+                        <th scope="col" className="text-center">Bài Tập Hoàn Thành</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {report.students && report.students.map((student) => (
+                        <tr key={student.studentId}>
+                          <td className="fw-bold text-dark">{student.studentName}</td>
+                          <td className="text-center fw-semibold text-success">{student.attendanceRate}%</td>
+                          <td className="text-center">
+                            <span className={`badge ${student.averageScore >= 8.0 ? 'bg-success' : student.averageScore >= 5.0 ? 'bg-primary' : 'bg-danger'} px-3 py-2 fs-6`}>
+                              {student.averageScore.toFixed(1)}
+                            </span>
+                          </td>
+                          <td className="text-center fw-semibold">
+                            {student.completedHomeworkCount} / {student.totalHomeworkCount}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
           </div>
         </>
       ) : (

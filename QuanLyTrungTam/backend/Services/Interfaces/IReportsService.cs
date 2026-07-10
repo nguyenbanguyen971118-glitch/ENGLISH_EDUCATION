@@ -28,6 +28,16 @@ namespace backend.Services.Interfaces
         /// Tạo báo cáo kết quả chi tiết của từng học viên trong lớp dưới dạng chuỗi định dạng CSV cho Giáo viên.
         /// </summary>
         Task<string> ExportTeacherClassReportCsvAsync(Guid teacherProfileId, Guid classId);
+
+        /// <summary>
+        /// Lấy số liệu thống kê tổng quan của tất cả các lớp giảng dạy dành cho Giáo viên.
+        /// </summary>
+        Task<TeacherOverviewReportDto> GetTeacherOverviewAsync(Guid teacherProfileId);
+
+        /// <summary>
+        /// Tạo nội dung báo cáo tổng quan tất cả các lớp giảng dạy dưới dạng chuỗi CSV cho Giáo viên.
+        /// </summary>
+        Task<string> ExportTeacherOverviewCsvAsync(Guid teacherProfileId);
         
         /// <summary>
         /// Lấy báo cáo chuyên cần cá nhân, tiến độ hoàn thành bài tập và biểu đồ xu hướng điểm số cho Học sinh.

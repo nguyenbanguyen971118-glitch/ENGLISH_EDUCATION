@@ -54,7 +54,8 @@ public class PermissionBootstrapService
             new { MaChucNang = classFn.MaChucNang, Ten = "PAGE_TEACHER_SCHEDULE_VIEW", MoTa = "Xem lịch dạy giáo viên" },
             new { MaChucNang = classFn.MaChucNang, Ten = "PAGE_STUDENT_SCHEDULE_VIEW", MoTa = "Xem lịch học học sinh" },
             new { MaChucNang = classFn.MaChucNang, Ten = "PAGE_PARENT_SCHEDULE_VIEW", MoTa = "Xem lịch học phụ huynh" },
-            new { MaChucNang = reportFn.MaChucNang, Ten = "PAGE_ADMIN_REPORTS_VIEW", MoTa = "Xem báo cáo" }
+            new { MaChucNang = reportFn.MaChucNang, Ten = "PAGE_ADMIN_REPORTS_VIEW", MoTa = "Xem báo cáo Admin" },
+            new { MaChucNang = reportFn.MaChucNang, Ten = "PAGE_TEACHER_REPORTS_VIEW", MoTa = "Xem báo cáo giáo viên" }
         };
 
         foreach (var p in permissionSeeds)
@@ -86,7 +87,7 @@ public class PermissionBootstrapService
                 "Giao_Vien" => new HashSet<string>
                 {
                     "PAGE_TEACHER_SCHEDULE_VIEW",
-                    "PAGE_ADMIN_REPORTS_VIEW"
+                    "PAGE_TEACHER_REPORTS_VIEW"
                 },
                 "Hoc_Sinh" => new HashSet<string>
                 {

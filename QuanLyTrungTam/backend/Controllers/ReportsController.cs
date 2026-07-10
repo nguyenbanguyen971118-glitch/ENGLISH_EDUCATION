@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Threading.Tasks;
+using backend.Attributes;
 using backend.DTOs;
 using backend.Helpers;
 using backend.Services.Interfaces;
@@ -26,10 +27,10 @@ namespace backend.Controllers
 
         /// <summary>
         /// Lấy thống kê tổng quan toàn trung tâm (sĩ số, giảng viên, khóa học, chuyên cần và phân bổ điểm số) dành cho Admin.
-        /// Yêu cầu vai trò: Admin
+        /// Yêu cầu quyền: PAGE_ADMIN_REPORTS_VIEW
         /// </summary>
         [HttpGet("admin/overview")]
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("PAGE_ADMIN_REPORTS_VIEW")]
         public async Task<IActionResult> GetAdminOverview()
         {
             try
@@ -45,10 +46,10 @@ namespace backend.Controllers
 
         /// <summary>
         /// Xuất file Excel (.csv UTF-8 BOM) thống kê tổng quan danh sách lớp học cho Admin.
-        /// Yêu cầu vai trò: Admin
+        /// Yêu cầu quyền: PAGE_ADMIN_REPORTS_VIEW
         /// </summary>
         [HttpGet("admin/export")]
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("PAGE_ADMIN_REPORTS_VIEW")]
         public async Task<IActionResult> ExportAdminReport()
         {
             try
@@ -64,12 +65,63 @@ namespace backend.Controllers
         }
 
         /// <summary>
+        /// Lấy thống kê tổng quan của tất cả các lớp giảng dạy dành cho Giáo viên.
+        /// Yêu cầu quyền: PAGE_TEACHER_REPORTS_VIEW
+        /// </summary>
+        [HttpGet("teacher/overview")]
+        [AuthorizeByPermission("PAGE_TEACHER_REPORTS_VIEW")]
+        public async Task<IActionResult> GetTeacherOverview()
+        {
+            try
+            {
+                var teacherProfileId = User.GetProfileId();
+                if (!teacherProfileId.HasValue)
+                {
+                    return BadRequest(ApiResponseDto<object>.Fail("Không tìm thấy mã giáo viên trong phiên đăng nhập.", "TEACHER_PROFILE_NOT_FOUND"));
+                }
+
+                var report = await _reportsService.GetTeacherOverviewAsync(teacherProfileId.Value);
+                return Ok(ApiResponseDto<TeacherOverviewReportDto>.Ok(report, "Lấy thống kê tổng quan giảng dạy thành công."));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDto<object>.Fail($"Lỗi: {ex.Message}", "REPORT_TEACHER_OVERVIEW_ERROR"));
+            }
+        }
+
+        /// <summary>
+        /// Xuất file Excel (.csv UTF-8 BOM) thống kê tổng quan các lớp phụ trách cho Giáo viên.
+        /// Yêu cầu quyền: PAGE_TEACHER_REPORTS_VIEW
+        /// </summary>
+        [HttpGet("teacher/export")]
+        [AuthorizeByPermission("PAGE_TEACHER_REPORTS_VIEW")]
+        public async Task<IActionResult> ExportTeacherOverview()
+        {
+            try
+            {
+                var teacherProfileId = User.GetProfileId();
+                if (!teacherProfileId.HasValue)
+                {
+                    return BadRequest(ApiResponseDto<object>.Fail("Không tìm thấy mã giáo viên trong phiên đăng nhập.", "TEACHER_PROFILE_NOT_FOUND"));
+                }
+
+                var csv = await _reportsService.ExportTeacherOverviewCsvAsync(teacherProfileId.Value);
+                var fileBytes = Encoding.UTF8.GetBytes(csv);
+                return File(fileBytes, "text/csv; charset=utf-8", "BaoCaoTongQuanGiangDay.csv");
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(ApiResponseDto<object>.Fail($"Lỗi xuất Excel: {ex.Message}", "REPORT_TEACHER_EXPORT_ERROR"));
+            }
+        }
+
+        /// <summary>
         /// Lấy thống kê chuyên cần, phổ điểm bài tập và tiến độ nộp bài chi tiết của từng học sinh trong một lớp học.
-        /// Yêu cầu vai trò: Giao_Vien (phải thuộc danh sách giảng viên phụ trách lớp học đó)
+        /// Yêu cầu quyền: PAGE_TEACHER_REPORTS_VIEW
         /// </summary>
         /// <param name="classId">Mã định danh duy nhất của lớp học cần xem báo cáo</param>
         [HttpGet("teacher/classes/{classId:guid}/overview")]
-        [Authorize(Roles = "Giao_Vien")]
+        [AuthorizeByPermission("PAGE_TEACHER_REPORTS_VIEW")]
         public async Task<IActionResult> GetTeacherClassOverview(Guid classId)
         {
             try
@@ -95,11 +147,11 @@ namespace backend.Controllers
 
         /// <summary>
         /// Xuất báo cáo điểm thi và chuyên cần chi tiết của học sinh trong lớp phụ trách dưới dạng file Excel (.csv).
-        /// Yêu cầu vai trò: Giao_Vien
+        /// Yêu cầu quyền: PAGE_TEACHER_REPORTS_VIEW
         /// </summary>
         /// <param name="classId">Mã định danh duy nhất của lớp học cần xuất báo cáo</param>
         [HttpGet("teacher/classes/{classId:guid}/export")]
-        [Authorize(Roles = "Giao_Vien")]
+        [AuthorizeByPermission("PAGE_TEACHER_REPORTS_VIEW")]
         public async Task<IActionResult> ExportTeacherClassReport(Guid classId)
         {
             try
@@ -126,10 +178,10 @@ namespace backend.Controllers
 
         /// <summary>
         /// Lấy thống kê kết quả học tập cá nhân (điểm trung bình, chuyên cần, xu hướng điểm bài tập) của học sinh đang đăng nhập.
-        /// Yêu cầu vai trò: Hoc_Sinh
+        /// Yêu cầu quyền: PAGE_STUDENT_SCHEDULE_VIEW
         /// </summary>
         [HttpGet("student/overview")]
-        [Authorize(Roles = "Hoc_Sinh")]
+        [AuthorizeByPermission("PAGE_STUDENT_SCHEDULE_VIEW")]
         public async Task<IActionResult> GetStudentOverview()
         {
             try
@@ -151,10 +203,10 @@ namespace backend.Controllers
 
         /// <summary>
         /// Xuất học bạ điện tử cá nhân (lịch sử nộp bài, điểm số) của học sinh đang đăng nhập dưới dạng file Excel (.csv).
-        /// Yêu cầu vai trò: Hoc_Sinh
+        /// Yêu cầu quyền: PAGE_STUDENT_SCHEDULE_VIEW
         /// </summary>
         [HttpGet("student/export")]
-        [Authorize(Roles = "Hoc_Sinh")]
+        [AuthorizeByPermission("PAGE_STUDENT_SCHEDULE_VIEW")]
         public async Task<IActionResult> ExportStudentReport()
         {
             try

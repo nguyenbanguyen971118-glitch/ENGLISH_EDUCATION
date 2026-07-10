@@ -57,6 +57,7 @@ export const p0Api = {
   },
   reports: {
     adminOverview: async () => unwrap(await apiClient.get("reports/admin/overview")),
+    teacherOverview: async () => unwrap(await apiClient.get("reports/teacher/overview")),
     teacherClassOverview: async (classId) => unwrap(await apiClient.get(`reports/teacher/classes/${classId}/overview`)),
     studentOverview: async () => unwrap(await apiClient.get("reports/student/overview")),
   },

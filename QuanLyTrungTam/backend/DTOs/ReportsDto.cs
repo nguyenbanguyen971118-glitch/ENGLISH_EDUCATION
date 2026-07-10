@@ -3,22 +3,33 @@ using System.Collections.Generic;
 
 namespace backend.DTOs
 {
-    // DTOs for Admin Overview
-    public class AdminOverviewReportDto
+    /// <summary>
+    /// Lớp DTO cơ sở chứa các số liệu thống kê tổng quan (Sĩ số học sinh, số lớp học,
+    /// chuyên cần, phân phối điểm số và kích thước lớp). Dùng làm lớp cha cho Admin và Giáo viên.
+    /// </summary>
+    public class BaseOverviewReportDto
     {
         public int TotalStudents { get; set; }
-        public int TotalTeachers { get; set; }
         public int TotalClasses { get; set; }
-        public int TotalCourses { get; set; }
         
-        // Attendance rates
+        // Tỷ lệ điểm danh chuyên cần
         public AttendanceRateDto AttendanceRate { get; set; } = new();
         
-        // Score distribution
+        // Phân phối phổ điểm
         public ScoreDistributionDto ScoreDistribution { get; set; } = new();
         
         // Sĩ số từng lớp học
         public List<ClassSizeDto> ClassSizes { get; set; } = new();
+    }
+
+    /// <summary>
+    /// DTO chứa dữ liệu thống kê tổng quan toàn trung tâm dành cho Admin.
+    /// Kế thừa các chỉ số cơ bản từ BaseOverviewReportDto và bổ sung tổng số giáo viên và khóa học.
+    /// </summary>
+    public class AdminOverviewReportDto : BaseOverviewReportDto
+    {
+        public int TotalTeachers { get; set; }
+        public int TotalCourses { get; set; }
     }
 
     public class AttendanceRateDto
@@ -48,7 +59,7 @@ namespace backend.DTOs
         public int Capacity { get; set; }
     }
 
-    // DTOs for Teacher Class Overview
+    // DTOs cho thống kê chi tiết theo từng lớp phụ trách của Giáo viên
     public class TeacherClassReportDto
     {
         public Guid ClassId { get; set; }
@@ -72,7 +83,7 @@ namespace backend.DTOs
         public int TotalHomeworkCount { get; set; }
     }
 
-    // DTOs for Student Overview
+    // DTOs cho thống kê cá nhân của Học sinh
     public class StudentReportDto
     {
         public Guid StudentId { get; set; }
@@ -91,5 +102,14 @@ namespace backend.DTOs
         public DateTime? SubmitTime { get; set; }
         public double? Score { get; set; }
         public double MaxScore { get; set; }
+    }
+
+    /// <summary>
+    /// DTO chứa dữ liệu thống kê tổng quan các lớp giảng dạy dành cho Giáo viên.
+    /// Kế thừa toàn bộ các thuộc tính tổng hợp từ BaseOverviewReportDto.
+    /// </summary>
+    public class TeacherOverviewReportDto : BaseOverviewReportDto
+    {
+        // Kế thừa toàn bộ từ BaseOverviewReportDto
     }
 }

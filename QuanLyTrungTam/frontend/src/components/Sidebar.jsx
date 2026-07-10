@@ -90,6 +90,7 @@ const Sidebar = () => {
         },
         {
             code: 'PAGE_ADMIN_REPORTS_VIEW',
+            roles: ['Admin'],
             to: '/admin/reports',
             icon: 'bi bi-pie-chart-fill',
             label: 'Bao cao va thong ke'
