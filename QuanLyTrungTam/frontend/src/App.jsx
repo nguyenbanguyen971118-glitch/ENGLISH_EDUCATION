@@ -4,6 +4,8 @@ import { StudentClassProvider } from './context/StudentClassContext';
 import { TestProvider } from './context/TestContext';
 import PrivateRoute from './routes/PrivateRoute';
 import MainLayout from './components/MainLayout';
+import { Toaster } from 'react-hot-toast';
+import Unauthorized from './components/Unauthorized';
 
 // Import Pages
 import Login from './pages/Login';
@@ -42,6 +44,7 @@ import TeacherMessages from './pages/teacher/TeacherMessages';
 import TeacherExams from './pages/teacher/TeacherExams';
 import TeacherStudyContent from './pages/teacher/TeacherStudyContent'; // Đã import trang nội dung  học tập của giáo viên
 import TeacherReports from './pages/teacher/TeacherReports';
+import ExamGenerationManager from './pages/teacher/ExamGenerationManager';
 // Import Parent Pages
 import ParentAttendance from './pages/parent/ParentAttendance';
 import ParentMessages from './pages/parent/ParentMessages';
@@ -82,6 +85,7 @@ function App() {
     <AuthProvider>
       <StudentClassProvider>
         <TestProvider>
+          <Toaster position="top-right" />
           <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
           <Route path="/login" element={<Login />} />
@@ -104,6 +108,7 @@ function App() {
 
             <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><AdminAttendance /></PrivateRoute>} />
             <Route path="/admin/exams" element={<PrivateRoute allowedRoles={['Admin']}><AdminAssignment /></PrivateRoute>} />
+            <Route path="/admin/exams/generate" element={<PrivateRoute allowedRoles={['Admin']}><ExamGenerationManager /></PrivateRoute>} />
             <Route path="/admin/reports" element={<PrivateRoute allowedRoles={['Admin']} requiredPermissions={['PAGE_ADMIN_REPORTS_VIEW']}><AdminReports /></PrivateRoute>} />
             <Route path="/admin/notifications" element={<PrivateRoute allowedRoles={['Admin']}><AdminNotifcations /></PrivateRoute>} />
             <Route path="/admin/content" element={<PrivateRoute allowedRoles={['Admin']}><AdminStudyContent /></PrivateRoute>} />
@@ -131,6 +136,7 @@ function App() {
             <Route path="/teacher/schedule" element={<PrivateRoute requiredPermissions={['PAGE_TEACHER_SCHEDULE_VIEW']}><TeacherSchedule /></PrivateRoute>} />
             <Route path="/teacher/classes" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherClasses /></PrivateRoute>} />
             <Route path="/teacher/exams" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherExams /></PrivateRoute>} />
+            <Route path="/teacher/exams/generate" element={<PrivateRoute allowedRoles={['Giao_Vien', 'Admin']}><ExamGenerationManager /></PrivateRoute>} />
             <Route path="/teacher/grading" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Chấm điểm" /></PrivateRoute>} />
             <Route path="/teacher/content" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherStudyContent /></PrivateRoute>} />
             <Route path="/teacher/notifications" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Thông báo" /></PrivateRoute>} />
@@ -159,10 +165,12 @@ function App() {
             <Route path="/parent/reports" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><Placeholder title="Báo cáo thống kê" /></PrivateRoute>} />
             {/* Trang hồ sơ phụ huynh dùng API thật và chỉ cho role Phu_Huynh truy cập. */}
             <Route path="/parent/profile" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><ParentProfile /></PrivateRoute>} />
+            
+            {/* Trang 403 hiển thị trong layout có sidebar */}
+            <Route path="/unauthorized" element={<PrivateRoute><Unauthorized height="70vh" /></PrivateRoute>} />
           </Route>
 
           {/* Error Routes & Catch-All */}
-          <Route path="/unauthorized" element={<div className="d-flex align-items-center justify-content-center" style={{ height: '100vh' }}><div className="text-center"><i className="bi bi-shield-lock-fill fs-1 text-danger"></i><h1 className="mt-3">403 - Không có quyền truy cập</h1><p className="text-muted">Bạn không có quyền truy cập trang này</p></div></div>} />
           <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

@@ -7,9 +7,7 @@ public static class ClaimsPrincipalExtensions
 {
     public static Guid? GetUserId(this ClaimsPrincipal principal)
     {
-        var rawValue = principal.FindFirstValue(ClaimTypes.NameIdentifier)
-            ?? principal.FindFirstValue(JwtRegisteredClaimNames.Sub)
-            ?? principal.FindFirstValue("sub");
+        var rawValue = principal.FindFirstValue(ClaimTypes.NameIdentifier);
 
         return Guid.TryParse(rawValue, out var userId) ? userId : null;
     }
