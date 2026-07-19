@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace backend.Controllers;
 
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize] // Kiểm tra chi tiết thông qua ma trận chức năng ở từng action
 [Route("api/users")]
 public class UsersController : ControllerBase
 {

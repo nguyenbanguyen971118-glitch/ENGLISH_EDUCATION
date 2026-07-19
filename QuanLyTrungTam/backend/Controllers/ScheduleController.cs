@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Models;
@@ -1105,7 +1106,7 @@ namespace backend.Controllers
         /// <summary>
         /// Lấy danh sách yêu cầu đổi lịch chờ duyệt (chỉ admin)
         /// </summary>
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("SCHEDULE_CHANGE_REQUEST_ADMIN")]
         [HttpGet("change-requests/pending")]
         public async Task<IActionResult> GetPendingScheduleChangeRequests()
         {
@@ -1148,7 +1149,7 @@ namespace backend.Controllers
         /// <summary>
         /// Admin duyệt yêu cầu đổi lịch
         /// </summary>
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("SCHEDULE_CHANGE_REQUEST_ADMIN")]
         [HttpPost("change-request/approve")]
         public async Task<IActionResult> ApproveScheduleChangeRequest([FromBody] ApproveScheduleChangeRequestDto dto)
         {
@@ -1179,7 +1180,7 @@ namespace backend.Controllers
         /// <summary>
         /// Admin từ chối yêu cầu đổi lịch
         /// </summary>
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("SCHEDULE_CHANGE_REQUEST_ADMIN")]
         [HttpPost("change-request/reject")]
         public async Task<IActionResult> RejectScheduleChangeRequest([FromBody] ApproveScheduleChangeRequestDto dto)
         {

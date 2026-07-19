@@ -1,3 +1,4 @@
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Helpers;
@@ -9,7 +10,7 @@ using Microsoft.EntityFrameworkCore;
 namespace backend.Controllers;
 
 [ApiController]
-[Authorize(Roles = "Admin,Giao_Vien")]
+[AuthorizeByPermission("CLASSES_STUDENTS_VIEW")]
 [Route("api/classes/{classId:guid}/students")]
 public class ClassStudentsController : ControllerBase
 {

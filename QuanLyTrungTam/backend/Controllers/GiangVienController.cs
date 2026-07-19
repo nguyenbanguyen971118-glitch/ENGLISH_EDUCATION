@@ -1,4 +1,4 @@
-﻿using backend.Data;
+using backend.Data;
 using backend.DTOs;
 using backend.Helpers;
 using backend.Models;
@@ -12,7 +12,7 @@ namespace backend.Controllers;
 // xem profile, cập nhật thông tin, upload avatar, xóa avatar.
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Giao_Vien")]
+[Authorize] // Profile cá nhân - chỉ cần đăng nhập, bảo vệ bằng userId từ JWT
 public class GiangVienController : ControllerBase
 {
     private const long MaxAvatarFileSize = 5 * 1024 * 1024;

@@ -39,7 +39,7 @@ public class ClassesController : ControllerBase
     }
 
     [HttpGet("assigned-to-me")]
-    [Authorize(Roles = "Giao_Vien")]
+    [AuthorizeByPermission("PAGE_TEACHER_SCHEDULE_VIEW")]
     public async Task<IActionResult> GetAssignedToMe()
     {
         var teacherId = User.GetProfileId();

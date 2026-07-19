@@ -1,3 +1,4 @@
+using backend.Attributes;
 using backend.DTOs;
 using backend.Helpers;
 using backend.Services.Interfaces;
@@ -6,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers;
 
-[Authorize(Roles = "Admin,Giao_Vien,Phu_Huynh,Hoc_Sinh")]
+[AuthorizeByPermission("MESSAGES_ACCESS")]
 [ApiController]
 [Route("api/[controller]")]
 public class MessagesController : ControllerBase

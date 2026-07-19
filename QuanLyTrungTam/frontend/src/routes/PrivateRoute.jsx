@@ -2,11 +2,18 @@ import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import Unauthorized from '../components/Unauthorized';
 
+/**
+ * PrivateRoute — kiểm tra xác thực và phân quyền dựa trên ma trận chức năng.
+ *
+ * Cơ chế:
+ *  - Yêu cầu người dùng đã đăng nhập (có user trong AuthContext).
+ *  - Kiểm tra `requiredPermissions` theo danh sách permissionCodes được server cấp
+ *    trong JWT (tra cứu từ bảng VaiTroQuyen theo ma trận chức năng).
+ *  - KHÔNG còn kiểm tra theo `allowedRoles` nữa. Prop này bị bỏ để tránh nhầm lẫn.
+ */
 const PrivateRoute = ({
     children,
-    allowedRoles = [],
     requiredPermissions = [],
     requireAllPermissions = true
 }) => {
@@ -16,6 +23,7 @@ const PrivateRoute = ({
         return <Navigate to="/login" replace />;
     }
 
+    // Xác định đường dẫn redirect mặc định theo loại tài khoản để điều hướng sau khi từ chối
     const rolePath = user?.role === 'Giao_Vien'
         ? 'teacher'
         : user?.role === 'Hoc_Sinh'
@@ -26,18 +34,13 @@ const PrivateRoute = ({
 
     const defaultRedirect = `/${rolePath}`;
 
-    // Kiểm tra vai trò
-    const isRoleDenied = allowedRoles.length > 0 && !allowedRoles.includes(user.role);
-
-    // Kiểm tra quyền hạn chi tiết
+    // Kiểm tra quyền theo ma trận chức năng (permissionCodes từ JWT — server cấp)
     const userPermissions = Array.isArray(user.permissionCodes) ? user.permissionCodes : [];
-    const isPermissionDenied = requiredPermissions.length > 0 && (
+    const isDenied = requiredPermissions.length > 0 && (
         requireAllPermissions
-            ? !requiredPermissions.every((permission) => userPermissions.includes(permission))
-            : !requiredPermissions.some((permission) => userPermissions.includes(permission))
+            ? !requiredPermissions.every((p) => userPermissions.includes(p))
+            : !requiredPermissions.some((p) => userPermissions.includes(p))
     );
-
-    const isDenied = isRoleDenied || isPermissionDenied;
 
     useEffect(() => {
         if (isDenied) {

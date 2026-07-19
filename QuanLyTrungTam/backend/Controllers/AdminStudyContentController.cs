@@ -1,3 +1,4 @@
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Helpers;
@@ -11,7 +12,7 @@ namespace backend.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")]
+[AuthorizeByPermission("STUDY_CONTENT_ADMIN")]
 public class AdminStudyContentController : ControllerBase
 {
     private static readonly CultureInfo VietnameseCulture = CultureInfo.GetCultureInfo("vi-VN");

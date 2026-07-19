@@ -1,3 +1,4 @@
+using backend.Attributes;
 using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -10,7 +11,7 @@ namespace backend.Controllers;
 /// </summary>
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")]
+[Authorize] // Phải đăng nhập — kiểm tra chi tiết thông qua ma trận chức năng
 public class PermissionsController : ControllerBase
 {
     private readonly IPermissionService _permissionService;
@@ -21,6 +22,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpGet("matrix")]
+    [AuthorizeByPermission("PAGE_ADMIN_PERMISSIONS_VIEW")]
     public async Task<IActionResult> GetMatrix()
     {
         // Trả toàn bộ ma trận quyền để FE hiển thị màn hình phân quyền.
@@ -29,6 +31,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpGet("roles/{roleId:int}")]
+    [AuthorizeByPermission("PAGE_ADMIN_PERMISSIONS_VIEW")]
     public async Task<IActionResult> GetRolePermissions(int roleId)
     {
         // Lấy danh sách quyền hiện tại của một vai trò cụ thể.
@@ -42,6 +45,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpGet("check")]
+    [AuthorizeByPermission("PAGE_ADMIN_PERMISSIONS_VIEW")]
     public async Task<IActionResult> CheckPermission([FromQuery] int roleId, [FromQuery] string permissionCode)
     {
         if (string.IsNullOrWhiteSpace(permissionCode))
@@ -56,6 +60,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpPost("roles")]
+    [AuthorizeByPermission("PERMISSIONS_ROLE_CREATE")]
     public async Task<IActionResult> CreateRole([FromBody] CreateRoleRequest request)
     {
         // Tạo vai trò mới kèm danh sách quyền ban đầu.
@@ -69,6 +74,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpPut("roles/{roleId:int}")]
+    [AuthorizeByPermission("PERMISSIONS_ROLE_EDIT")]
     public async Task<IActionResult> UpdateRolePermissions(int roleId, [FromBody] UpdateRolePermissionsRequest request)
     {
         // Ghi đè toàn bộ danh sách quyền của vai trò.
@@ -82,6 +88,7 @@ public class PermissionsController : ControllerBase
     }
 
     [HttpDelete("roles/{roleId:int}")]
+    [AuthorizeByPermission("PERMISSIONS_ROLE_DELETE")]
     public async Task<IActionResult> DeleteRole(int roleId)
     {
         // Xóa mềm vai trò nếu không còn người dùng nào được gán.
