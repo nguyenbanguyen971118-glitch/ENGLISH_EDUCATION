@@ -2,6 +2,7 @@
 using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.StaticFiles;
 using System.Security.Claims;
 
 namespace backend.Controllers
@@ -106,14 +107,43 @@ namespace backend.Controllers
         }
 
         /// <summary>
-        /// Tạo thông báo mới (chỉ Admin)
+        /// Tạo thông báo mới (chỉ Admin). Hỗ trợ đính kèm nhiều file (Word, Excel, PowerPoint, PDF).
         /// </summary>
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> Create([FromBody] CreateNotificationDto dto)
+        [RequestSizeLimit(250_000_000)]
+        public async Task<IActionResult> Create([FromForm] CreateNotificationDto dto)
         {
             var result = await _notificationService.CreateAsync(GetCurrentUserId(), dto);
             return result.Success ? Ok(result) : BadRequest(result);
+        }
+
+        /// <summary>
+        /// Tải file đính kèm của một thông báo. Admin tải được mọi file;
+        /// người dùng khác chỉ tải được file của thông báo mình là người nhận.
+        /// </summary>
+        [HttpGet("attachments/{resourceId:guid}/download")]
+        public async Task<IActionResult> DownloadAttachment(Guid resourceId)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == Guid.Empty)
+                return Unauthorized();
+
+            var (physicalPath, fileName, error) = await _notificationService.GetAttachmentForDownloadAsync(
+                userId, User.IsInRole("Admin"), resourceId);
+
+            if (error != null)
+            {
+                return error.ErrorCode == "ATTACHMENT_FORBIDDEN" ? StatusCode(403, error) : NotFound(error);
+            }
+
+            var contentTypeProvider = new FileExtensionContentTypeProvider();
+            if (!contentTypeProvider.TryGetContentType(fileName, out var contentType))
+            {
+                contentType = "application/octet-stream";
+            }
+
+            return PhysicalFile(physicalPath!, contentType, fileName);
         }
 
         /// <summary>

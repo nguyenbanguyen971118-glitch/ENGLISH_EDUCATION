@@ -11,13 +11,158 @@ namespace backend.Services
 {
     public class NotificationService : INotificationService
     {
+        private const long MaxAttachmentFileSize = 20 * 1024 * 1024; // 20MB mỗi file
+        private const int MaxAttachmentCount = 10; // tối đa 10 file mỗi thông báo
+        private static readonly string[] AllowedAttachmentExtensions =
+        [
+            ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".pdf"
+        ];
+
         private readonly INotificationRepository _notificationRepo;
         private readonly AppDbContext _context; // Dùng để tìm user theo Role
+        private readonly IWebHostEnvironment _environment;
 
-        public NotificationService(INotificationRepository notificationRepo, AppDbContext context)
+        public NotificationService(INotificationRepository notificationRepo, AppDbContext context, IWebHostEnvironment environment)
         {
             _notificationRepo = notificationRepo;
             _context = context;
+            _environment = environment;
+        }
+
+        private static List<NotificationAttachmentDto> MapAttachments(IEnumerable<Dinhkemthongbao> attachments)
+        {
+            return attachments
+                .Where(a => a.DaXoa != true && a.MaTaiNguyenNavigation != null)
+                .Select(a => new NotificationAttachmentDto
+                {
+                    Id = a.MaTaiNguyen,
+                    FileName = a.MaTaiNguyenNavigation.TenTaiNguyen
+                })
+                .ToList();
+        }
+
+        private string EnsureWebRootPath()
+        {
+            var webRootPath = _environment.WebRootPath;
+            if (!string.IsNullOrWhiteSpace(webRootPath))
+            {
+                return webRootPath;
+            }
+
+            webRootPath = Path.Combine(_environment.ContentRootPath, "wwwroot");
+            Directory.CreateDirectory(webRootPath);
+            return webRootPath;
+        }
+
+        private async Task<(List<Dinhkemthongbao>? Attachments, string? Error)> SaveAttachmentsAsync(
+            Guid thongBaoId, List<Microsoft.AspNetCore.Http.IFormFile>? files, Guid userId, DateTime now)
+        {
+            if (files == null || files.Count == 0)
+            {
+                return (new List<Dinhkemthongbao>(), null);
+            }
+
+            if (files.Count > MaxAttachmentCount)
+            {
+                return (null, $"Chỉ được đính kèm tối đa {MaxAttachmentCount} file cho mỗi thông báo.");
+            }
+
+            foreach (var file in files)
+            {
+                if (file.Length == 0)
+                {
+                    return (null, $"File '{file.FileName}' đang rỗng.");
+                }
+
+                if (file.Length > MaxAttachmentFileSize)
+                {
+                    return (null, $"File '{file.FileName}' vượt quá dung lượng cho phép (20MB).");
+                }
+
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                if (!AllowedAttachmentExtensions.Contains(ext))
+                {
+                    return (null, $"File '{file.FileName}' không đúng định dạng cho phép (Word, Excel, PowerPoint, PDF).");
+                }
+            }
+
+            var webRootPath = EnsureWebRootPath();
+            var folderPath = Path.Combine(webRootPath, "uploads", "notifications");
+            Directory.CreateDirectory(folderPath);
+
+            var links = new List<Dinhkemthongbao>();
+            foreach (var file in files)
+            {
+                var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
+                var storedFileName = $"notif_{userId:N}_{Guid.NewGuid():N}{ext}";
+                var physicalPath = Path.Combine(folderPath, storedFileName);
+                var relativePath = $"/uploads/notifications/{storedFileName}";
+
+                await using (var stream = new FileStream(physicalPath, FileMode.Create))
+                {
+                    await file.CopyToAsync(stream);
+                }
+
+                var resource = new Tainguyenluutru
+                {
+                    MaTaiNguyen = Guid.NewGuid(),
+                    MaNguoiDung = userId,
+                    TenTaiNguyen = file.FileName,
+                    Link = relativePath,
+                    NguoiTao = userId,
+                    ThoiGianTao = now,
+                    TrangThai = true,
+                    DaXoa = false
+                };
+                _context.Tainguyenluutrus.Add(resource);
+
+                links.Add(new Dinhkemthongbao
+                {
+                    MaThongBao = thongBaoId,
+                    MaTaiNguyen = resource.MaTaiNguyen,
+                    NguoiTao = userId,
+                    ThoiGianTao = now,
+                    TrangThai = true,
+                    DaXoa = false
+                });
+            }
+
+            _context.Dinhkemthongbaos.AddRange(links);
+            return (links, null);
+        }
+
+        public async Task<(string? PhysicalPath, string? FileName, ApiResponseDto<object>? Error)> GetAttachmentForDownloadAsync(Guid userId, bool isAdmin, Guid resourceId)
+        {
+            var resource = await _context.Tainguyenluutrus
+                .Include(r => r.Dinhkemthongbaos.Where(a => a.DaXoa != true))
+                .FirstOrDefaultAsync(r => r.MaTaiNguyen == resourceId && r.DaXoa != true);
+
+            var link = resource?.Dinhkemthongbaos.FirstOrDefault();
+            if (resource == null || link == null)
+            {
+                return (null, null, ApiResponseDto<object>.Fail("Không tìm thấy file đính kèm.", "ATTACHMENT_NOT_FOUND"));
+            }
+
+            if (!isAdmin)
+            {
+                var isRecipient = await _context.Nguoinhanthongbaos.AnyAsync(n =>
+                    n.MaThongBao == link.MaThongBao && n.MaNguoiDung == userId && n.DaXoa != true);
+                if (!isRecipient)
+                {
+                    return (null, null, ApiResponseDto<object>.Fail("Bạn không có quyền tải file này.", "ATTACHMENT_FORBIDDEN"));
+                }
+            }
+
+            var webRootPath = EnsureWebRootPath();
+            var relativePhysicalPath = resource.Link.TrimStart('/').Replace('/', Path.DirectorySeparatorChar);
+            var physicalPath = Path.Combine(webRootPath, relativePhysicalPath);
+
+            if (!File.Exists(physicalPath))
+            {
+                return (null, null, ApiResponseDto<object>.Fail("Không tìm thấy file trên máy chủ.", "ATTACHMENT_FILE_NOT_FOUND"));
+            }
+
+            return (physicalPath, resource.TenTaiNguyen, null);
         }
 
         // Hàm helper: Tìm danh sách ID người dùng theo Đối tượng (DoiTuong)
@@ -49,7 +194,8 @@ namespace backend.Services
                 Title = t.TieuDe,
                 Content = t.NoiDung,
                 DoiTuong = t.DoiTuong ?? "Tat_Ca",
-                CreatedAt = t.ThoiGianTao ?? DateTime.UtcNow
+                CreatedAt = t.ThoiGianTao ?? DateTime.UtcNow,
+                Attachments = MapAttachments(t.Dinhkemthongbaos)
             }).ToList();
 
             return ApiResponseDto<List<NotificationDto>>.Ok(result, "Lấy danh sách thông báo thành công");
@@ -69,7 +215,8 @@ namespace backend.Services
                     DoiTuong = n.MaThongBaoNavigation!.DoiTuong ?? "Tat_Ca",
                     CreatedAt = n.MaThongBaoNavigation!.ThoiGianTao ?? DateTime.UtcNow,
                     IsRead = n.DaDoc ?? false,
-                    ReadAt = n.NgayDoc
+                    ReadAt = n.NgayDoc,
+                    Attachments = MapAttachments(n.MaThongBaoNavigation!.Dinhkemthongbaos)
                 }).ToList();
 
             return ApiResponseDto<List<UserNotificationDto>>.Ok(result, "Lấy thông báo của người dùng thành công");
@@ -89,7 +236,8 @@ namespace backend.Services
                     DoiTuong = n.MaThongBaoNavigation!.DoiTuong ?? "Tat_Ca",
                     CreatedAt = n.MaThongBaoNavigation!.ThoiGianTao ?? DateTime.UtcNow,
                     IsRead = n.DaDoc ?? false,
-                    ReadAt = n.NgayDoc
+                    ReadAt = n.NgayDoc,
+                    Attachments = MapAttachments(n.MaThongBaoNavigation!.Dinhkemthongbaos)
                 }).ToList();
 
             return ApiResponseDto<List<UserNotificationDto>>.Ok(result, "Lấy thông báo chưa đọc thành công");
@@ -120,6 +268,7 @@ namespace backend.Services
 
             var receiverIds = await GetUserIdsByTargetAsync(dto.DoiTuong);
 
+            var now = DateTime.UtcNow;
             var thongBao = new Thongbao
             {
                 MaThongBao = Guid.NewGuid(),
@@ -127,12 +276,19 @@ namespace backend.Services
                 NoiDung = dto.Content,
                 DoiTuong = dto.DoiTuong ?? "Tat_Ca",
                 NguoiTao = currentUserId,
-                ThoiGianTao = DateTime.UtcNow,
+                ThoiGianTao = now,
                 DaXoa = false,
                 TrangThai = true
             };
 
             await _notificationRepo.CreateAsync(thongBao, receiverIds);
+
+            var (attachments, attachmentError) = await SaveAttachmentsAsync(thongBao.MaThongBao, dto.Files, currentUserId, now);
+            if (attachmentError != null)
+            {
+                return ApiResponseDto<NotificationDto>.Fail(attachmentError, "ATTACHMENT_INVALID");
+            }
+            await _context.SaveChangesAsync();
 
             var result = new NotificationDto
             {
@@ -140,7 +296,8 @@ namespace backend.Services
                 Title = thongBao.TieuDe,
                 Content = thongBao.NoiDung,
                 DoiTuong = thongBao.DoiTuong ?? "Tat_Ca",
-                CreatedAt = thongBao.ThoiGianTao.Value
+                CreatedAt = thongBao.ThoiGianTao.Value,
+                Attachments = MapAttachments(attachments ?? new List<Dinhkemthongbao>())
             };
 
             return ApiResponseDto<NotificationDto>.Ok(result, "Tạo thông báo thành công");

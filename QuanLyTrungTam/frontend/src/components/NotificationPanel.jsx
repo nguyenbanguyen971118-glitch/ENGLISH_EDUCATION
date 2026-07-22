@@ -1,5 +1,16 @@
 import React, { useState, useEffect, useRef } from 'react';
-import apiClient from '../api/BaseApi';
+import apiClient, { getApiBaseUrl } from '../api/BaseApi';
+
+const triggerBrowserDownload = (blob, fileName) => {
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = objectUrl;
+    anchor.download = fileName || 'dinh-kem';
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(objectUrl);
+};
 
 // Utility function để convert UTC time sang local time
 const formatLocalDate = (utcDateString) => {
@@ -62,7 +73,11 @@ const NotificationPanel = ({ isOpen, onClose, onMarkAsRead }) => {
                 content: item.content || item.Content || '',
                 target: item.target || item.Target || 'Tất cả',
                 createdAt: item.createdAt || item.CreatedAt || item.ThoiGianTao || new Date().toISOString(),
-                isRead: item.isRead || item.IsRead || false
+                isRead: item.isRead || item.IsRead || false,
+                attachments: (item.attachments || item.Attachments || []).map(a => ({
+                    id: a.id || a.Id,
+                    fileName: a.fileName || a.FileName || 'tep-dinh-kem'
+                }))
             }));
             
             setNotifications(normalizedData);
@@ -89,6 +104,25 @@ const NotificationPanel = ({ isOpen, onClose, onMarkAsRead }) => {
             }
         } catch (error) {
             console.error('Lỗi đánh dấu thông báo:', error);
+        }
+    };
+
+    const handleDownloadAttachment = async (event, attachment) => {
+        event.stopPropagation(); // tránh kích hoạt đánh dấu đã đọc khi bấm tải file
+        try {
+            const token = apiClient.getAuthToken();
+            const response = await fetch(`${getApiBaseUrl()}/Notification/attachments/${attachment.id}/download`, {
+                headers: token ? { Authorization: `Bearer ${token}` } : undefined
+            });
+            if (!response.ok) {
+                const payload = await response.json().catch(() => null);
+                throw new Error(payload?.message || 'Không thể tải file đính kèm.');
+            }
+            const blob = await response.blob();
+            triggerBrowserDownload(blob, attachment.fileName);
+        } catch (error) {
+            console.error('Lỗi tải file đính kèm:', error);
+            alert(error.message || 'Không thể tải file đính kèm.');
         }
     };
 
@@ -200,6 +234,23 @@ const NotificationPanel = ({ isOpen, onClose, onMarkAsRead }) => {
                                     <p className="mb-2 text-muted small" style={{ fontSize: '12px', lineHeight: '1.4' }}>
                                         {notif.content}
                                     </p>
+                                    {notif.attachments.length > 0 && (
+                                        <div className="d-flex gap-1 flex-wrap mb-2">
+                                            {notif.attachments.map((att) => (
+                                                <button
+                                                    key={att.id}
+                                                    type="button"
+                                                    className="btn btn-sm btn-outline-secondary"
+                                                    style={{ fontSize: '11px', padding: '2px 8px' }}
+                                                    onClick={(e) => handleDownloadAttachment(e, att)}
+                                                    title={att.fileName}
+                                                >
+                                                    <i className="bi bi-paperclip"></i>{' '}
+                                                    {att.fileName.length > 16 ? `${att.fileName.slice(0, 14)}…` : att.fileName}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    )}
                                     <div className="d-flex gap-2 align-items-center flex-wrap">
                                         <span className="text-muted opacity-75 small" style={{ fontSize: '11px' }}>
                                             <i className="bi bi-calendar3 me-1"></i>

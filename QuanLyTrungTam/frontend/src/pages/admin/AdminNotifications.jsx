@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from "react";
-import BaseApi from "../../api/BaseApi";
+import BaseApi, { getApiBaseUrl } from "../../api/BaseApi";
+
+const triggerBrowserDownload = (blob, fileName) => {
+  const objectUrl = URL.createObjectURL(blob);
+  const anchor = document.createElement("a");
+  anchor.href = objectUrl;
+  anchor.download = fileName || "dinh-kem";
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(objectUrl);
+};
 /**
  * Chức năng: Hiển thị và quản lý danh sách thông báo cho admin
  * Creatby: Trương Quốc Lộc - 18/3/2026
@@ -53,6 +64,7 @@ const AdminNotifications = () => {
     content: "",
     target: "Tất cả",
   });
+  const [files, setFiles] = useState([]);
 
   useEffect(() => {
     fetchNotifications();
@@ -74,7 +86,11 @@ const AdminNotifications = () => {
           title: item.title || item.Title || "",
           content: item.content || item.Content || "",
           target: item.target || item.Target || "Tất cả",
-          createdAt: item.createdAt || item.CreatedAt || item.ThoiGianTao || new Date().toISOString()
+          createdAt: item.createdAt || item.CreatedAt || item.ThoiGianTao || new Date().toISOString(),
+          attachments: (item.attachments || item.Attachments || []).map(a => ({
+            id: a.id || a.Id,
+            fileName: a.fileName || a.FileName || "tep-dinh-kem",
+          })),
         }));
         setNotifications(normalizedData);
       } else {
@@ -98,10 +114,31 @@ const AdminNotifications = () => {
       setIsEditing(false);
       setFormData({ id: null, title: "", content: "", target: "Tất cả" });
     }
+    setFiles([]);
     setShowModal(true);
   };
 
-  const handleCloseModal = () => setShowModal(false);
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setFiles([]);
+  };
+
+  const downloadAttachment = async (attachment) => {
+    try {
+      const token = BaseApi.getAuthToken();
+      const response = await fetch(`${getApiBaseUrl()}/Notification/attachments/${attachment.id}/download`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+      });
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message || "Không thể tải file đính kèm.");
+      }
+      const blob = await response.blob();
+      triggerBrowserDownload(blob, attachment.fileName);
+    } catch (error) {
+      alert(error.message || "Không thể tải file đính kèm.");
+    }
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -119,7 +156,19 @@ const AdminNotifications = () => {
       if (isEditing) {
         res = await BaseApi.put(`Notification/${formData.id}`, formData);
       } else {
-        res = await BaseApi.post("Notification", formData);
+        const form = new FormData();
+        form.append("Title", formData.title);
+        form.append("Content", formData.content);
+        form.append("DoiTuong", formData.target);
+        files.forEach((file) => form.append("Files", file));
+
+        const token = BaseApi.getAuthToken();
+        const rawResponse = await fetch(`${getApiBaseUrl()}/Notification`, {
+          method: "POST",
+          headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+          body: form,
+        });
+        res = await rawResponse.json();
       }
 
       const resData = res.data || res;
@@ -242,13 +291,14 @@ const AdminNotifications = () => {
                 <th>Khung giờ</th>
                 <th>Tiêu đề</th>
                 <th>Đối tượng</th>
+                <th>Đính kèm</th>
                 <th>Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {filteredNotifications.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="text-center py-4 text-muted">
+                  <td colSpan="7" className="text-center py-4 text-muted">
                     Không tìm thấy thông báo nào.
                   </td>
                 </tr>
@@ -280,6 +330,23 @@ const AdminNotifications = () => {
                       <span className={`badge ${targetColor(item.target)}`}>
                         {item.target}
                       </span>
+                    </td>
+                    <td>
+                      {(item.attachments || []).length === 0 ? (
+                        <span className="text-muted">-</span>
+                      ) : (
+                        item.attachments.map((att) => (
+                          <button
+                            key={att.id}
+                            className="btn btn-sm btn-outline-secondary me-1 mb-1"
+                            onClick={() => downloadAttachment(att)}
+                            title={att.fileName}
+                          >
+                            <i className="bi bi-paperclip"></i>{" "}
+                            {att.fileName.length > 14 ? `${att.fileName.slice(0, 12)}…` : att.fileName}
+                          </button>
+                        ))
+                      )}
                     </td>
                     <td>
                       <button
@@ -352,6 +419,31 @@ const AdminNotifications = () => {
                 placeholder="Nhập nội dung thông báo..."
               ></textarea>
             </div>
+
+            {!isEditing && (
+              <div className="mb-4">
+                <label className="form-label fw-medium">
+                  Tệp đính kèm (Word, Excel, PowerPoint, PDF - có thể chọn nhiều file)
+                </label>
+                <input
+                  type="file"
+                  className="form-control"
+                  multiple
+                  accept=".doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf"
+                  onChange={(e) => setFiles(Array.from(e.target.files || []))}
+                />
+                {files.length > 0 && (
+                  <ul className="list-unstyled mt-2 mb-0 small text-muted">
+                    {files.map((f, i) => (
+                      <li key={i}>
+                        <i className="bi bi-file-earmark-text me-1"></i>
+                        {f.name} ({(f.size / 1024 / 1024).toFixed(2)} MB)
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            )}
 
             <div className="d-flex justify-content-end gap-2">
               <button className="btn btn-secondary" onClick={handleCloseModal}>

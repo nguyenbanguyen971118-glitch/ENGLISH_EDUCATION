@@ -30,5 +30,8 @@ namespace backend.Services.Interfaces
         
         // Xóa thông báo
         Task<ApiResponseDto<object>> DeleteAsync(Guid id, Guid currentUserId);
+
+        // Lấy đường dẫn vật lý của một file đính kèm để tải xuống, có kiểm tra quyền truy cập
+        Task<(string? PhysicalPath, string? FileName, ApiResponseDto<object>? Error)> GetAttachmentForDownloadAsync(Guid userId, bool isAdmin, Guid resourceId);
     }
 }

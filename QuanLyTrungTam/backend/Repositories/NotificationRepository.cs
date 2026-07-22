@@ -21,6 +21,8 @@ namespace backend.Repositories
             // Chỉ lấy những thông báo chưa bị xóa mềm
             return await _context.Thongbaos
                 .Include(t => t.Nguoinhanthongbaos)
+                .Include(t => t.Dinhkemthongbaos.Where(a => a.DaXoa != true))
+                .ThenInclude(a => a.MaTaiNguyenNavigation)
                 .Where(t => t.DaXoa == null || t.DaXoa == false)
                 .OrderByDescending(t => t.ThoiGianTao)
                 .ToListAsync();
@@ -37,7 +39,9 @@ namespace backend.Repositories
         {
             return await _context.Nguoinhanthongbaos
                 .Include(n => n.MaThongBaoNavigation)
-                .Where(n => n.MaNguoiDung == userId 
+                .ThenInclude(t => t.Dinhkemthongbaos.Where(a => a.DaXoa != true))
+                .ThenInclude(a => a.MaTaiNguyenNavigation)
+                .Where(n => n.MaNguoiDung == userId
                     && (n.DaXoa == null || n.DaXoa == false)
                     && (n.MaThongBaoNavigation.DaXoa == null || n.MaThongBaoNavigation.DaXoa == false))
                 .OrderByDescending(n => n.MaThongBaoNavigation.ThoiGianTao)
@@ -48,7 +52,9 @@ namespace backend.Repositories
         {
             return await _context.Nguoinhanthongbaos
                 .Include(n => n.MaThongBaoNavigation)
-                .Where(n => n.MaNguoiDung == userId 
+                .ThenInclude(t => t.Dinhkemthongbaos.Where(a => a.DaXoa != true))
+                .ThenInclude(a => a.MaTaiNguyenNavigation)
+                .Where(n => n.MaNguoiDung == userId
                     && (n.DaDoc == null || n.DaDoc == false)
                     && (n.DaXoa == null || n.DaXoa == false)
                     && (n.MaThongBaoNavigation.DaXoa == null || n.MaThongBaoNavigation.DaXoa == false))

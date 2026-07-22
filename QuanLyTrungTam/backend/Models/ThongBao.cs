@@ -29,4 +29,6 @@ public partial class Thongbao
     public bool? DaXoa { get; set; }
 
     public virtual ICollection<Nguoinhanthongbao> Nguoinhanthongbaos { get; set; } = new List<Nguoinhanthongbao>();
+
+    public virtual ICollection<Dinhkemthongbao> Dinhkemthongbaos { get; set; } = new List<Dinhkemthongbao>();
 }

@@ -15,6 +15,18 @@ using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Nâng giới hạn dung lượng request (mặc định Kestrel ~28.6MB) để các endpoint upload file
+// (tài liệu học tập tới 100MB, đính kèm thông báo tối đa 10 file x 20MB) không bị chặn sớm
+// ở tầng server dù action đã tự validate dung lượng riêng.
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 250 * 1024 * 1024; // 250MB
+});
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 250 * 1024 * 1024;
+});
+
 // Nạp cấu hình theo thứ tự: appsettings.json -> appsettings.{Environment}.json -> biến môi trường.
 builder.Configuration
     .SetBasePath(builder.Environment.ContentRootPath)

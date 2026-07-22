@@ -29,5 +29,7 @@ public partial class Tainguyenluutru
 
     public virtual ICollection<Dinhkem> Dinhkems { get; set; } = new List<Dinhkem>();
 
+    public virtual ICollection<Dinhkemthongbao> Dinhkemthongbaos { get; set; } = new List<Dinhkemthongbao>();
+
     public virtual Nguoidung MaNguoiDungNavigation { get; set; } = null!;
 }

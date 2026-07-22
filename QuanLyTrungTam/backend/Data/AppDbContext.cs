@@ -47,6 +47,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Dinhkemnopbai> Dinhkemnopbais { get; set; }
 
+    public virtual DbSet<Dinhkemthongbao> Dinhkemthongbaos { get; set; }
+
     public virtual DbSet<Giangvien> Giangviens { get; set; }
 
     public virtual DbSet<Giangvienlophoc> Giangvienlophocs { get; set; }
@@ -722,6 +724,37 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey(d => d.MaTaiNguyen)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("dinhkemnopbai_ibfk_2");
+        });
+
+        modelBuilder.Entity<Dinhkemthongbao>(entity =>
+        {
+            // MaThongBao/MaTaiNguyen deliberately left on the table's default charset
+            // (utf8mb4_general_ci) instead of the "ascii" override used elsewhere in this
+            // file — the actual thongbao/tainguyenluutru tables in this DB use utf8mb4 for
+            // their GUID PKs, and an ascii FK column here would fail with errno 150.
+            entity.HasKey(e => new { e.MaThongBao, e.MaTaiNguyen })
+                .HasName("PRIMARY")
+                .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+            entity.ToTable("dinhkemthongbao");
+
+            entity.HasIndex(e => new { e.MaTaiNguyen, e.DaXoa, e.TrangThai }, "idx_DinhKemThongBao_TaiNguyen_Active");
+
+            entity.Property(e => e.DaXoa).HasDefaultValueSql("'0'");
+            entity.Property(e => e.ThoiGianTao)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("datetime");
+            entity.Property(e => e.TrangThai).HasDefaultValueSql("'1'");
+
+            entity.HasOne(d => d.MaThongBaoNavigation).WithMany(p => p.Dinhkemthongbaos)
+                .HasForeignKey(d => d.MaThongBao)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("dinhkemthongbao_ibfk_1");
+
+            entity.HasOne(d => d.MaTaiNguyenNavigation).WithMany(p => p.Dinhkemthongbaos)
+                .HasForeignKey(d => d.MaTaiNguyen)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("dinhkemthongbao_ibfk_2");
         });
 
         modelBuilder.Entity<Giangvien>(entity =>
