@@ -78,6 +78,21 @@ public sealed class TeacherItemDto
     public string Name { get; set; } = string.Empty;
 }
 
+public sealed class TeacherOverviewDto
+{
+    public Guid Id { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public string? Email { get; set; }
+    public List<TeacherClassOverviewDto> Classes { get; set; } = new();
+}
+
+public sealed class TeacherClassOverviewDto
+{
+    public Guid ClassId { get; set; }
+    public string ClassName { get; set; } = string.Empty;
+    public List<CourseDto> Courses { get; set; } = new();
+}
+
 public sealed partial class UpsertClassRequestDto
 {
     public string Name { get; set; } = string.Empty;

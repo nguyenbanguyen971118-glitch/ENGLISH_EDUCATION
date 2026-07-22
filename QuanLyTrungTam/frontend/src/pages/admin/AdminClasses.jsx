@@ -8,14 +8,17 @@ const AdminClasses = () => {
   const location = useLocation();
   const [classes, setClasses] = useState([]);
   const [rooms, setRooms] = useState([]);
+  const [teachers, setTeachers] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
   const [roomsLoading, setRoomsLoading] = useState(true);
+  const [teachersLoading, setTeachersLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [toast, setToast] = useState("");
   const [editing, setEditing] = useState(null);
   const [showRooms, setShowRooms] = useState(false);
+  const [showTeachers, setShowTeachers] = useState(false);
 
   const loadClasses = async () => {
     setLoading(true);
@@ -43,6 +46,18 @@ const AdminClasses = () => {
       setError(err.message || "Khong tai duoc danh sach phong.");
     } finally {
       setRoomsLoading(false);
+    }
+  };
+
+  const loadTeachers = async () => {
+    setTeachersLoading(true);
+    setError("");
+    try {
+      setTeachers(await p0Api.classes.teachersOverview());
+    } catch (err) {
+      setError(err.message || "Khong tai duoc danh sach giao vien.");
+    } finally {
+      setTeachersLoading(false);
     }
   };
 
@@ -80,6 +95,7 @@ const AdminClasses = () => {
   useEffect(() => {
     loadClasses();
     loadRooms();
+    loadTeachers();
   }, []);
 
   useEffect(() => {
@@ -148,6 +164,7 @@ const AdminClasses = () => {
         <div className="d-flex gap-2">
           <button className="btn btn-outline-secondary" onClick={() => navigate("/admin/rooms/create")}>Tạo phòng học</button>
           <button className="btn btn-outline-info" onClick={() => setShowRooms(s => !s)}>Danh sách phòng</button>
+          <button className="btn btn-outline-info" onClick={() => setShowTeachers(s => !s)}>Danh sách giảng viên</button>
           <button className="btn btn-primary" onClick={() => navigate("/admin/classes/create")}>Thêm lớp học</button>
         </div>
       </div>
@@ -238,6 +255,59 @@ const AdminClasses = () => {
               </table>
             )}
             <small className="text-muted">Tong so {rooms.length} phong hoc</small>
+          </div>
+        </div>
+      )}
+
+      {showTeachers && (
+        <div className="card shadow-sm mb-3">
+          <div className="card-body">
+            <h6 className="fw-bold mb-3">Danh sach giang vien va lop dang day</h6>
+            {teachersLoading ? (
+              <div className="text-center py-4">Dang tai danh sach giao vien...</div>
+            ) : teachers.length === 0 ? (
+              <div className="text-center text-muted py-4">Chua co giao vien nao.</div>
+            ) : (
+              <table className="table align-middle">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Giao vien</th>
+                    <th>Lop hoc dang day</th>
+                    <th>Khoa hoc</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {teachers.map((teacher, index) => (
+                    <tr key={teacher.id}>
+                      <td>{index + 1}</td>
+                      <td className="fw-semibold">
+                        <i className="bi bi-person-badge text-primary me-2"></i>
+                        {teacher.name}
+                        {teacher.email && <div className="text-muted small">{teacher.email}</div>}
+                      </td>
+                      <td>
+                        {teacher.classes.length === 0
+                          ? <span className="text-muted">Chua co lop</span>
+                          : teacher.classes.map((cls) => (
+                              <span key={cls.classId} className="badge bg-secondary me-1 mb-1">{cls.className}</span>
+                            ))}
+                      </td>
+                      <td>
+                        {teacher.classes.length === 0
+                          ? <span className="text-muted">-</span>
+                          : Array.from(new Map(
+                              teacher.classes.flatMap((cls) => cls.courses).map((course) => [course.id, course])
+                            ).values()).map((course) => (
+                              <span key={course.id} className="badge bg-info me-1 mb-1">{course.name}</span>
+                            ))}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            <small className="text-muted">Tong so {teachers.length} giao vien</small>
           </div>
         </div>
       )}

@@ -37,6 +37,7 @@ export const p0Api = {
     addStudent: async (classId, studentId) => unwrap(await apiClient.post(`classes/${classId}/students`, { studentId })),
     removeStudent: async (classId, studentId) => unwrap(await apiClient.delete(`classes/${classId}/students/${studentId}`)),
     assignedToMe: async () => unwrap(await apiClient.get("classes/assigned-to-me")),
+    teachersOverview: async () => unwrap(await apiClient.get("classes/teachers-overview")),
   },
   attendance: {
     get: async (classId, sessionId) => unwrap(await apiClient.get(`classes/${classId}/sessions/${sessionId}/attendance`)),

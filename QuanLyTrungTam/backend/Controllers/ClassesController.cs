@@ -68,6 +68,23 @@ public class ClassesController : ControllerBase
         return Ok(ApiResponseDto<List<ClassDto>>.Ok(classes));
     }
 
+    [HttpGet("teachers-overview")]
+    public async Task<IActionResult> GetTeachersOverview()
+    {
+        var teachers = await _db.Giangviens
+            .Where(t => t.DaXoa != true)
+            .Include(t => t.MaNguoiDungNavigation)
+            .Include(t => t.Giangvienlophocs.Where(x => x.DaXoa != true))
+            .ThenInclude(x => x.MaLopHocNavigation)
+            .ThenInclude(x => x.ChitietkhoahocLophocs.Where(x => x.DaXoa != true))
+            .ThenInclude(x => x.MaKhoaHocNavigation)
+            .OrderBy(t => t.MaNguoiDungNavigation.HoTen)
+            .Select(t => ToOverviewDto(t))
+            .ToListAsync();
+
+        return Ok(ApiResponseDto<List<TeacherOverviewDto>>.Ok(teachers));
+    }
+
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -366,6 +383,35 @@ public class ClassesController : ControllerBase
                 {
                     Id = x.MaGiangVien,
                     Name = x.MaGiangVienNavigation?.MaNguoiDungNavigation?.HoTen ?? x.MaGiangVien.ToString()
+                })
+                .ToList()
+        };
+    }
+
+    private static TeacherOverviewDto ToOverviewDto(Giangvien teacher)
+    {
+        return new TeacherOverviewDto
+        {
+            Id = teacher.MaGiangVien,
+            Name = teacher.MaNguoiDungNavigation?.HoTen ?? teacher.MaGiangVien.ToString(),
+            Email = teacher.MaNguoiDungNavigation?.Email,
+            Classes = teacher.Giangvienlophocs
+                .Where(x => x.DaXoa != true && x.MaLopHocNavigation != null && x.MaLopHocNavigation.DaXoa != true)
+                .Select(x => new TeacherClassOverviewDto
+                {
+                    ClassId = x.MaLopHoc,
+                    ClassName = x.MaLopHocNavigation!.TenLop,
+                    Courses = x.MaLopHocNavigation!.ChitietkhoahocLophocs
+                        .Where(c => c.DaXoa != true)
+                        .Select(c => new CourseDto
+                        {
+                            Id = c.MaKhoaHoc,
+                            Name = c.MaKhoaHocNavigation?.TenKhoaHoc ?? c.MaKhoaHoc.ToString(),
+                            Description = c.MaKhoaHocNavigation?.MoTa,
+                            BasePrice = c.MaKhoaHocNavigation?.GiaCoBan,
+                            Active = c.MaKhoaHocNavigation?.TrangThai != false
+                        })
+                        .ToList()
                 })
                 .ToList()
         };
