@@ -2844,8 +2844,6 @@ namespace backend.Migrations
                     b.HasKey("MaYeuCau")
                         .HasName("PRIMARY");
 
-                    b.HasIndex("MaPhongHocDeXuatNavigationMaPhongHoc");
-
                     b.HasIndex(new[] { "MaBuoiHoc" }, "MaBuoiHoc");
 
                     b.HasIndex(new[] { "MaGiangVien" }, "MaGiangVien");

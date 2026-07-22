@@ -11,10 +11,7 @@ namespace backend.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.RenameColumn(
-                name: "CauTraLoiDienKhuyet",
-                table: "chitietnopbai",
-                newName: "CauTraLoiHocSinh");
+            migrationBuilder.Sql("ALTER TABLE `chitietnopbai` CHANGE COLUMN `CauTraLoiDienKhuyet` `CauTraLoiHocSinh` text NULL;");
 
             migrationBuilder.AddColumn<string>(
                 name: "AmThanhLink",
@@ -182,10 +179,7 @@ namespace backend.Migrations
                 name: "ThuTu",
                 table: "dapan");
 
-            migrationBuilder.RenameColumn(
-                name: "CauTraLoiHocSinh",
-                table: "chitietnopbai",
-                newName: "CauTraLoiDienKhuyet");
+            migrationBuilder.Sql("ALTER TABLE `chitietnopbai` CHANGE COLUMN `CauTraLoiHocSinh` `CauTraLoiDienKhuyet` text NULL;");
         }
     }
 }
