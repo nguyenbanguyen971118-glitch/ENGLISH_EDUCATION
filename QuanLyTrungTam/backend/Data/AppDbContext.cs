@@ -1810,10 +1810,6 @@ public partial class AppDbContext : DbContext
             entity.HasKey(e => e.MaYeuCau).HasName("PRIMARY");
 
             entity.ToTable("yeucaulichday");
-            entity.Ignore(e => e.GhiChuAdmin);
-            entity.Ignore(e => e.LoaiYeuCau);
-            entity.Ignore(e => e.MaPhongHocDeXuat);
-            entity.Ignore(e => e.MaPhongHocDeXuatNavigation);
 
             entity.HasIndex(e => e.MaBuoiHoc, "MaBuoiHoc");
 
@@ -1851,6 +1847,16 @@ public partial class AppDbContext : DbContext
                 .HasColumnType("datetime");
             entity.Property(e => e.TrangThai).HasDefaultValueSql("'1'");
             entity.Property(e => e.TrangThaiDuyet).HasDefaultValueSql("'0'");
+            entity.Property(e => e.GhiChuAdmin).HasColumnType("longtext");
+            // MaPhongHocDeXuat được để charset mặc định (utf8mb4) của bảng, khớp với
+            // phonghoc.MaPhongHoc thực tế trong DB — không dùng override "ascii" như các
+            // cột GUID khác trong entity này vì sẽ gây lỗi FK (errno 150) lúc migrate.
+            entity.Property(e => e.MaPhongHocDeXuat);
+
+            entity.HasOne(d => d.MaPhongHocDeXuatNavigation).WithMany()
+                .HasForeignKey(d => d.MaPhongHocDeXuat)
+                .OnDelete(DeleteBehavior.ClientSetNull)
+                .HasConstraintName("FK_yeucaulichday_phonghoc_MaPhongHocDeXuat");
 
             entity.HasOne(d => d.MaBuoiHocNavigation).WithMany(p => p.Yeucaulichdays)
                 .HasForeignKey(d => d.MaBuoiHoc)

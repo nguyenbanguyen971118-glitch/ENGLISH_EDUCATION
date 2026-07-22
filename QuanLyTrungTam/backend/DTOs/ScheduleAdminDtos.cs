@@ -41,6 +41,10 @@ public sealed class AdminRescheduleRequestDto
     public string NewDate { get; set; } = string.Empty;
     public string Reason { get; set; } = string.Empty;
     public sbyte? Status { get; set; }
+    /// <summary>1: Đổi thời gian, 2: Đổi phòng</summary>
+    public sbyte? LoaiYeuCau { get; set; }
+    public string? TenPhongHocHienTai { get; set; }
+    public string? TenPhongHocDeXuat { get; set; }
 }
 
 public sealed class AdminScheduleBoardDto

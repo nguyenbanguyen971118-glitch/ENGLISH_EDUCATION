@@ -341,7 +341,8 @@ namespace backend.Controllers
                 .Where(y => (y.DaXoa == null || y.DaXoa == false) && (y.TrangThaiDuyet == null || y.TrangThaiDuyet == 0))
                 .Include(y => y.MaLopHocNavigation)
                 .Include(y => y.MaGiangVienNavigation).ThenInclude(gv => gv.MaNguoiDungNavigation)
-                .Include(y => y.MaBuoiHocNavigation)
+                .Include(y => y.MaBuoiHocNavigation).ThenInclude(b => b!.MaPhongHocNavigation)
+                .Include(y => y.MaPhongHocDeXuatNavigation)
                 .ToListAsync();
 
             var rescheduleRequests = requestRows.Select(row => new AdminRescheduleRequestDto
@@ -355,9 +356,14 @@ namespace backend.Controllers
                 OldDate = row.MaBuoiHocNavigation != null
                     ? $"{row.MaBuoiHocNavigation.NgayHoc:dd/MM} - Ca {row.MaBuoiHocNavigation.MaTietBatDau}"
                     : "Chưa có lịch gốc",
-                NewDate = $"{row.NgayHocDeXuat:dd/MM} - Ca {row.MaTietBatDauDeXuat}",
+                NewDate = row.LoaiYeuCau == 2
+                    ? $"Đổi phòng: {row.MaBuoiHocNavigation?.MaPhongHocNavigation?.TenPhong ?? "?"} → {row.MaPhongHocDeXuatNavigation?.TenPhong ?? "?"}"
+                    : $"{row.NgayHocDeXuat:dd/MM} - Ca {row.MaTietBatDauDeXuat}",
                 Reason = row.LyDo ?? string.Empty,
-                Status = row.TrangThaiDuyet
+                Status = row.TrangThaiDuyet,
+                LoaiYeuCau = row.LoaiYeuCau,
+                TenPhongHocHienTai = row.MaBuoiHocNavigation?.MaPhongHocNavigation?.TenPhong,
+                TenPhongHocDeXuat = row.MaPhongHocDeXuatNavigation?.TenPhong
             }).ToList();
 
             var classes = await _db.Lophocs
@@ -436,7 +442,7 @@ namespace backend.Controllers
                     ConflictReason = null
                 }).ToList();
 
-                // Lấy yêu cầu đổi lịch của giáo viên (sử dụng projection để tránh mapping navigation lỗi)
+                // Lấy yêu cầu đổi lịch của giáo viên (dùng projection, không Include navigation)
                 var rawRequests = await _db.Yeucaulichdays
                     .Where(y => (y.DaXoa == null || y.DaXoa == false) && y.MaGiangVien == parsedTeacherId)
                     .Select(y => new {
@@ -447,13 +453,16 @@ namespace backend.Controllers
                         y.MaTietBatDauDeXuat,
                         y.MaTietKetThucDeXuat,
                         y.LyDo,
-                        y.TrangThaiDuyet
+                        y.TrangThaiDuyet,
+                        y.LoaiYeuCau,
+                        y.MaPhongHocDeXuat
                     })
                     .ToListAsync();
 
                 // Lấy tên lớp và thông tin buổi gốc riêng để ghép
                 var classIds = rawRequests.Select(r => r.MaLopHoc).Distinct().ToList();
                 var buoiIds = rawRequests.Where(r => r.MaBuoiHoc != null).Select(r => r.MaBuoiHoc!.Value).Distinct().ToList();
+                var roomIds = rawRequests.Where(r => r.MaPhongHocDeXuat != null).Select(r => r.MaPhongHocDeXuat!.Value).Distinct().ToList();
 
                 var classMap = await _db.Lophocs
                     .Where(l => classIds.Contains(l.MaLopHoc))
@@ -462,6 +471,18 @@ namespace backend.Controllers
                 var buoiMap = await _db.Buoihocs
                     .Where(b => buoiIds.Contains(b.MaBuoiHoc))
                     .ToDictionaryAsync(b => b.MaBuoiHoc, b => b);
+
+                foreach (var currentRoomId in buoiMap.Values.Where(b => b.MaPhongHoc.HasValue).Select(b => b.MaPhongHoc!.Value).Distinct())
+                {
+                    if (!roomIds.Contains(currentRoomId))
+                    {
+                        roomIds.Add(currentRoomId);
+                    }
+                }
+
+                var roomMap = await _db.Phonghocs
+                    .Where(r => roomIds.Contains(r.MaPhongHoc))
+                    .ToDictionaryAsync(r => r.MaPhongHoc, r => r.TenPhong);
 
                 var rescheduleRequests = rawRequests.Select(row => new AdminRescheduleRequestDto
                 {
@@ -474,9 +495,13 @@ namespace backend.Controllers
                     OldDate = (row.MaBuoiHoc != null && buoiMap.ContainsKey(row.MaBuoiHoc.Value))
                         ? $"{buoiMap[row.MaBuoiHoc.Value].NgayHoc:dd/MM} - Ca {buoiMap[row.MaBuoiHoc.Value].MaTietBatDau}"
                         : "Không xác định",
-                    NewDate = $"{row.NgayHocDeXuat:dd/MM} - Ca {row.MaTietBatDauDeXuat}",
+                    NewDate = row.LoaiYeuCau == 2
+                        ? $"Đổi phòng: {(row.MaBuoiHoc != null && buoiMap.ContainsKey(row.MaBuoiHoc.Value) && buoiMap[row.MaBuoiHoc.Value].MaPhongHoc.HasValue && roomMap.ContainsKey(buoiMap[row.MaBuoiHoc.Value].MaPhongHoc!.Value) ? roomMap[buoiMap[row.MaBuoiHoc.Value].MaPhongHoc!.Value] : "?")} → {(row.MaPhongHocDeXuat != null && roomMap.ContainsKey(row.MaPhongHocDeXuat.Value) ? roomMap[row.MaPhongHocDeXuat.Value] : "?")}"
+                        : $"{row.NgayHocDeXuat:dd/MM} - Ca {row.MaTietBatDauDeXuat}",
                     Reason = row.LyDo ?? string.Empty,
-                    Status = row.TrangThaiDuyet
+                    Status = row.TrangThaiDuyet,
+                    LoaiYeuCau = row.LoaiYeuCau,
+                    TenPhongHocDeXuat = row.MaPhongHocDeXuat != null && roomMap.ContainsKey(row.MaPhongHocDeXuat.Value) ? roomMap[row.MaPhongHocDeXuat.Value] : null
                 }).ToList();
 
                 // Lấy danh sách phòng học
@@ -506,60 +531,29 @@ namespace backend.Controllers
         [HttpPut("reschedule-requests/{id:guid}/approve")]
         public async Task<IActionResult> ApproveRescheduleRequest(Guid id)
         {
-            var request = await _db.Yeucaulichdays.Include(x => x.MaBuoiHocNavigation).FirstOrDefaultAsync(x => x.MaYeuCau == id);
-            if (request == null) return NotFound(new { message = "Không tìm thấy yêu cầu đổi lịch." });
-
-            if (request.MaBuoiHocNavigation != null)
+            // Ủy quyền cho ScheduleChangeRequestService: nó xử lý đúng cho cả hai loại yêu cầu
+            // (đổi giờ và đổi phòng), bao gồm kiểm tra xung đột và gửi thông báo. Endpoint này
+            // trước đây tự xử lý inline và luôn áp dụng lại ngày/ca hiện có, bỏ qua hoàn toàn
+            // yêu cầu đổi phòng (MaPhongHocDeXuat không bao giờ được dùng).
+            var result = await _scheduleChangeRequestService.ApproveRequestAsync(id, null);
+            if (!result.Success)
             {
-                var targetDate = request.NgayHocDeXuat;
-                var targetStart = request.MaTietBatDauDeXuat;
-                var targetEnd = request.MaTietKetThucDeXuat;
-
-                var overlapping = await _db.Buoihocs
-                    .Where(b => b.MaBuoiHoc != request.MaBuoiHoc && b.NgayHoc == targetDate && b.MaTietBatDau <= targetEnd && b.MaTietKetThuc >= targetStart)
-                    .ToListAsync();
-
-                var hasRoomConflict = request.MaBuoiHocNavigation.MaPhongHoc != null && overlapping.Any(b => b.MaPhongHoc == request.MaBuoiHocNavigation.MaPhongHoc);
-                var teachersForClass = await _db.Giangvienlophocs
-                    .Where(g => g.MaLopHoc == request.MaLopHoc)
-                    .Select(g => g.MaGiangVien)
-                    .Distinct()
-                    .ToListAsync();
-                var busyTeachers = await _db.Giangvienlophocs
-                    .Where(g => overlapping.Select(b => b.MaLopHoc).Contains(g.MaLopHoc))
-                    .Select(g => g.MaGiangVien)
-                    .Distinct()
-                    .ToListAsync();
-
-                if (hasRoomConflict || teachersForClass.Intersect(busyTeachers).Any())
-                {
-                    return BadRequest(new { message = "Khung giờ mới bị trùng, không thể duyệt đổi lịch." });
-                }
-
-                request.MaBuoiHocNavigation.NgayHoc = targetDate;
-                request.MaBuoiHocNavigation.MaTietBatDau = targetStart;
-                request.MaBuoiHocNavigation.MaTietKetThuc = targetEnd;
-                request.MaBuoiHocNavigation.ThoiGianSua = DateTime.UtcNow;
+                return BadRequest(new { message = result.Message });
             }
 
-            request.TrangThaiDuyet = 1;
-            request.ThoiGianSua = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
-
-            return Ok(new { message = "Đã duyệt đổi lịch thành công.", id = request.MaYeuCau });
+            return Ok(new { message = result.Message, id = result.MaYeuCau });
         }
 
         [HttpPut("reschedule-requests/{id:guid}/reject")]
         public async Task<IActionResult> RejectRescheduleRequest(Guid id)
         {
-            var request = await _db.Yeucaulichdays.FirstOrDefaultAsync(x => x.MaYeuCau == id);
-            if (request == null) return NotFound(new { message = "Không tìm thấy yêu cầu đổi lịch." });
+            var result = await _scheduleChangeRequestService.RejectRequestAsync(id, null);
+            if (!result.Success)
+            {
+                return BadRequest(new { message = result.Message });
+            }
 
-            request.TrangThaiDuyet = 2;
-            request.ThoiGianSua = DateTime.UtcNow;
-            await _db.SaveChangesAsync();
-
-            return Ok(new { message = "Đã từ chối yêu cầu đổi lịch.", id = request.MaYeuCau });
+            return Ok(new { message = result.Message, id = result.MaYeuCau });
         }
 
         [HttpDelete("{id:guid}")]
