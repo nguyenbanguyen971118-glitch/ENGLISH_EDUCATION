@@ -69,6 +69,7 @@ public class ClassesController : ControllerBase
     }
 
     [HttpGet("teachers-overview")]
+    [AuthorizeByPermission("PAGE_ADMIN_CLASSES_VIEW")]
     public async Task<IActionResult> GetTeachersOverview()
     {
         var teachers = await _db.Giangviens
