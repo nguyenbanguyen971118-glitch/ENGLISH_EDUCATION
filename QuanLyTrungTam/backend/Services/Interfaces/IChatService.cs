@@ -1,4 +1,5 @@
 using backend.DTOs;
+using Microsoft.AspNetCore.Http;
 
 namespace backend.Services.Interfaces;
 
@@ -13,6 +14,7 @@ public interface IChatService
     Task<ApiResponseDto<ChatConversationDto>> CreateGroupConversationAsync(Guid currentUserId, CreateGroupConversationRequestDto request);
 
     Task<ApiResponseDto<ChatMessageDto>> SendMessageAsync(Guid currentUserId, Guid conversationId, SendMessageRequestDto request);
+    Task<ApiResponseDto<List<string>>> UploadMessageAttachmentsAsync(Guid currentUserId, List<IFormFile> files);
     Task<ApiResponseDto<object>> MarkAsReadAsync(Guid currentUserId, Guid conversationId);
 
     Task<ApiResponseDto<object>> RegisterDeviceTokenAsync(Guid currentUserId, string token);

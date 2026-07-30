@@ -16,7 +16,7 @@ public interface IChatRepository
     Task<ChatConversationDto?> GetConversationByIdAsync(Guid conversationId, Guid currentUserId);
     Task<List<ChatConversationDto>> GetConversationsAsync(Guid currentUserId);
 
-    Task<ChatMessageDto> CreateMessageAsync(Guid conversationId, Guid senderId, string content);
+    Task<ChatMessageDto> CreateMessageAsync(Guid conversationId, Guid senderId, string content, List<string>? attachmentUrls = null);
     Task<List<ChatMessageDto>> GetMessagesAsync(Guid conversationId, int take);
     Task<int> MarkMessagesAsReadAsync(Guid conversationId, Guid currentUserId);
 }

@@ -17,6 +17,7 @@ public class ChatMessageDto
     public string SenderRole { get; set; } = string.Empty;
     public string? SenderAvatarUrl { get; set; }
     public string Content { get; set; } = string.Empty;
+    public List<string>? AttachmentUrls { get; set; }
     public bool IsRead { get; set; }
     public DateTime CreatedAt { get; set; }
 }

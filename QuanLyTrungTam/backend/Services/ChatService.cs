@@ -1,6 +1,9 @@
+using System;
+using System.IO;
 using backend.DTOs;
 using backend.Repositories.Interfaces;
 using backend.Services.Interfaces;
+using Microsoft.AspNetCore.Http;
 
 namespace backend.Services;
 
@@ -154,7 +157,8 @@ public class ChatService : IChatService
 
     public async Task<ApiResponseDto<ChatMessageDto>> SendMessageAsync(Guid currentUserId, Guid conversationId, SendMessageRequestDto request)
     {
-        if (string.IsNullOrWhiteSpace(request.Content))
+        var hasAttachmentUrls = request.AttachmentUrls != null && request.AttachmentUrls.Any();
+        if (string.IsNullOrWhiteSpace(request.Content) && !hasAttachmentUrls)
         {
             return ApiResponseDto<ChatMessageDto>.Fail("Nội dung tin nhắn không được để trống.", "CHAT_MESSAGE_REQUIRED");
         }
@@ -164,7 +168,7 @@ public class ChatService : IChatService
             return ApiResponseDto<ChatMessageDto>.Fail("Bạn không thuộc hội thoại này.", "CHAT_FORBIDDEN");
         }
 
-        var message = await _chatRepository.CreateMessageAsync(conversationId, currentUserId, request.Content);
+        var message = await _chatRepository.CreateMessageAsync(conversationId, currentUserId, request.Content ?? string.Empty, hasAttachmentUrls ? request.AttachmentUrls : null);
         var conversation = await _chatRepository.GetConversationByIdAsync(conversationId, currentUserId);
 
         var memberIds = conversation?.Members.Select(x => x.UserId).Distinct().ToList() ?? new List<Guid>();
@@ -195,6 +199,42 @@ public class ChatService : IChatService
             conversationId,
             updatedCount
         }, "Đánh dấu đã đọc thành công.");
+    }
+
+    public async Task<ApiResponseDto<List<string>>> UploadMessageAttachmentsAsync(Guid currentUserId, List<IFormFile> files)
+    {
+        if (files == null || !files.Any())
+        {
+            return ApiResponseDto<List<string>>.Fail("Không có tệp đính kèm nào được gửi.", "CHAT_ATTACHMENTS_REQUIRED");
+        }
+
+        var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "message-attachments");
+        Directory.CreateDirectory(uploadFolder);
+
+        var urls = new List<string>();
+        foreach (var file in files)
+        {
+            if (file == null || file.Length == 0)
+            {
+                continue;
+            }
+
+            var extension = Path.GetExtension(file.FileName);
+            var storedFileName = $"attachment_{Guid.NewGuid()}{extension}";
+            var filePath = Path.Combine(uploadFolder, storedFileName);
+
+            await using var fileStream = File.Create(filePath);
+            await file.CopyToAsync(fileStream);
+
+            urls.Add($"/uploads/message-attachments/{storedFileName}");
+        }
+
+        if (!urls.Any())
+        {
+            return ApiResponseDto<List<string>>.Fail("Không thể lưu tệp đính kèm.", "CHAT_ATTACHMENTS_SAVE_FAILED");
+        }
+
+        return ApiResponseDto<List<string>>.Ok(urls, "Tải tệp đính kèm lên thành công.");
     }
 
     public async Task<ApiResponseDto<object>> RegisterDeviceTokenAsync(Guid currentUserId, string token)

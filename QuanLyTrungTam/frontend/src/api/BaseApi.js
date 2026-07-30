@@ -67,10 +67,14 @@ class BaseApi {
     // - nmkhue -31/3/2026
     async request(path, options = {}) {
         const token = this.getAuthToken();
+        const isFormData = options.body instanceof FormData;
         const headers = {
-            'Content-Type': 'application/json',
             ...(options.headers || {}),
         };
+
+        if (!isFormData) {
+            headers['Content-Type'] = 'application/json';
+        }
 
         if (token) {
             headers.Authorization = `Bearer ${token}`;
@@ -156,6 +160,16 @@ class BaseApi {
             ...options,
             method: 'POST',
             body: body ? JSON.stringify(body) : undefined,
+        });
+    }
+
+    // - chuc nang: Shortcut gui HTTP POST voi FormData.
+    // - nmkhue -30/7/2026
+    postForm(path, formData, options = {}) {
+        return this.request(path, {
+            ...options,
+            method: 'POST',
+            body: formData,
         });
     }
 

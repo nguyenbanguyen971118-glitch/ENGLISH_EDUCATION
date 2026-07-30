@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useMessagingAPI } from '../../hooks/useMessagingAPI';
 import { useChatHub } from '../../hooks/useChatHub';
 import { useAuth } from '../../context/AuthContext';
+import { getSignalRBaseUrl } from '../../api/BaseApi';
 
 const AdminMessages = () => {
     const { user: currentUser } = useAuth();
@@ -22,6 +23,8 @@ const AdminMessages = () => {
     const [attachments, setAttachments] = useState([]);
     const [dropdownOpen, setDropdownOpen] = useState(null);
     const [showGroupMembers, setShowGroupMembers] = useState(false);
+    const [previewAttachment, setPreviewAttachment] = useState(null);
+    const [previewOpen, setPreviewOpen] = useState(false);
     const isComposingRef = useRef(false);
     const isSendingRef = useRef(false);
 
@@ -96,6 +99,22 @@ const AdminMessages = () => {
         return normalizedName !== normalizedRole && !normalizedName.includes(normalizedRole);
     };
 
+    const getAttachmentType = (url) => {
+        if (!url) return 'file';
+        const extension = url.split('.').pop()?.split('?')[0]?.toLowerCase();
+        return ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp', 'svg'].includes(extension) ? 'image' : 'file';
+    };
+
+    const getAttachmentFullUrl = (url) => {
+        if (!url) return url;
+        if (url.startsWith('http://') || url.startsWith('https://')) return url;
+        const backendOrigin = getSignalRBaseUrl().replace(/\/$/, '');
+        if (url.startsWith('/')) {
+            return `${backendOrigin}${url}`;
+        }
+        return `${backendOrigin}/${url}`;
+    };
+
     const mapConversation = (c) => {
         const displayName = c?.displayName || c?.name || c?.title || 'Cuộc trò chuyện';
         const members = (c?.members || []).map(member => ({
@@ -167,8 +186,8 @@ const AdminMessages = () => {
                 time: formatTime(m.createdAt),
                 attachments: m.attachmentUrls && m.attachmentUrls.length > 0 ? m.attachmentUrls.map(url => ({
                     id: url,
-                    type: url.includes('image') ? 'image' : 'file',
-                    url: url,
+                    type: getAttachmentType(url),
+                    url: getAttachmentFullUrl(url),
                     name: url.split('/').pop(),
                     size: 'N/A'
                 })) : null
@@ -192,8 +211,8 @@ const AdminMessages = () => {
                     time: formatTime(message.createdAt),
                     attachments: message.attachmentUrls && message.attachmentUrls.length > 0 ? message.attachmentUrls.map(url => ({
                         id: url,
-                        type: url.includes('image') ? 'image' : 'file',
-                        url: url,
+                        type: getAttachmentType(url),
+                        url: getAttachmentFullUrl(url),
                         name: url.split('/').pop(),
                         size: 'N/A'
                     })) : null
@@ -240,14 +259,39 @@ const AdminMessages = () => {
     };
 
     const handleDownload = (attachment) => {
-        const urlToDownload = attachment.url;
+        const urlToDownload = attachment?.url;
         if (!urlToDownload) return;
+
+        let isCrossOrigin = false;
+        try {
+            const downloadUrl = new URL(urlToDownload, window.location.href);
+            isCrossOrigin = downloadUrl.origin !== window.location.origin;
+        } catch {
+            isCrossOrigin = false;
+        }
+
+        if (isCrossOrigin) {
+            window.open(urlToDownload, '_blank', 'noopener');
+            return;
+        }
+
         const a = document.createElement('a');
         a.href = urlToDownload;
         a.download = attachment.name || 'TaiLieuDinhKem';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
+    };
+
+    const openPreview = (attachment) => {
+        if (!attachment?.url) return;
+        setPreviewAttachment(attachment);
+        setPreviewOpen(true);
+    };
+
+    const closePreview = () => {
+        setPreviewOpen(false);
+        setPreviewAttachment(null);
     };
 
     const handleSendMessage = async (e) => {
@@ -258,23 +302,53 @@ const AdminMessages = () => {
 
         isSendingRef.current = true;
         const messageText = messageInput.trim();
-        const messageAttachments = attachments.map(a => a.url);
-        setMessageInput('');
-        setAttachments([]);
+        const filesToUpload = attachments.map(a => a.file).filter(Boolean);
 
         try {
-            const result = await messaging.sendMessage(activeChat, messageText, messageAttachments);
+            let attachmentUrls = [];
+            if (filesToUpload.length > 0) {
+                attachmentUrls = await messaging.uploadAttachments(filesToUpload);
+            }
+
+            const result = await messaging.sendMessage(activeChat, messageText, attachmentUrls);
             if (!result) {
                 console.error('Lỗi gửi tin nhắn - result null');
                 alert('Lỗi gửi tin nhắn, vui lòng thử lại');
             } else {
                 console.log('Tin nhắn gửi thành công:', result);
-                // Chỉ đánh dấu đã đọc nếu gửi thành công
+                const mappedMessage = {
+                    id: result.messageId,
+                    senderId: result.senderId,
+                    senderName: result.senderName,
+                    text: result.content || '',
+                    time: formatTime(result.createdAt),
+                    attachments: result.attachmentUrls && result.attachmentUrls.length > 0 ? result.attachmentUrls.map(url => ({
+                        id: url,
+                        type: getAttachmentType(url),
+                        url: getAttachmentFullUrl(url),
+                        name: url.split('/').pop(),
+                        size: 'N/A'
+                    })) : null
+                };
+
+                setMessages(prev => ({
+                    ...prev,
+                    [activeChat]: dedupeMessagesById([...(prev[activeChat] || []), mappedMessage])
+                }));
+
+                setConversations(prev => prev.map(c =>
+                    c.id === activeChat
+                        ? { ...c, lastMessage: result.content, time: formatTime(result.createdAt), unread: 0 }
+                        : c
+                ));
+
+                setMessageInput('');
+                setAttachments([]);
+
                 try {
                     await messaging.markAsRead(activeChat);
                 } catch (markAsReadError) {
                     console.warn('Lỗi đánh dấu đã đọc:', markAsReadError);
-                    // Không xử lý lỗi nghiêm trọng ở đây
                 }
             }
         } catch (error) {
@@ -580,74 +654,88 @@ const AdminMessages = () => {
                                     <span className="badge bg-white text-muted border px-3 py-2 shadow-sm fw-medium rounded-pill">Hôm nay</span>
                                 </div>
 
-                                {chatMsgs.length > 0 ? (
-                                    chatMsgs.map((msg, index) => {
-                                        const isSelf = msg.senderId === currentUser.id;
-                                        const senderInfo = getSenderInfo(msg.senderId);
-                                        const isSameSenderAsPrev = index > 0 && chatMsgs[index - 1].senderId === msg.senderId;
+                                {(() => {
+                                    // Lọc những tin nhắn có nội dung thực tế (text hoặc attachment)
+                                    const messagesWithContent = chatMsgs.filter(msg => 
+                                        msg.text?.trim() || (msg.attachments && msg.attachments.length > 0)
+                                    );
+                                    
+                                    return messagesWithContent.length > 0 ? (
+                                        messagesWithContent.map((msg, index) => {
+                                            const isSelf = msg.senderId === currentUser.id;
+                                            const senderInfo = getSenderInfo(msg.senderId);
+                                            const isSameSenderAsPrev = index > 0 && messagesWithContent[index - 1].senderId === msg.senderId;
 
-                                        return (
-                                            <div key={msg.id || `${msg.senderId || 'sender'}-${msg.time || 'time'}-${index}`} className={`d-flex mb-3 ${isSelf ? 'justify-content-end' : 'justify-content-start'}`}>
-                                                {!isSelf && (
-                                                    <div style={{ width: '38px', marginRight: '10px' }}>
-                                                        {!isSameSenderAsPrev && <img src={senderInfo.avatar} className="rounded-circle shadow-sm" width="36" height="36" alt="avt" />}
-                                                    </div>
-                                                )}
-
-                                                <div className="d-flex flex-column" style={{ maxWidth: '70%' }}>
-                                                    {!isSelf && chatInfo.isGroup && !isSameSenderAsPrev && (
-                                                        <span className="small text-muted fw-bold ms-1 mb-1" style={{ fontSize: '12px' }}>{senderInfo.name}</span>
+                                            return (
+                                                <div key={msg.id || `${msg.senderId || 'sender'}-${msg.time || 'time'}-${index}`} className={`d-flex mb-3 ${isSelf ? 'justify-content-end' : 'justify-content-start'}`}>
+                                                    {!isSelf && (
+                                                        <div style={{ width: '38px', marginRight: '10px' }}>
+                                                            {!isSameSenderAsPrev && <img src={senderInfo.avatar} className="rounded-circle shadow-sm" width="36" height="36" alt="avt" />}
+                                                        </div>
                                                     )}
 
-                                                    {msg.attachments && msg.attachments.map((att, attIndex) => (
-                                                        <div key={att.id || att.url || `att-${attIndex}`} className={`mb-1 ${isSelf ? 'text-end' : 'text-start'}`}>
-                                                            {att.type === 'image' ? (
-                                                                <div className="position-relative d-inline-block">
-                                                                    <img src={att.url} alt="attachment" className="rounded-4 shadow-sm border border-light cursor-pointer"
-                                                                        style={{ maxWidth: '280px', maxHeight: '280px', objectFit: 'cover' }}
-                                                                        onClick={() => window.open(att.url, '_blank')} />
-                                                                </div>
-                                                            ) : (
-                                                                <div className={`d-inline-flex align-items-center p-3 rounded-4 shadow-sm border ${isSelf ? 'bg-primary text-white border-primary' : 'bg-white text-dark border-light'}`} style={{ minWidth: '240px' }}>
-                                                                    <div className={`rounded p-2 me-3 ${isSelf ? 'bg-white bg-opacity-25' : 'bg-light text-primary'}`}><i className="bi bi-file-earmark-text-fill fs-3"></i></div>
-                                                                    <div className="text-start me-4 flex-grow-1 min-w-0">
-                                                                        <div className="fw-bold text-truncate" style={{ fontSize: '14px' }} title={att.name}>{att.name}</div>
-                                                                        <div className="small opacity-75 mt-1" style={{ fontSize: '11px' }}>{att.size}</div>
+                                                    <div className="d-flex flex-column" style={{ maxWidth: '70%' }}>
+                                                        {!isSelf && chatInfo.isGroup && !isSameSenderAsPrev && (
+                                                            <span className="small text-muted fw-bold ms-1 mb-1" style={{ fontSize: '12px' }}>{senderInfo.name}</span>
+                                                        )}
+
+                                                        {msg.attachments && msg.attachments.map((att, attIndex) => (
+                                                            <div key={att.id || att.url || `att-${attIndex}`} className={`mb-1 ${isSelf ? 'text-end' : 'text-start'}`}>
+                                                                {att.type === 'image' ? (
+                                                                    <div className="position-relative d-inline-block">
+                                                                        <img src={att.url} alt="attachment" className="rounded-4 shadow-sm border border-light cursor-pointer"
+                                                                            style={{ maxWidth: '280px', maxHeight: '280px', objectFit: 'cover' }}
+                                                                            onClick={() => openPreview(att)} />
                                                                     </div>
-                                                                    <button
-                                                                        className={`btn btn-sm rounded-circle shadow-none hover-scale ${isSelf ? 'btn-light text-primary' : 'btn-primary text-white'}`}
-                                                                        onClick={() => handleDownload(att)}
-                                                                        title="Tải tệp này xuống"
-                                                                    >
-                                                                        <i className="bi bi-download"></i>
-                                                                    </button>
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    ))}
+                                                                ) : (
+                                                                    <div className={`d-inline-flex align-items-center p-3 rounded-4 shadow-sm border ${isSelf ? 'bg-primary text-white border-primary' : 'bg-white text-dark border-light'}`} style={{ minWidth: '240px' }}>
+                                                                        <div className={`rounded p-2 me-3 ${isSelf ? 'bg-white bg-opacity-25' : 'bg-light text-primary'}`}><i className="bi bi-file-earmark-text-fill fs-3"></i></div>
+                                                                        <div className="text-start me-2 flex-grow-1 min-w-0">
+                                                                            <div className="fw-bold text-truncate" style={{ fontSize: '14px' }} title={att.name}>{att.name}</div>
+                                                                            <div className="small opacity-75 mt-1" style={{ fontSize: '11px' }}>{att.size}</div>
+                                                                        </div>
+                                                                        <button
+                                                                            className={`btn btn-sm rounded-circle shadow-none hover-scale ${isSelf ? 'btn-light text-primary' : 'btn-light text-primary'}`}
+                                                                            onClick={() => openPreview(att)}
+                                                                            title="Xem trước"
+                                                                        >
+                                                                            <i className="bi bi-eye"></i>
+                                                                        </button>
+                                                                        <button
+                                                                            className={`btn btn-sm rounded-circle shadow-none hover-scale ${isSelf ? 'btn-light text-primary' : 'btn-light text-primary'}`}
+                                                                            onClick={() => handleDownload(att)}
+                                                                            title="Tải tệp này xuống"
+                                                                        >
+                                                                            <i className="bi bi-download"></i>
+                                                                        </button>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))}
 
-                                                    {msg.text && (
-                                                        <div className={`p-3 shadow-sm ${isSelf ? 'bg-primary text-white' : 'bg-white text-dark border border-light'}`}
-                                                            style={{
-                                                                borderRadius: isSelf ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
-                                                                fontSize: '15px',
-                                                                lineHeight: '1.5'
-                                                            }}>
-                                                            {msg.text}
-                                                        </div>
-                                                    )}
+                                                        {msg.text && (
+                                                            <div className={`p-3 shadow-sm ${isSelf ? 'bg-primary text-white' : 'bg-white text-dark border border-light'}`}
+                                                                style={{
+                                                                    borderRadius: isSelf ? '18px 18px 4px 18px' : '18px 18px 18px 4px',
+                                                                    fontSize: '15px',
+                                                                    lineHeight: '1.5'
+                                                                }}>
+                                                                {msg.text}
+                                                            </div>
+                                                        )}
 
-                                                    <div className={`d-flex align-items-center mt-1 ${isSelf ? 'justify-content-end me-1' : 'ms-1'}`}>
-                                                        <span className="small text-muted" style={{ fontSize: '11px' }}>{msg.time}</span>
-                                                        {isSelf && <i className="bi bi-check2-all text-primary ms-1 fs-6"></i>}
+                                                        <div className={`d-flex align-items-center mt-1 ${isSelf ? 'justify-content-end me-1' : 'ms-1'}`}>
+                                                            <span className="small text-muted" style={{ fontSize: '11px' }}>{msg.time}</span>
+                                                            {isSelf && <i className="bi bi-check2-all text-primary ms-1 fs-6"></i>}
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })
-                                ) : (
-                                    <div className="text-center text-muted small">Chưa có tin nhắn nào</div>
-                                )}
+                                            );
+                                        })
+                                    ) : (
+                                        <div className="text-center text-muted small">Chưa có tin nhắn nào</div>
+                                    );
+                                })()}
                                 <div ref={messagesEndRef} />
                             </div>
 
@@ -715,6 +803,39 @@ const AdminMessages = () => {
                     );
                 })()}
             </div>
+
+            {previewOpen && previewAttachment && (
+                <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style={{ zIndex: 2500, backgroundColor: 'rgba(0,0,0,0.55)' }}>
+                    <div className="bg-white rounded-4 shadow-lg overflow-hidden" style={{ width: '95%', maxWidth: '980px', maxHeight: '90vh' }}>
+                        <div className="d-flex justify-content-between align-items-center p-3 border-bottom bg-white">
+                            <div className="me-3" style={{ minWidth: 0 }}>
+                                <div className="fw-semibold text-truncate" style={{ maxWidth: '520px' }}>{previewAttachment.name}</div>
+                                <div className="small text-muted">{previewAttachment.size || 'N/A'}</div>
+                            </div>
+                            <div className="d-flex gap-2">
+                                <button type="button" className="btn btn-sm btn-outline-secondary" onClick={closePreview} title="Đóng xem trước">
+                                    <i className="bi bi-x-lg"></i>
+                                </button>
+                                <button type="button" className="btn btn-sm btn-primary" onClick={() => handleDownload(previewAttachment)} title="Tải tệp này xuống">
+                                    <i className="bi bi-download me-1"></i> Tải
+                                </button>
+                            </div>
+                        </div>
+                        <div className="bg-dark d-flex justify-content-center align-items-center" style={{ minHeight: '60vh', maxHeight: 'calc(90vh - 72px)' }}>
+                            {previewAttachment.type === 'image' ? (
+                                <img src={previewAttachment.url} alt={previewAttachment.name} className="img-fluid" style={{ maxHeight: '100%', maxWidth: '100%' }} />
+                            ) : (
+                                <iframe
+                                    src={previewAttachment.url}
+                                    title={previewAttachment.name}
+                                    className="w-100 h-100 border-0"
+                                    style={{ minHeight: '60vh' }}
+                                />
+                            )}
+                        </div>
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
