@@ -522,5 +522,272 @@ namespace backend.Services
 
             return sb.ToString();
         }
+
+        public async Task<ClassDashboardDto> GetClassDashboardAsync(Guid classId)
+        {
+            var studentCount = await _context.Hocsinhlophocs.CountAsync(h => h.MaLopHoc == classId && h.DaXoa != true && h.TrangThai != false);
+            var tests = await _context.Sukienlophocs
+                .Where(e => e.MaLopHoc == classId && e.MaBaiTap != null && e.DaXoa != true)
+                .ToListAsync();
+            var testCount = tests.Count;
+
+            var testScoreDists = new List<TestScoreDistributionDto>();
+            foreach (var test in tests)
+            {
+                var testName = _context.Baitaps.FirstOrDefault(b => b.MaBaiTap == test.MaBaiTap)?.TenBaiTap ?? "Bài kiểm tra";
+                var submissions = await _context.Nopbais
+                    .Where(s => s.MaSuKien == test.MaSuKien && s.DiemSo != null && s.DaXoa != true)
+                    .Select(s => (double)s.DiemSo!.Value)
+                    .ToListAsync();
+                
+                var dist = new List<ScoreCountDto>();
+                for (int i = 0; i <= 10; i++)
+                {
+                    dist.Add(new ScoreCountDto { Score = i, Count = 0 });
+                }
+
+                foreach (var score in submissions)
+                {
+                    var rounded = (int)Math.Clamp(Math.Round(score), 0, 10);
+                    var bin = dist.FirstOrDefault(d => d.Score == rounded);
+                    if (bin != null) bin.Count++;
+                }
+
+                testScoreDists.Add(new TestScoreDistributionDto
+                {
+                    TestId = test.MaSuKien,
+                    TestName = testName,
+                    ScoreDistribution = dist
+                });
+            }
+
+            var studentsInClass = await _context.Hocsinhlophocs
+                .Where(h => h.MaLopHoc == classId && h.DaXoa != true && h.TrangThai != false)
+                .Include(h => h.MaHocSinhNavigation)
+                .ThenInclude(h => h.MaNguoiDungNavigation)
+                .ToListAsync();
+
+            var buoiHocs = await _context.Buoihocs
+                .Where(b => b.MaLopHoc == classId && b.DaXoa != true)
+                .Select(b => b.MaBuoiHoc)
+                .ToListAsync();
+
+            var allAttendance = await _context.Diemdanhs
+                .Where(d => buoiHocs.Contains(d.MaBuoiHoc) && d.DaXoa != true)
+                .Include(d => d.MaTrangThaiNavigation)
+                .ToListAsync();
+
+            var attendanceSummary = new List<StudentAttendanceSummaryDto>();
+            foreach (var sc in studentsInClass)
+            {
+                var studentId = sc.MaHocSinh;
+                var studentName = sc.MaHocSinhNavigation?.MaNguoiDungNavigation?.HoTen ?? "Học sinh";
+                var studentAtts = allAttendance.Where(d => d.MaHocSinh == studentId).ToList();
+                
+                int total = studentAtts.Count;
+                int present = studentAtts.Count(x => x.MaTrangThaiNavigation?.MaCode == "DD_PRESENT");
+                int late = studentAtts.Count(x => x.MaTrangThaiNavigation?.MaCode == "DD_LATE");
+                int absent = studentAtts.Count(x => x.MaTrangThaiNavigation?.MaCode == "DD_ABSENT");
+                int excused = studentAtts.Count(x => x.MaTrangThaiNavigation?.MaCode == "DD_EXCUSED");
+
+                double attendanceRate = total > 0 ? Math.Round((double)(present + late) / total * 100, 2) : 100.0;
+                double absentRate = total > 0 ? Math.Round((double)absent / total * 100, 2) : 0.0;
+
+                attendanceSummary.Add(new StudentAttendanceSummaryDto
+                {
+                    StudentId = studentId,
+                    StudentName = studentName,
+                    TotalSessions = total,
+                    PresentSessions = present,
+                    AbsentSessions = absent,
+                    LateSessions = late,
+                    ExcusedSessions = excused,
+                    AttendanceRate = attendanceRate,
+                    AbsentRate = absentRate
+                });
+            }
+
+            var testIds = tests.Select(t => t.MaSuKien).ToList();
+            var classSubmissions = await _context.Nopbais
+                .Where(s => testIds.Contains(s.MaSuKien) && s.DiemSo != null && s.DaXoa != true)
+                .ToListAsync();
+
+            var avgBins = new List<ScoreIntervalBinDto>
+            {
+                new() { Interval = "0-1", Count = 0 },
+                new() { Interval = "1-2", Count = 0 },
+                new() { Interval = "2-3", Count = 0 },
+                new() { Interval = "3-4", Count = 0 },
+                new() { Interval = "4-5", Count = 0 },
+                new() { Interval = "5-6", Count = 0 },
+                new() { Interval = "6-7", Count = 0 },
+                new() { Interval = "7-8", Count = 0 },
+                new() { Interval = "8-9", Count = 0 },
+                new() { Interval = "9-10", Count = 0 }
+            };
+
+            foreach (var sc in studentsInClass)
+            {
+                var studentId = sc.MaHocSinh;
+                var studentScores = classSubmissions
+                    .Where(s => s.MaHocSinh == studentId)
+                    .Select(s => (double)s.DiemSo!.Value)
+                    .ToList();
+
+                if (studentScores.Any())
+                {
+                    var avg = studentScores.Average();
+                    int binIndex = (int)Math.Clamp(Math.Floor(avg), 0, 9);
+                    avgBins[binIndex].Count++;
+                }
+            }
+
+            return new ClassDashboardDto
+            {
+                ClassId = classId,
+                ClassName = _context.Lophocs.FirstOrDefault(c => c.MaLopHoc == classId)?.TenLop ?? "Lớp học",
+                TotalStudents = studentCount,
+                TotalTests = testCount,
+                Tests = testScoreDists,
+                Attendance = attendanceSummary,
+                AverageScoreDistribution = avgBins
+            };
+        }
+
+        public async Task<StudentCourseDashboardDto> GetStudentCourseDashboardAsync(Guid studentId, Guid classId)
+        {
+            var tests = await _context.Sukienlophocs
+                .Where(e => e.MaLopHoc == classId && e.MaBaiTap != null && e.DaXoa != true)
+                .ToListAsync();
+
+            var testResults = new List<StudentTestResultDto>();
+            foreach (var test in tests)
+            {
+                var testName = _context.Baitaps.FirstOrDefault(b => b.MaBaiTap == test.MaBaiTap)?.TenBaiTap ?? "Bài kiểm tra";
+                var allTestSubs = await _context.Nopbais
+                    .Where(s => s.MaSuKien == test.MaSuKien && s.DiemSo != null && s.DaXoa != true)
+                    .OrderByDescending(s => s.DiemSo!.Value)
+                    .ToListAsync();
+
+                var studentSub = allTestSubs.FirstOrDefault(s => s.MaHocSinh == studentId);
+                double? score = studentSub != null ? (double)studentSub.DiemSo!.Value : null;
+                double classAverage = allTestSubs.Any() ? Math.Round(allTestSubs.Average(s => (double)s.DiemSo!.Value), 2) : 0.0;
+
+                string rankStr = "Chưa có";
+                if (studentSub != null)
+                {
+                    int rank = allTestSubs.FindIndex(s => s.MaHocSinh == studentId) + 1;
+                    rankStr = $"{rank}/{allTestSubs.Count}";
+                }
+
+                testResults.Add(new StudentTestResultDto
+                {
+                    TestId = test.MaSuKien,
+                    TestName = testName,
+                    Score = score,
+                    ClassAverage = classAverage,
+                    Rank = rankStr
+                });
+            }
+
+            var buoiHocs = await _context.Buoihocs
+                .Where(b => b.MaLopHoc == classId && b.DaXoa != true)
+                .Select(b => b.MaBuoiHoc)
+                .ToListAsync();
+
+            var studentAttendance = await _context.Diemdanhs
+                .Where(d => buoiHocs.Contains(d.MaBuoiHoc) && d.MaHocSinh == studentId && d.DaXoa != true)
+                .Include(d => d.MaTrangThaiNavigation)
+                .ToListAsync();
+
+            int totalAtt = studentAttendance.Count;
+            int presentAtt = studentAttendance.Count(x => x.MaTrangThaiNavigation?.MaCode == "DD_PRESENT" || x.MaTrangThaiNavigation?.MaCode == "DD_LATE");
+            double attendanceRate = totalAtt > 0 ? Math.Round((double)presentAtt / totalAtt * 100, 2) : 100.0;
+
+            var studentName = _context.Hocsinhs
+                .Where(h => h.MaHocSinh == studentId)
+                .Include(h => h.MaNguoiDungNavigation)
+                .FirstOrDefault()?.MaNguoiDungNavigation?.HoTen ?? "Học sinh";
+
+            return new StudentCourseDashboardDto
+            {
+                StudentId = studentId,
+                StudentName = studentName,
+                ClassId = classId,
+                ClassName = _context.Lophocs.FirstOrDefault(c => c.MaLopHoc == classId)?.TenLop ?? "Lớp học",
+                AttendanceRate = attendanceRate,
+                Tests = testResults
+            };
+        }
+
+        public async Task<List<ParentChildDashboardDto>> GetParentChildrenDashboardAsync(Guid parentProfileId)
+        {
+            var childLinks = await _context.Phuhuynhhocsinhs
+                .Where(ph => ph.MaPhuHuynh == parentProfileId && ph.DaXoa != true)
+                .ToListAsync();
+
+            var dashboardList = new List<ParentChildDashboardDto>();
+
+            foreach (var childLink in childLinks)
+            {
+                var student = await _context.Hocsinhs
+                    .Where(h => h.MaHocSinh == childLink.MaHocSinh && h.DaXoa != true)
+                    .Include(h => h.MaNguoiDungNavigation)
+                    .FirstOrDefaultAsync();
+
+                if (student == null) continue;
+
+                var childDto = new ParentChildDashboardDto
+                {
+                    StudentId = student.MaHocSinh,
+                    StudentName = student.MaNguoiDungNavigation?.HoTen ?? "Con"
+                };
+
+                var enrollments = await _context.Hocsinhlophocs
+                    .Where(h => h.MaHocSinh == student.MaHocSinh && h.DaXoa != true && h.TrangThai != false)
+                    .Include(h => h.MaLopHocNavigation)
+                    .ToListAsync();
+
+                foreach (var enrollment in enrollments)
+                {
+                    var courseLink = await _context.ChitietkhoahocLophocs
+                        .Where(ck => ck.MaLopHoc == enrollment.MaLopHoc && ck.DaXoa != true)
+                        .Include(ck => ck.MaKhoaHocNavigation)
+                        .FirstOrDefaultAsync();
+
+                    var tests = await _context.Sukienlophocs
+                        .Where(e => e.MaLopHoc == enrollment.MaLopHoc && e.MaBaiTap != null && e.DaXoa != true)
+                        .Select(e => e.MaSuKien)
+                        .ToListAsync();
+
+                    double? finalAvg = null;
+                    if (tests.Any())
+                    {
+                        var scores = await _context.Nopbais
+                            .Where(s => tests.Contains(s.MaSuKien) && s.MaHocSinh == student.MaHocSinh && s.DiemSo != null && s.DaXoa != true)
+                            .Select(s => (double)s.DiemSo!.Value)
+                            .ToListAsync();
+
+                        if (scores.Any())
+                        {
+                            finalAvg = Math.Round(scores.Average(), 2);
+                        }
+                    }
+
+                    childDto.Courses.Add(new ChildCourseSummaryDto
+                    {
+                        ClassId = enrollment.MaLopHoc,
+                        ClassName = enrollment.MaLopHocNavigation?.TenLop ?? "Lớp học",
+                        CourseName = courseLink?.MaKhoaHocNavigation?.TenKhoaHoc ?? "Khóa học",
+                        FinalAverageScore = finalAvg
+                    });
+                }
+
+                dashboardList.Add(childDto);
+            }
+
+            return dashboardList;
+        }
     }
 }
+

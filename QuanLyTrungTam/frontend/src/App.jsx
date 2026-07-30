@@ -48,6 +48,7 @@ import ExamGenerationManager from './pages/teacher/ExamGenerationManager';
 // Import Parent Pages
 import ParentAttendance from './pages/parent/ParentAttendance';
 import ParentMessages from './pages/parent/ParentMessages';
+import ParentReports from './pages/parent/ParentReports';
 
 import ParentProfile from './pages/parent/ParentProfile';
 // Import Student Pages
@@ -162,7 +163,7 @@ function App() {
             <Route path="/parent/schedule" element={<PrivateRoute requiredPermissions={['PAGE_PARENT_SCHEDULE_VIEW']}><ParentSchedule /></PrivateRoute>} />
             <Route path="/parent/attendance" element={<PrivateRoute requiredPermissions={['ATTENDANCE_VIEW_PARENT']}><ParentAttendance /></PrivateRoute>} />
             <Route path="/parent/messages" element={<PrivateRoute requiredPermissions={['MESSAGES_ACCESS']}><ParentMessages /></PrivateRoute>} />
-            <Route path="/parent/reports" element={<PrivateRoute><Placeholder title="Báo cáo thống kê" /></PrivateRoute>} />
+            <Route path="/parent/reports" element={<PrivateRoute requiredPermissions={['PAGE_PARENT_SCHEDULE_VIEW']}><ParentReports /></PrivateRoute>} />
             {/* Trang hồ sơ phụ huynh dùng API thật — chỉ cần đăng nhập, bảo vệ bởi userId trong JWT. */}
             <Route path="/parent/profile" element={<PrivateRoute><ParentProfile /></PrivateRoute>} />
             

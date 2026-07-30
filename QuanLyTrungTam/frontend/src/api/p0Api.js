@@ -61,5 +61,13 @@ export const p0Api = {
     teacherOverview: async () => unwrap(await apiClient.get("reports/teacher/overview")),
     teacherClassOverview: async (classId) => unwrap(await apiClient.get(`reports/teacher/classes/${classId}/overview`)),
     studentOverview: async () => unwrap(await apiClient.get("reports/student/overview")),
+    classDashboard: async (classId) => unwrap(await apiClient.get(`reports/class/${classId}/dashboard`)),
+    studentDashboard: async (classId, studentId) => unwrap(await apiClient.get(`reports/student/dashboard?classId=${classId}${studentId ? `&studentId=${studentId}` : ""}`)),
+    parentDashboard: async () => unwrap(await apiClient.get("reports/parent/dashboard")),
+  },
+  teacherSpecializations: {
+    list: async () => unwrap(await apiClient.get("GiangVien/specializations")),
+    assign: async (payload) => unwrap(await apiClient.post("GiangVien/assign-courses", payload)),
   },
 };
+

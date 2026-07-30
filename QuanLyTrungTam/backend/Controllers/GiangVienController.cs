@@ -310,4 +310,64 @@ public class GiangVienController : ControllerBase
     {
         return string.IsNullOrWhiteSpace(value) ? null : value.Trim();
     }
+
+    // Lấy danh sách chuyên môn (các môn được dạy) của giáo viên
+    [HttpGet("specializations")]
+    public async Task<IActionResult> GetSpecializations()
+    {
+        var specializations = await _context.Giangviens
+            .Where(t => t.DaXoa != true)
+            .Select(t => new TeacherSpecializationDto
+            {
+                MaGiangVien = t.MaGiangVien,
+                TenGiangVien = t.MaNguoiDungNavigation.HoTen,
+                CourseIds = _context.GiangvienKhoahocs
+                    .Where(gk => gk.MaGiangVien == t.MaGiangVien)
+                    .Select(gk => gk.MaKhoaHoc)
+                    .ToList(),
+                CourseNames = _context.GiangvienKhoahocs
+                    .Where(gk => gk.MaGiangVien == t.MaGiangVien)
+                    .Select(gk => gk.MaKhoaHocNavigation.TenKhoaHoc)
+                    .ToList()
+            })
+            .ToListAsync();
+
+        return Ok(ApiResponseDto<List<TeacherSpecializationDto>>.Ok(specializations, "Lấy danh sách chuyên môn giảng viên thành công."));
+    }
+
+    // Phân công các môn học (khoá học) cho giảng viên dạy
+    [HttpPost("assign-courses")]
+    public async Task<IActionResult> AssignCourses([FromBody] AssignCoursesRequestDto request)
+    {
+        var teacher = await _context.Giangviens
+            .FirstOrDefaultAsync(t => t.MaGiangVien == request.MaGiangVien && t.DaXoa != true);
+        if (teacher == null)
+        {
+            return NotFound(ApiResponseDto<object>.Fail("Không tìm thấy thông tin giảng viên.", "TEACHER_NOT_FOUND"));
+        }
+
+        var existing = await _context.GiangvienKhoahocs
+            .Where(gk => gk.MaGiangVien == request.MaGiangVien)
+            .ToListAsync();
+        _context.GiangvienKhoahocs.RemoveRange(existing);
+
+        var userId = User.GetUserId();
+        var now = DateTime.UtcNow;
+
+        foreach (var courseId in request.CourseIds)
+        {
+            _context.GiangvienKhoahocs.Add(new GiangvienKhoahoc
+            {
+                MaGiangVien = request.MaGiangVien,
+                MaKhoaHoc = courseId,
+                NguoiTao = userId,
+                ThoiGianTao = now
+            });
+        }
+
+        await _context.SaveChangesAsync();
+
+        return Ok(ApiResponseDto<object>.Ok(null, "Phân công môn dạy cho giảng viên thành công."));
+    }
 }
+

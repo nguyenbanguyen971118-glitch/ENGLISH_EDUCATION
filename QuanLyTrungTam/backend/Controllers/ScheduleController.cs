@@ -373,11 +373,26 @@ namespace backend.Controllers
                 .Select(x => new ScheduleLookupItemDto { Id = x.MaLopHoc, Name = x.TenLop })
                 .ToListAsync();
 
-            var teachers = await _db.Giangviens
+            var rawTeachers = await _db.Giangviens
                 .Where(x => x.DaXoa == null || x.DaXoa == false)
                 .OrderBy(x => x.MaNguoiDungNavigation.HoTen)
-                .Select(x => new ScheduleLookupItemDto { Id = x.MaGiangVien, Name = x.MaNguoiDungNavigation.HoTen })
+                .Select(x => new
+                {
+                    x.MaGiangVien,
+                    x.MaNguoiDungNavigation.HoTen,
+                    Specializations = _db.GiangvienKhoahocs
+                        .Where(gk => gk.MaGiangVien == x.MaGiangVien)
+                        .Select(gk => gk.MaKhoaHocNavigation.TenKhoaHoc)
+                        .ToList()
+                })
                 .ToListAsync();
+
+            var teachers = rawTeachers.Select(t => new ScheduleLookupItemDto
+            {
+                Id = t.MaGiangVien,
+                Name = t.HoTen + (t.Specializations.Any() ? " (" + string.Join(", ", t.Specializations) + ")" : "")
+            }).ToList();
+
 
             var rooms = await _db.Phonghocs
                 .Where(x => x.DaXoa == null || x.DaXoa == false)

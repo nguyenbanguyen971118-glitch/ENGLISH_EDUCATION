@@ -73,7 +73,7 @@ builder.Services.AddScoped<INotificationRepository, NotificationRepository>();
 builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<NotificationEventService>(); // Service xử lý sự kiện thông báo
 builder.Services.AddScoped<IAdminAttendanceService, AdminAttendanceService>();//Service quản lý điểm danh cho admin
-builder.Services.AddSingleton<IRefreshSessionStore, InMemoryRefreshSessionStore>();
+builder.Services.AddSingleton<IRefreshSessionStore, DbRefreshSessionStore>();
 builder.Services.AddSingleton<IFirebasePushService, FirebasePushService>();
 builder.Services.AddHttpClient();
 
@@ -163,6 +163,20 @@ var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
 {
+    var dbContext = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+    await dbContext.Database.ExecuteSqlRawAsync(@"
+CREATE TABLE IF NOT EXISTS refresh_sessions (
+    sessionId CHAR(32) NOT NULL,
+    userId CHAR(36) NOT NULL,
+    refreshToken VARCHAR(512) NOT NULL,
+    expiresAtUtc DATETIME(6) NOT NULL,
+    createdAtUtc DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    updatedAtUtc DATETIME(6) NULL,
+    PRIMARY KEY (sessionId),
+    INDEX idx_refresh_sessions_user_id (userId),
+    INDEX idx_refresh_sessions_expires_at (expiresAtUtc)
+);");
+
     var bootstrapService = scope.ServiceProvider.GetRequiredService<PermissionBootstrapService>();
     await bootstrapService.EnsureInitializedAsync();
 

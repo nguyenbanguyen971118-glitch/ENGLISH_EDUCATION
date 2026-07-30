@@ -226,5 +226,77 @@ namespace backend.Controllers
                 return BadRequest(ApiResponseDto<object>.Fail($"Lỗi xuất Excel: {ex.Message}", "REPORT_STUDENT_EXPORT_ERROR"));
             }
         }
+
+        /// <summary>
+        /// Lấy thống kê chi tiết của một lớp học phục vụ cho Dashboard.
+        /// </summary>
+        [HttpGet("class/{classId:guid}/dashboard")]
+        [Authorize]
+        public async Task<IActionResult> GetClassDashboard(Guid classId)
+        {
+            try
+            {
+                var dashboard = await _reportsService.GetClassDashboardAsync(classId);
+                return Ok(ApiResponseDto<ClassDashboardDto>.Ok(dashboard, "Lấy dữ liệu dashboard lớp học thành công."));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDto<object>.Fail($"Lỗi: {ex.Message}", "REPORT_CLASS_DASHBOARD_ERROR"));
+            }
+        }
+
+        /// <summary>
+        /// Lấy dashboard học tập của một học sinh cụ thể trong một lớp học.
+        /// </summary>
+        [HttpGet("student/dashboard")]
+        [Authorize]
+        public async Task<IActionResult> GetStudentCourseDashboard([FromQuery] Guid classId, [FromQuery] Guid? studentId = null)
+        {
+            try
+            {
+                var targetStudentId = studentId;
+                if (!targetStudentId.HasValue)
+                {
+                    targetStudentId = User.GetProfileId();
+                }
+
+                if (!targetStudentId.HasValue)
+                {
+                    return BadRequest(ApiResponseDto<object>.Fail("Không tìm thấy mã học sinh.", "STUDENT_ID_REQUIRED"));
+                }
+
+                var dashboard = await _reportsService.GetStudentCourseDashboardAsync(targetStudentId.Value, classId);
+                return Ok(ApiResponseDto<StudentCourseDashboardDto>.Ok(dashboard, "Lấy dữ liệu dashboard học sinh thành công."));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDto<object>.Fail($"Lỗi: {ex.Message}", "REPORT_STUDENT_DASHBOARD_ERROR"));
+            }
+        }
+
+        /// <summary>
+        /// Lấy danh sách con và thống kê các khoá học của từng con dành cho Phụ huynh.
+        /// </summary>
+        [HttpGet("parent/dashboard")]
+        [Authorize]
+        public async Task<IActionResult> GetParentDashboard()
+        {
+            try
+            {
+                var parentProfileId = User.GetProfileId();
+                if (!parentProfileId.HasValue)
+                {
+                    return BadRequest(ApiResponseDto<object>.Fail("Không tìm thấy mã phụ huynh trong phiên đăng nhập.", "PARENT_PROFILE_NOT_FOUND"));
+                }
+
+                var dashboard = await _reportsService.GetParentChildrenDashboardAsync(parentProfileId.Value);
+                return Ok(ApiResponseDto<List<ParentChildDashboardDto>>.Ok(dashboard, "Lấy dữ liệu dashboard phụ huynh thành công."));
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, ApiResponseDto<object>.Fail($"Lỗi: {ex.Message}", "REPORT_PARENT_DASHBOARD_ERROR"));
+            }
+        }
     }
 }
+

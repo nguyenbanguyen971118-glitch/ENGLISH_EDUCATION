@@ -48,5 +48,21 @@ namespace backend.Services.Interfaces
         /// Tạo học bạ điện tử cá nhân lưu trữ lịch sử nộp bài tập và chuyên cần dạng CSV cho Học sinh.
         /// </summary>
         Task<string> ExportStudentReportCsvAsync(Guid studentProfileId);
+
+        /// <summary>
+        /// Lấy thống kê chi tiết của một lớp học phục vụ dashboard (sĩ số, số bài kiểm tra, phân bố điểm từng bài, chuyên cần từng học sinh, phân phối điểm trung bình).
+        /// </summary>
+        Task<ClassDashboardDto> GetClassDashboardAsync(Guid classId);
+
+        /// <summary>
+        /// Lấy thông tin điểm các bài kiểm tra, thứ hạng và tỷ lệ chuyên cần của 1 học sinh cụ thể trong 1 lớp học.
+        /// </summary>
+        Task<StudentCourseDashboardDto> GetStudentCourseDashboardAsync(Guid studentId, Guid classId);
+
+        /// <summary>
+        /// Lấy danh sách học sinh (con) của phụ huynh kèm danh sách khoá học.
+        /// </summary>
+        Task<List<ParentChildDashboardDto>> GetParentChildrenDashboardAsync(Guid parentProfileId);
     }
 }
+
