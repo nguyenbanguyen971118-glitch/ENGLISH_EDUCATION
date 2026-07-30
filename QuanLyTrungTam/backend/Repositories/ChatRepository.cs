@@ -1,3 +1,4 @@
+using System.Text.Json;
 using backend.Data;
 using backend.DTOs;
 using backend.Models;
@@ -27,15 +28,16 @@ public class ChatRepository : IChatRepository
             from u in _context.Nguoidungs
             where u.MaNguoiDung != currentUserId && u.DaXoa != true && u.TrangThai != false
             join ur in _context.Nguoidungvaitros.Where(x => x.DaXoa != true && x.TrangThai != false)
-                on u.MaNguoiDung equals ur.MaNguoiDung
+                on u.MaNguoiDung equals ur.MaNguoiDung into userRoles
+            from ur in userRoles.DefaultIfEmpty()
             join r in _context.Vaitros.Where(x => x.DaXoa != true && x.TrangThai != false)
-                on ur.MaVaiTro equals r.MaVaiTro
-            where r.TenVaiTro == "Admin" || r.TenVaiTro == "Giao_Vien" || r.TenVaiTro == "Phu_Huynh"
+                on ur.MaVaiTro equals r.MaVaiTro into roles
+            from r in roles.DefaultIfEmpty()
             select new ChatUserDto
             {
                 UserId = u.MaNguoiDung,
                 FullName = u.HoTen,
-                Role = r.TenVaiTro,
+                Role = r != null ? r.TenVaiTro : "User",
                 AvatarUrl = u.AnhDaiDien
             }
         ).ToListAsync();
@@ -187,15 +189,16 @@ public class ChatRepository : IChatRepository
         return await BuildConversationDtosAsync(conversationIds, currentUserId);
     }
 
-    public async Task<ChatMessageDto> CreateMessageAsync(Guid conversationId, Guid senderId, string content)
+    public async Task<ChatMessageDto> CreateMessageAsync(Guid conversationId, Guid senderId, string content, List<string>? attachmentUrls = null)
     {
         var now = DateTime.UtcNow;
+        var storedText = FormatMessageContent(content, attachmentUrls);
         var message = new Tinnhan
         {
             MaTinNhan = Guid.NewGuid(),
             MaHoiThoai = conversationId,
             MaNguoiDungGui = senderId,
-            NoiDung = content.Trim(),
+            NoiDung = storedText,
             DaDoc = false,
             NguoiTao = senderId,
             ThoiGianTao = now,
@@ -209,6 +212,7 @@ public class ChatRepository : IChatRepository
         await _context.SaveChangesAsync();
 
         var sender = await GetUserProfileAsync(senderId);
+        var parsed = ParseMessageContent(storedText);
 
         return new ChatMessageDto
         {
@@ -218,10 +222,70 @@ public class ChatRepository : IChatRepository
             SenderName = sender?.FullName ?? "Người dùng",
             SenderRole = sender?.Role ?? "User",
             SenderAvatarUrl = sender?.AvatarUrl,
-            Content = message.NoiDung,
+            Content = parsed.Text,
+            AttachmentUrls = parsed.AttachmentUrls,
             IsRead = message.DaDoc == true,
             CreatedAt = message.ThoiGianTao ?? now
         };
+    }
+
+    private static string FormatMessageContent(string content, List<string>? attachmentUrls)
+    {
+        var trimmedContent = content?.Trim() ?? string.Empty;
+        if (attachmentUrls == null || attachmentUrls.Count == 0)
+        {
+            return trimmedContent;
+        }
+
+        var payload = new
+        {
+            __chatMessageFormat = 1,
+            Text = trimmedContent,
+            AttachmentUrls = attachmentUrls
+        };
+
+        return JsonSerializer.Serialize(payload);
+    }
+
+    private static (string Text, List<string> AttachmentUrls) ParseMessageContent(string rawContent)
+    {
+        if (string.IsNullOrWhiteSpace(rawContent))
+        {
+            return (string.Empty, new List<string>());
+        }
+
+        try
+        {
+            using var document = JsonDocument.Parse(rawContent);
+            if (document.RootElement.ValueKind == JsonValueKind.Object &&
+                document.RootElement.TryGetProperty("__chatMessageFormat", out var formatProp) &&
+                formatProp.GetInt32() == 1)
+            {
+                var text = document.RootElement.TryGetProperty("Text", out var textElement) && textElement.ValueKind == JsonValueKind.String
+                    ? textElement.GetString() ?? string.Empty
+                    : string.Empty;
+
+                var attachments = new List<string>();
+                if (document.RootElement.TryGetProperty("AttachmentUrls", out var attachmentsElement) && attachmentsElement.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var item in attachmentsElement.EnumerateArray())
+                    {
+                        if (item.ValueKind == JsonValueKind.String)
+                        {
+                            attachments.Add(item.GetString() ?? string.Empty);
+                        }
+                    }
+                }
+
+                return (text, attachments);
+            }
+        }
+        catch
+        {
+            // Không phải payload JSON đặc biệt, dùng nguyên văn.
+        }
+
+        return (rawContent, new List<string>());
     }
 
     public async Task<List<ChatMessageDto>> GetMessagesAsync(Guid conversationId, int take)
@@ -237,11 +301,11 @@ public class ChatRepository : IChatRepository
                 on ur.MaVaiTro equals r.MaVaiTro into roles
             from r in roles.DefaultIfEmpty()
             orderby m.ThoiGianTao descending
-            select new ChatMessageDto
+            select new
             {
-                MessageId = m.MaTinNhan,
-                ConversationId = m.MaHoiThoai,
-                SenderId = m.MaNguoiDungGui,
+                m.MaTinNhan,
+                m.MaHoiThoai,
+                m.MaNguoiDungGui,
                 SenderName = u.HoTen,
                 SenderRole = r != null ? r.TenVaiTro : "User",
                 SenderAvatarUrl = u.AnhDaiDien,
@@ -251,8 +315,25 @@ public class ChatRepository : IChatRepository
             }
         ).Take(take).ToListAsync();
 
-        rows.Reverse();
-        return rows;
+        var messages = rows.Select(row => {
+            var parsed = ParseMessageContent(row.Content ?? string.Empty);
+            return new ChatMessageDto
+            {
+                MessageId = row.MaTinNhan,
+                ConversationId = row.MaHoiThoai,
+                SenderId = row.MaNguoiDungGui,
+                SenderName = row.SenderName,
+                SenderRole = row.SenderRole,
+                SenderAvatarUrl = row.SenderAvatarUrl,
+                Content = parsed.Text,
+                AttachmentUrls = parsed.AttachmentUrls,
+                IsRead = row.IsRead,
+                CreatedAt = row.CreatedAt
+            };
+        }).ToList();
+
+        messages.Reverse();
+        return messages;
     }
 
     public async Task<int> MarkMessagesAsReadAsync(Guid conversationId, Guid currentUserId)
@@ -327,6 +408,10 @@ public class ChatRepository : IChatRepository
             }
         ).ToListAsync();
 
+        var lastMessageLookup = lastMessages
+            .GroupBy(x => x.MaHoiThoai)
+            .ToDictionary(x => x.Key, x => x.First());
+
         var result = new List<ChatConversationDto>();
 
         foreach (var conversation in conversations)
@@ -341,8 +426,9 @@ public class ChatRepository : IChatRepository
             var isGroup = members.Count > 2 || !string.IsNullOrWhiteSpace(conversation.TieuDe);
             var otherMember = members.FirstOrDefault(m => m.UserId != currentUserId);
 
-            var latest = lastMessages.FirstOrDefault(x => x.MaHoiThoai == conversation.MaHoiThoai);
-            var latestText = latest?.NoiDung ?? string.Empty;
+            lastMessageLookup.TryGetValue(conversation.MaHoiThoai, out var latest);
+            var latestParsed = latest == null ? (Text: string.Empty, AttachmentUrls: new List<string>()) : ParseMessageContent(latest.NoiDung ?? string.Empty);
+            var latestText = latestParsed.Text;
             if (latest != null && latest.MaNguoiDungGui != currentUserId && isGroup)
             {
                 latestText = $"{latest.SenderName}: {latestText}";

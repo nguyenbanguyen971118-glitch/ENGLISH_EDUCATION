@@ -52,6 +52,7 @@ import StudentProfile from './pages/student/StudentProfile';
 import StudentStudyContent from './pages/student/StudentStudyContent';
 import StudentAssignmentPage from './pages/student/StudentAssignmentPage';
 import StudentReports from './pages/student/StudentReports';
+import StudentMessages from './pages/student/StudentMessages'; // Đã import trang nhắn tin của học sinh
 // Component Placeholder để tránh lỗi khi chưa có file trang cụ thể
 const Placeholder = ({ title }) => (
   <div className="p-4 animate__animated animate__fadeIn">
@@ -146,6 +147,7 @@ function App() {
             <Route path="/student/reports" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentReports /></PrivateRoute>} />
             <Route path="/student/homework" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentStudyContent /></PrivateRoute>} />
             <Route path="/student/notifications" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><Placeholder title="Thông báo" /></PrivateRoute>} />
+            <Route path="/student/messages" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentMessages /></PrivateRoute>} />
             {/* Trang hồ sơ học sinh dùng API thật và chỉ cho role Hoc_Sinh truy cập. */}
             <Route path="/student/profile" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentProfile /></PrivateRoute>} />
 

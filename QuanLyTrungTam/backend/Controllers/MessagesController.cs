@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace backend.Controllers;
 
-[Authorize(Roles = "Admin,Giao_Vien,Phu_Huynh")]
+[Authorize(Roles = "Admin,Giao_Vien,Phu_Huynh,Hoc_Sinh")]
 [ApiController]
 [Route("api/[controller]")]
 public class MessagesController : ControllerBase
@@ -136,6 +136,24 @@ public class MessagesController : ControllerBase
             return Forbid();
         }
 
+        if (!result.Success)
+        {
+            return BadRequest(result);
+        }
+
+        return Ok(result);
+    }
+
+    [HttpPost("attachments")]
+    public async Task<IActionResult> UploadAttachments([FromForm] List<IFormFile> files)
+    {
+        var userId = User.GetUserId();
+        if (!userId.HasValue)
+        {
+            return Unauthorized(ApiResponseDto<object>.Fail("Phiên đăng nhập không hợp lệ.", "AUTH_INVALID_TOKEN"));
+        }
+
+        var result = await _chatService.UploadMessageAttachmentsAsync(userId.Value, files);
         if (!result.Success)
         {
             return BadRequest(result);

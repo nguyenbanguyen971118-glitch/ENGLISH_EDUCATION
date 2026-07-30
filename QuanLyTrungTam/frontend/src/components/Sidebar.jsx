@@ -238,6 +238,7 @@ const Sidebar = () => {
                             <li className="nav-item"><NavLink to="/student/reports" className={getNavLinkClass}><i className="bi bi-pie-chart-fill me-3 fs-5"></i><span style={{ fontSize: '14px' }}>Bao cao thong ke</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/student/homework" className={getNavLinkClass}><i className="bi bi-laptop me-3 fs-5"></i><span style={{ fontSize: '14px' }}>Hoc chu dong</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/student/notifications" className={getNavLinkClass}><i className="bi bi-bell-fill me-3 fs-5"></i><span style={{ fontSize: '14px' }}>Thong bao</span></NavLink></li>
+                            <li className="nav-item"><NavLink to="/student/messages" className={getNavLinkClass}><i className="bi bi-chat-dots me-3 fs-5"></i><span style={{ fontSize: '14px' }}>Quan ly nhan tin</span></NavLink></li>
                         </>
                     )}
 

@@ -12,7 +12,19 @@ export const useMessagingAPI = () => {
     return fallbackValue;
   };
 
-  // Lấy danh sách người dùng có thể nhắn tin (Admin, GiáoViên, PhụHuynh)
+  const normalizeListResponse = (payload) => {
+    if (Array.isArray(payload)) return payload;
+    if (Array.isArray(payload?.data)) return payload.data;
+    if (payload?.data && typeof payload.data === 'object') return [payload.data];
+    return [];
+  };
+
+  const normalizeSingleResponse = (payload) => {
+    if (payload && typeof payload === 'object') return payload;
+    return null;
+  };
+
+  // Lấy danh sách người dùng có thể nhắn tin (Admin, Giáo viên, Phụ huynh, Học sinh)
   const getUsers = useCallback(async () => {
     try {
       if (!token) return [];
@@ -27,7 +39,7 @@ export const useMessagingAPI = () => {
         return [];
       }
 
-      return (response.data || []).map((u) => ({
+      return normalizeListResponse(response.data || response).map((u) => ({
         id: u?.id || u?.userId,
         name: u?.name || u?.fullName,
         role: u?.role,
@@ -54,7 +66,7 @@ export const useMessagingAPI = () => {
         return [];
       }
 
-      return response.data || [];
+      return normalizeListResponse(response.data || response);
     } catch (error) {
       console.error('Lỗi kết nối lấy cuộc trò chuyện:', error);
       return [];
@@ -76,7 +88,7 @@ export const useMessagingAPI = () => {
         return [];
       }
 
-      return response.data || [];
+      return normalizeListResponse(response.data || response);
     } catch (error) {
       console.error('Lỗi kết nối lấy tin nhắn:', error);
       return [];
@@ -102,10 +114,37 @@ export const useMessagingAPI = () => {
         return null;
       }
 
-      return response.data;
+      return normalizeSingleResponse(response.data || response);
     } catch (error) {
       console.error('Lỗi kết nối gửi tin nhắn:', error);
       return null;
+    }
+  }, [token, logout]);
+
+  const uploadAttachments = useCallback(async (files) => {
+    try {
+      if (!token) return [];
+      if (!files || files.length === 0) return [];
+
+      const formData = new FormData();
+      files.forEach((file) => {
+        formData.append('files', file);
+      });
+
+      const response = await apiClient.postForm('messages/attachments', formData);
+      if (response?.status === 401) {
+        return handleUnauthorized('Chưa đăng nhập hoặc token hết hạn khi upload tệp đính kèm', []);
+      }
+
+      if (!response?.success) {
+        console.error('Lỗi upload tệp đính kèm:', response?.message || 'Không thể upload tệp đính kèm');
+        return [];
+      }
+
+      return normalizeListResponse(response.data || response);
+    } catch (error) {
+      console.error('Lỗi kết nối upload tệp đính kèm:', error);
+      return [];
     }
   }, [token, logout]);
 
@@ -128,7 +167,7 @@ export const useMessagingAPI = () => {
         return null;
       }
 
-      return response.data;
+      return normalizeSingleResponse(response.data || response);
     } catch (error) {
       console.error('Lỗi kết nối tạo cuộc trò chuyện:', error);
       return null;
@@ -155,7 +194,7 @@ export const useMessagingAPI = () => {
         return null;
       }
 
-      return response.data;
+      return normalizeSingleResponse(response.data || response);
     } catch (error) {
       console.error('Lỗi kết nối tạo nhóm chat:', error);
       return null;
@@ -215,6 +254,7 @@ export const useMessagingAPI = () => {
     getConversations,
     getMessages,
     sendMessage,
+    uploadAttachments,
     createDirectConversation,
     createGroupConversation,
     markAsRead,
