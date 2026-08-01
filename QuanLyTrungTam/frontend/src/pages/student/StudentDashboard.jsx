@@ -1,38 +1,40 @@
-
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../../context/AuthContext";
 import StudentClasses from "../../components/StudentClasses";
 import NotificationPanel from "../../components/NotificationPanel";
 import BaseApi from "../../api/BaseApi";
 import "../../styles/notification-badge.css";
+import "../../styles/notification-panel.css"; // Import notification panel styles
 
 const StudentDashboard = () => {
     const { user } = useAuth();
     const [showNotifications, setShowNotifications] = useState(false);
     const [unreadCount, setUnreadCount] = useState(0);
+    const [weeklySessionCount, setWeeklySessionCount] = useState(0);
 
-    // Fetch unread notification count
+    // Fetch unread notification count and weekly schedule count
     useEffect(() => {
         fetchUnreadCount();
-    }, []);
+        fetchWeeklySessionCount();
+    }, [user]);
 
     const fetchUnreadCount = async () => {
         try {
             const res = await BaseApi.get('Notification/unread-count');
             console.log('Full response object:', res);
-            const resData = res.data || res;
-            console.log('Unread count response:', resData);
             
             // Handle multiple response formats
             let count = 0;
-            if (typeof resData === 'number') {
-                count = resData;
-            } else if (resData && typeof resData === 'object') {
-                // Check if it's ApiResponse format with data property
-                if ('data' in resData && typeof resData.data === 'number') {
-                    count = resData.data;
-                } else if ('value' in resData && typeof resData.value === 'number') {
-                    count = resData.value;
+            if (typeof res === 'number') {
+                count = res;
+            } else if (res && typeof res === 'object') {
+                // Check if it's ApiResponse format with Data property (capital D)
+                if ('Data' in res && typeof res.Data === 'number') {
+                    count = res.Data;
+                } else if ('data' in res && typeof res.data === 'number') {
+                    count = res.data;
+                } else if ('value' in res && typeof res.value === 'number') {
+                    count = res.value;
                 }
             }
             
@@ -45,13 +47,49 @@ const StudentDashboard = () => {
         }
     };
 
+    const getWeekStart = (date) => {
+        const target = new Date(date);
+        const day = target.getDay();
+        const diff = target.getDate() - day + (day === 0 ? -6 : 1);
+        const monday = new Date(target.setDate(diff));
+        monday.setHours(0, 0, 0, 0);
+        return monday;
+    };
+
+    const formatDateForApi = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}T00:00:00`;
+    };
+
+    const fetchWeeklySessionCount = async () => {
+        if (!user) {
+            setWeeklySessionCount(0);
+            return;
+        }
+
+        try {
+            const weekStart = getWeekStart(new Date());
+            const studentId = user.profileId || user.id;
+            const url = `Schedule/student-board?weekStart=${formatDateForApi(weekStart)}${studentId ? `&studentId=${studentId}` : ''}`;
+            const response = await BaseApi.get(url);
+            const data = response?.data || response;
+            const schedules = Array.isArray(data?.schedules) ? data.schedules : [];
+            setWeeklySessionCount(schedules.length);
+        } catch (error) {
+            console.error('Error fetching weekly sessions count:', error);
+            setWeeklySessionCount(0);
+        }
+    };
+
     // Refresh unread count when notification panel opens
     const handleNotificationPanelOpen = (isOpen) => {
         console.log('Notification panel toggle (student):', isOpen);
         setShowNotifications(isOpen);
-        if (!isOpen) {
-            // Refresh count when panel closes (after marking as read)
-            fetchUnreadCount();
+        if (isOpen) {
+            // Refresh count when panel opens (after marking as read via NotificationPanel)
+            setTimeout(() => fetchUnreadCount(), 500);
         }
     };
 
@@ -67,14 +105,14 @@ const StudentDashboard = () => {
                 <div className="d-flex align-items-center gap-3">
                     {/* Nút thông báo hình chuông */}
                     <div 
-                        className="position-relative hover-up bg-white shadow-sm border rounded-circle d-flex align-items-center justify-content-center" 
-                        style={{ width: '45px', height: '45px', cursor: 'pointer' }}
+                        className={`position-relative hover-up rounded-circle d-flex align-items-center justify-content-center ${unreadCount > 0 ? 'notification-bell-active shadow-sm' : 'bg-white border border-secondary-subtle shadow-sm'}`} 
+                        style={{ width: '48px', height: '48px', cursor: 'pointer', transition: 'all 0.2s ease' }}
                         onClick={() => handleNotificationPanelOpen(!showNotifications)}
                         title="Thông báo"
                     >
-                        <i className="bi bi-bell-fill text-secondary fs-5"></i>
+                        <i className={`bi bi-bell-fill ${unreadCount > 0 ? 'text-danger' : 'text-secondary'} fs-5`}></i>
                         {unreadCount > 0 && (
-                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light notification-badge" style={{fontSize: '10px'}}>
+                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light notification-badge-animated" style={{fontSize: '10px', fontWeight: 700, minWidth: '22px', height: '22px', padding: '0 6px', lineHeight: '20px'}}>
                                 {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
                         )}

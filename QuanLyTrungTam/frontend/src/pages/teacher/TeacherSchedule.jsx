@@ -86,7 +86,14 @@ const TeacherSchedule = () => {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
         const day = String(date.getDate()).padStart(2, '0');
-        return `${year}-${month}-${day}T00:00:00`;
+        return `${year}-${month}-${day}`; // DateOnly format expected by backend
+    };
+
+    const ensureApiSuccess = (result, fallbackMessage) => {
+        if (result && typeof result === 'object' && result.success === false) {
+            throw new Error(result.message || fallbackMessage);
+        }
+        return result;
     };
 
     // Handler khi chọn tiết học từ dropdown
@@ -267,7 +274,7 @@ const responseData = response.data ? response.data : response;
                     LyDo: formData.reason
                 };
 
-                await apiClient.post('Schedule/change-request', payload);
+                ensureApiSuccess(await apiClient.post('Schedule/change-request', payload), 'Gửi yêu cầu đổi lịch thất bại.');
             } else {
                 for (const slotKey of formData.newSlots) {
                     const range = parseSlotRange(slotKey);
@@ -284,7 +291,7 @@ const responseData = response.data ? response.data : response;
                         LyDo: formData.reason
                     };
 
-                    await apiClient.post('Schedule/change-request', payload);
+                    ensureApiSuccess(await apiClient.post('Schedule/change-request', payload), 'Gửi yêu cầu đổi lịch thất bại.');
                 }
             }
 

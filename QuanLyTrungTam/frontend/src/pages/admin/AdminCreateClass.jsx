@@ -254,21 +254,30 @@ export default function AdminCreateClass() {
           }
         }
 
+        const successMessage = formattedEnd
+          ? `Đã tạo lớp. Ngày kết thúc: ${formattedEnd}`
+          : (scheduleConfigs.length > 0 ? "Đã tạo lớp học và lịch học." : "Đã tạo lớp học.");
+
         if (formattedEnd) {
           console.debug('AdminCreateClass - formatted endDate:', formattedEnd);
           setForm((prev) => ({ ...prev, endDate: formattedEnd }));
-          setToast(`Đã tạo lớp. Ngày kết thúc: ${formattedEnd}`);
-          // navigate to classes list so the new end date and schedules are visible
-          setTimeout(() => navigate("/admin/classes"), 1500);
         } else {
           console.warn('AdminCreateClass - Could not format endDate:', serverEnd);
-          setToast(scheduleConfigs.length > 0 ? "Da tao lop hoc va lich hoc." : "Da tao lop hoc.");
-          setTimeout(() => navigate("/admin/classes"), 700);
         }
+
+        setToast(successMessage);
+        setTimeout(() => navigate("/admin/schedules", {
+          replace: true,
+          state: { toast: { show: true, msg: successMessage, type: "success" } },
+        }), 900);
       } else {
         console.warn('AdminCreateClass - No endDate in response');
-        setToast(scheduleConfigs.length > 0 ? "Da tao lop hoc va lich hoc." : "Da tao lop hoc.");
-        setTimeout(() => navigate("/admin/classes"), 700);
+        const successMessage = scheduleConfigs.length > 0 ? "Đã tạo lớp học và lịch học." : "Đã tạo lớp học.";
+        setToast(successMessage);
+        setTimeout(() => navigate("/admin/schedules", {
+          replace: true,
+          state: { toast: { show: true, msg: successMessage, type: "success" } },
+        }), 900);
       }
     } catch (err) {
       setError(err.message || "Tao lop hoc that bai.");
@@ -287,7 +296,19 @@ export default function AdminCreateClass() {
       </div>
       <h3 className="mb-4">Tao lop hoc moi</h3>
       {toast && <div className="alert alert-success">{toast}</div>}
-      {error && <div className="alert alert-danger">{error}</div>}
+      {error && (
+        <div className="position-fixed top-0 start-0 w-100 h-100 d-flex align-items-center justify-content-center" style={{ zIndex: 2000, backgroundColor: 'rgba(0, 0, 0, 0.35)' }}>
+          <div className="bg-white shadow-lg rounded-4 p-4 text-center" style={{ minWidth: '320px', maxWidth: '90vw' }} role="alert" aria-live="assertive">
+            <div className="d-flex align-items-center justify-content-center fw-bold text-danger mb-3">
+              <i className="bi bi-exclamation-triangle-fill me-2"></i>
+              {error}
+            </div>
+            <button type="button" className="btn btn-danger px-4" onClick={() => setError("")}>
+              Oke
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="row">
         <div className="col-md-6">

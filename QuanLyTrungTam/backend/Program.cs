@@ -9,6 +9,7 @@ using backend.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using backend.Converters;
 using backend.Hubs;
 using backend.Swagger;
 using System.Reflection;
@@ -88,11 +89,12 @@ builder.Services.AddScoped<IReportsService, ReportsService>();
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 
-// Cấu hình JSON serialization để DateTime luôn là UTC
+// Cấu hình JSON serialization để DateTime luôn là UTC và hỗ trợ DateOnly
 builder.Services.AddControllers().AddJsonOptions(options =>
 {
     // Ensure DateTime values are serialized in ISO 8601 format (with Z for UTC)
     options.JsonSerializerOptions.WriteIndented = false;
+    options.JsonSerializerOptions.Converters.Add(new DateOnlyJsonConverter());
 });
 
 var jwtSection = builder.Configuration.GetSection("JwtSettings");

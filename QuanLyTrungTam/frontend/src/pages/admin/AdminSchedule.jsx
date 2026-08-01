@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import apiClient from '../../api/BaseApi';
 import { PERIODS as SHARED_PERIODS } from '../../constants/scheduleTime';
 
@@ -81,6 +82,9 @@ const splitDateRange = (val) => {
 };
 
 const AdminSchedule = () => {
+    const navigate = useNavigate();
+    const location = useLocation();
+
     // ==========================================
     // 1. STATE ĐIỀU HƯỚNG & DANH MỤC
     // ==========================================
@@ -97,6 +101,14 @@ const AdminSchedule = () => {
         setToast({ show: true, msg, type });
         setTimeout(() => setToast({ show: false, msg: '', type: '' }), 3000);
     };
+
+    useEffect(() => {
+        const flashToast = location.state?.toast;
+        if (flashToast?.show && flashToast?.msg) {
+            showToast(flashToast.msg, flashToast.type || 'success');
+            navigate(location.pathname, { replace: true, state: null });
+        }
+    }, [location.pathname, location.state, navigate]);
 
     // ==========================================
     // 2. STATE DỮ LIỆU & KÉO THẢ
@@ -781,7 +793,7 @@ const AdminSchedule = () => {
                                     <option value="all">Tất cả lịch</option>
                                 </select>
 
-                                <button className="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center hover-scale btn-primary-elevated" onClick={() => openAddModal(0, 1)} style={{ fontSize: '13px', boxShadow: '0 6px 18px rgba(13,110,253,0.12)' }}>
+                                <button className="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm d-flex align-items-center hover-scale btn-primary-elevated" onClick={() => navigate('/admin/classes/create')} style={{ fontSize: '13px', boxShadow: '0 6px 18px rgba(13,110,253,0.12)' }}>
                                     <i className="bi bi-plus-lg me-2"></i> Xếp lịch mới
                                 </button>
 

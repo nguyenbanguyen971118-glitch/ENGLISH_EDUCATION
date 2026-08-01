@@ -177,20 +177,6 @@ const Sidebar = () => {
                         </span>
                     </div>
                 </div>
-
-                {rolePath === 'student' && (
-                    <div className="mb-4 px-1">
-                        <p className="text-muted fw-bold mb-2 ps-1" style={{ fontSize: '10px', letterSpacing: '1px', opacity: 0.8 }}>
-                            LOP HIEN TAI
-                        </p>
-                        <div
-                            className="border border-light-subtle bg-light rounded-3 py-2 px-3 small fw-bold text-dark shadow-none border-2"
-                            style={{ fontSize: '12px', minHeight: '48px', display: 'flex', alignItems: 'center' }}
-                        >
-                            {studentClassLabel}
-                        </div>
-                    </div>
-                )}
             </div>
 
             <div className="flex-grow-1 overflow-y-auto custom-scrollbar px-1">
@@ -237,7 +223,6 @@ const Sidebar = () => {
                             <li className="nav-item"><NavLink to="/student/homework-list" className={getNavLinkClass}><i className="bi bi-pencil-square me-3 fs-5"></i><span style={{ fontSize: '14px' }}>Bai tap/bai thi</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/student/reports" className={getNavLinkClass}><i className="bi bi-pie-chart-fill me-3 fs-5"></i><span style={{ fontSize: '14px' }}>Bao cao thong ke</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/student/homework" className={getNavLinkClass}><i className="bi bi-laptop me-3 fs-5"></i><span style={{ fontSize: '14px' }}>Hoc chu dong</span></NavLink></li>
-                            <li className="nav-item"><NavLink to="/student/notifications" className={getNavLinkClass}><i className="bi bi-bell-fill me-3 fs-5"></i><span style={{ fontSize: '14px' }}>Thong bao</span></NavLink></li>
                             <li className="nav-item"><NavLink to="/student/messages" className={getNavLinkClass}><i className="bi bi-chat-dots me-3 fs-5"></i><span style={{ fontSize: '14px' }}>Quan ly nhan tin</span></NavLink></li>
                         </>
                     )}

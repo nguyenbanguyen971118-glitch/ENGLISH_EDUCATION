@@ -39,6 +39,7 @@ const NotificationPanel = ({ isOpen, onClose, onMarkAsRead }) => {
     useEffect(() => {
         if (isOpen) {
             console.log('NotificationPanel opened');
+            markAllNotificationsAsRead();
             fetchNotifications();
         }
     }, [isOpen]);
@@ -85,6 +86,22 @@ const NotificationPanel = ({ isOpen, onClose, onMarkAsRead }) => {
             console.error('Lỗi lấy thông báo:', error);
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const markAllNotificationsAsRead = async () => {
+        try {
+            console.log('Marking all notifications as read...');
+            const response = await apiClient.post('Notification/mark-all-as-read');
+            if (response.data?.success || response.success) {
+                console.log('All notifications marked as read');
+                // Notify parent component to update count
+                if (onMarkAsRead) {
+                    onMarkAsRead();
+                }
+            }
+        } catch (error) {
+            console.error('Lỗi đánh dấu tất cả thông báo:', error);
         }
     };
 

@@ -5,6 +5,7 @@ import { useStudentClass } from '../../context/StudentClassContext';
 import NotificationPanel from '../../components/NotificationPanel';
 import BaseApi from '../../api/BaseApi';
 import { p0Api } from '../../api/p0Api';
+import '../../styles/notification-badge.css';
 import bannerMot from "../../assets/a1.jpeg";
 import bannerHai from "../../assets/a2.jpeg";
 import bannerBa from "../../assets/a3.jpeg";
@@ -14,23 +15,38 @@ const Dashboard = () => {
     const [unreadCount, setUnreadCount] = useState(0);
     const [attendanceRows, setAttendanceRows] = useState([]);
     const [attendanceLoading, setAttendanceLoading] = useState(true);
+    const [todayClasses, setTodayClasses] = useState([]);
+    const [todayLoading, setTodayLoading] = useState(true);
+    const [todayError, setTodayError] = useState('');
+    const [weeklySessionCount, setWeeklySessionCount] = useState(0);
     const { classes, currentClass, selectClass, loading, error } = useStudentClass();
     const navigate = useNavigate();
 
     useEffect(() => {
         fetchUnreadCount();
         fetchAttendanceRows();
-    }, []);
+        fetchTodayClasses();
+        fetchWeeklySessionCount();
+    }, [user]);
 
     const fetchUnreadCount = async () => {
         try {
             const res = await BaseApi.get('Notification/unread-count');
-            const resData = res.data || res;
-            const count = typeof resData.data === 'number'
-                ? resData.data
-                : resData.success && typeof resData.data === 'number'
-                    ? resData.data
-                    : 0;
+            
+            // Handle multiple response formats
+            let count = 0;
+            if (typeof res === 'number') {
+                count = res;
+            } else if (res && typeof res === 'object') {
+                // Check if it's ApiResponse format with Data property (capital D)
+                if ('Data' in res && typeof res.Data === 'number') {
+                    count = res.Data;
+                } else if ('data' in res && typeof res.data === 'number') {
+                    count = res.data;
+                } else if ('value' in res && typeof res.value === 'number') {
+                    count = res.value;
+                }
+            }
             setUnreadCount(count);
         } catch (err) {
             console.error('Error fetching unread count:', err);
@@ -40,8 +56,9 @@ const Dashboard = () => {
 
     const handleNotificationPanelOpen = (isOpen) => {
         setShowNotifications(isOpen);
-        if (!isOpen) {
-            fetchUnreadCount();
+        if (isOpen) {
+            // Refresh count when panel opens (after marking as read via NotificationPanel)
+            setTimeout(() => fetchUnreadCount(), 500);
         }
     };
     const handleSelectClass = (classId) => {
@@ -50,6 +67,79 @@ const Dashboard = () => {
 
     const handleViewSchedule = () => {
         navigate('/student/schedule');
+    };
+
+    const formatDateForApi = (date) => {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}T00:00:00`;
+    };
+
+    const isToday = (dateValue) => {
+        const date = new Date(dateValue);
+        if (Number.isNaN(date.getTime())) return false;
+        const today = new Date();
+        return date.getFullYear() === today.getFullYear() && date.getMonth() === today.getMonth() && date.getDate() === today.getDate();
+    };
+
+    const formatDateLabel = (dateValue) => {
+        const date = new Date(dateValue);
+        if (Number.isNaN(date.getTime())) return '';
+        return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`;
+    };
+
+    const fetchTodayClasses = async () => {
+        setTodayLoading(true);
+        setTodayError('');
+        try {
+            const today = new Date();
+            const weekStart = formatDateForApi(today);
+            const response = await BaseApi.get(`Schedule/student-board?weekStart=${weekStart}`);
+            const data = response?.data || response;
+            const schedules = Array.isArray(data?.schedules) ? data.schedules : [];
+            const todayItems = schedules
+                .filter((item) => isToday(item.ngayHoc))
+                .map((item) => ({
+                    ...item,
+                    subject: item.subject || item.className || item.classCode,
+                    period: `Tiết ${item.slotId}${item.slotEndId && item.slotEndId !== item.slotId ? `-${item.slotEndId}` : ''}`,
+                    timeRange: `${item.slotId && item.slotEndId ? `Tiết ${item.slotId}-${item.slotEndId}` : `Tiết ${item.slotId}`}`,
+                    dateLabel: formatDateLabel(item.ngayHoc),
+                }));
+
+            setTodayClasses(todayItems);
+        } catch (err) {
+            console.error('Error fetching today classes:', err);
+            setTodayError('Không thể tải lớp học hôm nay. Vui lòng thử lại.');
+            setTodayClasses([]);
+        } finally {
+            setTodayLoading(false);
+        }
+    };
+
+    const getWeekStart = (date) => {
+        const current = new Date(date);
+        const dayOfWeek = current.getDay();
+        const diff = current.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+        const weekStart = new Date(current.setDate(diff));
+        weekStart.setHours(0, 0, 0, 0);
+        return weekStart;
+    };
+
+    const fetchWeeklySessionCount = async () => {
+        try {
+            const weekStart = getWeekStart(new Date());
+            const studentId = user?.profileId || user?.id;
+            const url = `Schedule/student-board?weekStart=${formatDateForApi(weekStart)}${studentId ? `&studentId=${studentId}` : ''}`;
+            const response = await BaseApi.get(url);
+            const data = response?.data || response;
+            const schedules = Array.isArray(data?.schedules) ? data.schedules : [];
+            setWeeklySessionCount(schedules.length);
+        } catch (err) {
+            console.error('Error fetching weekly session count:', err);
+            setWeeklySessionCount(0);
+        }
     };
 
     const fetchAttendanceRows = async () => {
@@ -88,14 +178,14 @@ const Dashboard = () => {
                 
                 <div className="d-flex align-items-center gap-3">
                     <div 
-                        className="position-relative hover-up bg-white shadow-sm border rounded-circle d-flex align-items-center justify-content-center" 
-                        style={{ width: '45px', height: '45px', cursor: 'pointer' }}
+                        className={`position-relative hover-up rounded-circle d-flex align-items-center justify-content-center ${unreadCount > 0 ? 'notification-bell-active shadow-sm' : 'bg-white border border-secondary-subtle shadow-sm'}`} 
+                        style={{ width: '48px', height: '48px', cursor: 'pointer', transition: 'all 0.2s ease' }}
                         onClick={() => handleNotificationPanelOpen(!showNotifications)}
                         title="Thông báo"
                     >
-                        <i className="bi bi-bell-fill text-primary fs-5"></i>
+                        <i className={`bi bi-bell-fill ${unreadCount > 0 ? 'text-danger' : 'text-secondary'} fs-5`}></i>
                         {unreadCount > 0 && (
-                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light" style={{ fontSize: '10px' }}>
+                            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-light notification-badge-animated" style={{ fontSize: '10px', fontWeight: 700, minWidth: '22px', height: '22px', padding: '0 6px', lineHeight: '20px' }}>
                                 {unreadCount > 99 ? '99+' : unreadCount}
                             </span>
                         )}
@@ -146,9 +236,9 @@ const Dashboard = () => {
                                 <div className="bg-primary bg-opacity-10 p-2 rounded-3 me-3">
                                     <i className="bi bi-patch-check fs-4 text-primary"></i>
                                 </div>
-                                <span className="fw-bold text-uppercase small text-muted">Tham dự</span>
+                                <span className="fw-bold text-uppercase small text-muted">Số % nghỉ</span>
                             </div>
-                            <h2 className="display-5 fw-bold mb-0 text-primary">94%</h2>
+                            <h2 className="display-5 fw-bold mb-0 text-primary">12%</h2>
                             <i className="bi bi-graph-up-arrow position-absolute bottom-0 end-0 p-3 text-primary opacity-10" style={{ fontSize: '3rem' }}></i>
                         </div>
                     </div>
@@ -180,7 +270,7 @@ const Dashboard = () => {
                                 </div>
                                 <span className="fw-bold text-uppercase small text-muted">Số buổi học trong tuần</span>
                             </div>
-                            <h2 className="display-5 fw-bold mb-0" style={{ color: '#e53935' }}>3</h2>
+                            <h2 className="display-5 fw-bold mb-0" style={{ color: '#e53935' }}>{weeklySessionCount}</h2>
                             <i className="bi bi-calendar3 position-absolute bottom-0 end-0 p-3 opacity-10" style={{ fontSize: '3rem', color: '#e53935' }}></i>
                         </div>
                     </div>
@@ -218,33 +308,48 @@ const Dashboard = () => {
                             <p className="text-muted mb-0">Tài khoản học sinh hiện chưa được gán vào lớp nào. Vui lòng liên hệ quản trị viên hoặc giáo viên phụ trách.</p>
                         </div>
                     ) : (
-                        <div className="row align-items-center">
+                        <div className="row g-3">
                             <div className="col-md-6">
                                 <label className="form-label fw-bold text-muted text-uppercase small mb-2">Chọn lớp</label>
-                                <select 
-                                    className="form-select form-select-lg rounded-4 border-1 shadow-none fw-bold"
-                                    value={currentClass?.id || ''}
-                                    onChange={(e) => handleSelectClass(e.target.value)}
-                                    style={{ color: '#2c3e50', backgroundColor: '#f8f9fa' }}
-                                >
-                                    {classes.map(cls => (
-                                        <option key={cls.id} value={cls.id}>
-                                            {cls.classCode} - {cls.teacher}
-                                        </option>
+                                <div className="list-group">
+                                    {classes.map((cls) => (
+                                        <button
+                                            key={cls.id}
+                                            type="button"
+                                            className={`list-group-item list-group-item-action rounded-4 mb-2 text-start ${currentClass?.id === cls.id ? 'active' : ''}`}
+                                            onClick={() => handleSelectClass(cls.id)}
+                                            style={{ minHeight: '84px' }}
+                                        >
+                                            <div className="d-flex justify-content-between align-items-start">
+                                                <div>
+                                                    <div className="fw-bold">{cls.classCode}</div>
+                                                    <div className="text-muted small">{cls.teacher}</div>
+                                                </div>
+                                                {currentClass?.id === cls.id && (
+                                                    <span className="badge bg-primary rounded-pill">Đang chọn</span>
+                                                )}
+                                            </div>
+                                        </button>
                                     ))}
-                                </select>
+                                </div>
                             </div>
                             <div className="col-md-6 mt-3 mt-md-0">
                                 {currentClass && (
                                     <div className="p-4 rounded-4 position-relative overflow-hidden" style={{ background: 'linear-gradient(135deg, #1e88e5 0%, #1565c0 100%)', color: 'white' }}>
                                         <i className="bi bi-book-half position-absolute top-50 end-0 translate-middle-y opacity-25 me-n3" style={{ fontSize: '6rem' }}></i>
                                         <div className="position-relative z-index-1">
-                                            <p className="mb-1 small text-white-50 text-uppercase fw-bold">Lớp đang học</p>
-                                            <h4 className="fw-bold mb-2">{currentClass.classCode}</h4>
-                                            <p className="mb-0 small">
+                                            <p className="mb-1 small text-white-50 text-uppercase fw-bold">Khóa học</p>
+                                            <h4 className="fw-bold mb-2">{currentClass.className || currentClass.classCode}</h4>
+                                            <p className="mb-2 small">
                                                 <i className="bi bi-person-badge me-2"></i>
                                                 {currentClass.teacher}
                                             </p>
+                                            <p className="mb-1 small text-white-75">Số học sinh: {currentClass.studentCount} / {currentClass.maxStudents}</p>
+                                            {currentClass.startDate && currentClass.endDate && (
+                                                <p className="mb-0 small text-white-75">
+                                                    Từ {currentClass.startDate} đến {currentClass.endDate}
+                                                </p>
+                                            )}
                                         </div>
                                     </div>
                                 )}
@@ -304,19 +409,55 @@ const Dashboard = () => {
                     </div>
                     <h5 className="fw-bold mb-0 text-dark">Lớp học hôm nay</h5>
                 </div>
-                
-                <div className="card bg-white border-0 rounded-4 shadow-sm p-5 text-center">
-<div className="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mx-auto mb-3" style={{ width: '80px', height: '80px' }}>
-                        <i className="bi bi-calendar-x text-muted" style={{ fontSize: '2.5rem' }}></i>
-                    </div>
-                    <h5 className="fw-bold text-dark">Hiện chưa có lớp học nào hôm nay</h5>
-                    <p className="text-muted mb-4">Hãy quay lại sau hoặc xem lịch học chi tiết nhé!</p>
-                    <div>
-                        <button className="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" onClick={handleViewSchedule}>
-                            <i className="bi bi-calendar3 me-2"></i>
-                            XEM LỊCH HỌC
-                        </button>
-                    </div>
+
+                <div className="card bg-white border-0 rounded-4 shadow-sm p-4">
+                    {todayLoading ? (
+                        <div className="text-center py-4 text-muted">
+                            <div className="spinner-border text-danger" role="status">
+                                <span className="visually-hidden">Đang tải...</span>
+                            </div>
+                        </div>
+                    ) : todayError ? (
+                        <div className="alert alert-warning rounded-4 mb-0" role="alert">
+                            <i className="bi bi-exclamation-triangle me-2"></i>
+                            {todayError}
+                        </div>
+                    ) : todayClasses.length === 0 ? (
+                        <div className="text-center py-5">
+                            <div className="bg-light rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: '80px', height: '80px' }}>
+                                <i className="bi bi-calendar-x text-muted" style={{ fontSize: '2.5rem' }}></i>
+                            </div>
+                            <h5 className="fw-bold text-dark">Hiện chưa có lớp học nào hôm nay</h5>
+                            <p className="text-muted mb-4">Hãy quay lại sau hoặc xem lịch học chi tiết nhé!</p>
+                            <button className="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm" onClick={handleViewSchedule}>
+                                <i className="bi bi-calendar3 me-2"></i>
+                                XEM LỊCH HỌC
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="row g-3">
+                            {todayClasses.map((cls) => (
+                                <div className="col-md-6" key={cls.id}>
+                                    <div className="border rounded-4 p-3 h-100">
+                                        <div className="d-flex justify-content-between align-items-start mb-2">
+                                            <div>
+                                                <div className="fw-bold">{cls.className || cls.classCode}</div>
+                                                <div className="text-muted small">{cls.subject}</div>
+                                            </div>
+                                            <span className="badge bg-danger rounded-pill">Hôm nay</span>
+                                        </div>
+                                        <p className="mb-1 text-muted">Giáo viên: {cls.teacher || 'Chưa có'}</p>
+                                        <p className="mb-1 text-muted">Phòng: {cls.room || 'Chưa gán phòng'}</p>
+                                        <p className="mb-1 text-muted">Ngày: {cls.dateLabel}</p>
+                                        <div className="mt-3 d-flex flex-wrap gap-2">
+                                            <span className="badge bg-primary bg-opacity-10 text-primary">{cls.period}</span>
+                                            <span className="badge bg-secondary bg-opacity-10 text-secondary">{cls.timeRange}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 
