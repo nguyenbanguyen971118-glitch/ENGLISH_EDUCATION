@@ -4,6 +4,8 @@ import { StudentClassProvider } from './context/StudentClassContext';
 import { TestProvider } from './context/TestContext';
 import PrivateRoute from './routes/PrivateRoute';
 import MainLayout from './components/MainLayout';
+import { Toaster } from 'react-hot-toast';
+import Unauthorized from './components/Unauthorized';
 
 // Import Pages
 import Login from './pages/Login';
@@ -42,9 +44,11 @@ import TeacherMessages from './pages/teacher/TeacherMessages';
 import TeacherExams from './pages/teacher/TeacherExams';
 import TeacherStudyContent from './pages/teacher/TeacherStudyContent'; // Đã import trang nội dung  học tập của giáo viên
 import TeacherReports from './pages/teacher/TeacherReports';
+import ExamGenerationManager from './pages/teacher/ExamGenerationManager';
 // Import Parent Pages
 import ParentAttendance from './pages/parent/ParentAttendance';
 import ParentMessages from './pages/parent/ParentMessages';
+import ParentReports from './pages/parent/ParentReports';
 
 import ParentProfile from './pages/parent/ParentProfile';
 // Import Student Pages
@@ -82,6 +86,7 @@ function App() {
     <AuthProvider>
       <StudentClassProvider>
         <TestProvider>
+          <Toaster position="top-right" />
           <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
             <Routes>
           <Route path="/login" element={<Login />} />
@@ -89,30 +94,31 @@ function App() {
 
           <Route element={<MainLayout />}>
 
-            {/* --- NHÓM QUẢN TRỊ (ADMIN) --- */}
-            <Route path="/admin" element={<PrivateRoute allowedRoles={['Admin']}><AdminDashboard /></PrivateRoute>} />
-            <Route path="/admin/functions" element={<PrivateRoute allowedRoles={['Admin']}><AdminFunctions /></PrivateRoute>} />
+          {/* --- NHÓM QUẢN TRỊ (ADMIN) --- */}
+            <Route path="/admin" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_USERS_VIEW']}><AdminDashboard /></PrivateRoute>} />
+            <Route path="/admin/functions" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_PERMISSIONS_VIEW']}><AdminFunctions /></PrivateRoute>} />
             <Route path="/admin/users" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_USERS_VIEW']}><AdminUsers /></PrivateRoute>} />
-            <Route path="/admin/courses" element={<PrivateRoute allowedRoles={['Admin']}><AdminCourses /></PrivateRoute>} />
-            <Route path="/admin/courses/create" element={<PrivateRoute allowedRoles={['Admin']}><AdminCreateCourse /></PrivateRoute>} />
+            <Route path="/admin/courses" element={<PrivateRoute requiredPermissions={['COURSES_CREATE']}><AdminCourses /></PrivateRoute>} />
+            <Route path="/admin/courses/create" element={<PrivateRoute requiredPermissions={['COURSES_CREATE']}><AdminCreateCourse /></PrivateRoute>} />
 
             <Route path="/admin/classes" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_CLASSES_VIEW']}><AdminClasses /></PrivateRoute>} />
-            <Route path="/admin/classes/create" element={<PrivateRoute allowedRoles={['Admin']}><AdminCreateClass /></PrivateRoute>} />
-            <Route path="/admin/rooms/create" element={<PrivateRoute allowedRoles={['Admin']}><AdminCreateRoom /></PrivateRoute>} />
-            <Route path="/admin/rooms/:id/edit" element={<PrivateRoute allowedRoles={['Admin']}><AdminEditRoom /></PrivateRoute>} />
-            <Route path="/admin/classes/assign-students" element={<PrivateRoute allowedRoles={['Admin']}><AdminAssignStudent /></PrivateRoute>} />
+            <Route path="/admin/classes/create" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_CLASSES_VIEW']}><AdminCreateClass /></PrivateRoute>} />
+            <Route path="/admin/rooms/create" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_CLASSES_VIEW']}><AdminCreateRoom /></PrivateRoute>} />
+            <Route path="/admin/rooms/:id/edit" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_CLASSES_VIEW']}><AdminEditRoom /></PrivateRoute>} />
+            <Route path="/admin/classes/assign-students" element={<PrivateRoute requiredPermissions={['CLASSES_STUDENTS_VIEW']}><AdminAssignStudent /></PrivateRoute>} />
 
-            <Route path="/admin/attendance" element={<PrivateRoute allowedRoles={['Admin']}><AdminAttendance /></PrivateRoute>} />
-            <Route path="/admin/exams" element={<PrivateRoute allowedRoles={['Admin']}><AdminAssignment /></PrivateRoute>} />
-            <Route path="/admin/reports" element={<PrivateRoute allowedRoles={['Admin']} requiredPermissions={['PAGE_ADMIN_REPORTS_VIEW']}><AdminReports /></PrivateRoute>} />
-            <Route path="/admin/notifications" element={<PrivateRoute allowedRoles={['Admin']}><AdminNotifcations /></PrivateRoute>} />
-            <Route path="/admin/content" element={<PrivateRoute allowedRoles={['Admin']}><AdminStudyContent /></PrivateRoute>} />
+            <Route path="/admin/attendance" element={<PrivateRoute requiredPermissions={['ATTENDANCE_ADMIN_VIEW']}><AdminAttendance /></PrivateRoute>} />
+            <Route path="/admin/exams" element={<PrivateRoute requiredPermissions={['ASSIGNMENTS_ADMIN_VIEW']}><AdminAssignment /></PrivateRoute>} />
+            <Route path="/admin/exams/generate" element={<PrivateRoute requiredPermissions={['STUDY_CONTENT_ADMIN']}><ExamGenerationManager /></PrivateRoute>} />
+            <Route path="/admin/reports" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_REPORTS_VIEW']}><AdminReports /></PrivateRoute>} />
+            <Route path="/admin/notifications" element={<PrivateRoute requiredPermissions={['NOTIFICATIONS_VIEW_ALL']}><AdminNotifcations /></PrivateRoute>} />
+            <Route path="/admin/content" element={<PrivateRoute requiredPermissions={['STUDY_CONTENT_ADMIN']}><AdminStudyContent /></PrivateRoute>} />
             {/* ĐÃ TÍCH HỢP TRANG TIN NHẮN TẠI ĐÂY */}
-            <Route path="/admin/messages" element={<PrivateRoute allowedRoles={['Admin']}><AdminMessages /></PrivateRoute>} />
+            <Route path="/admin/messages" element={<PrivateRoute requiredPermissions={['MESSAGES_ACCESS']}><AdminMessages /></PrivateRoute>} />
 
-            <Route path="/admin/schedules" element={<PrivateRoute allowedRoles={['Admin']}><AdminSchedule /></PrivateRoute>} />
+            <Route path="/admin/schedules" element={<PrivateRoute requiredPermissions={['PAGE_ADMIN_CLASSES_VIEW']}><AdminSchedule /></PrivateRoute>} />
 
-            <Route path="/admin/profile" element={<PrivateRoute allowedRoles={['Admin']}><Placeholder title="Hồ sơ cá nhân" /></PrivateRoute>} />
+            <Route path="/admin/profile" element={<PrivateRoute><Placeholder title="Hồ sơ cá nhân" /></PrivateRoute>} />
             {/* nmkhue: Route để tạo người dùng mới 
               thay vì sử dụng AdminUsers thì dùng User_Create 
               để phân tách chức năng */}
@@ -127,21 +133,22 @@ function App() {
 
 
             {/* --- NHÓM GIÁO VIÊN (TEACHER) --- */}
-            <Route path="/teacher" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherDashboard /></PrivateRoute>} />
+            <Route path="/teacher" element={<PrivateRoute requiredPermissions={['PAGE_TEACHER_SCHEDULE_VIEW']}><TeacherDashboard /></PrivateRoute>} />
             <Route path="/teacher/schedule" element={<PrivateRoute requiredPermissions={['PAGE_TEACHER_SCHEDULE_VIEW']}><TeacherSchedule /></PrivateRoute>} />
-            <Route path="/teacher/classes" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherClasses /></PrivateRoute>} />
-            <Route path="/teacher/exams" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherExams /></PrivateRoute>} />
-            <Route path="/teacher/grading" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Chấm điểm" /></PrivateRoute>} />
-            <Route path="/teacher/content" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherStudyContent /></PrivateRoute>} />
-            <Route path="/teacher/notifications" element={<PrivateRoute allowedRoles={['Giao_Vien']}><Placeholder title="Thông báo" /></PrivateRoute>} />
-            <Route path="/teacher/messages" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherMessages /></PrivateRoute>} />
-            <Route path="/teacher/attendance" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherAttendance /></PrivateRoute>} />
-            <Route path="/teacher/reports" element={<PrivateRoute allowedRoles={['Giao_Vien']} requiredPermissions={['PAGE_TEACHER_REPORTS_VIEW']}><TeacherReports /></PrivateRoute>} />
-            {/* Trang hồ sơ giảng viên dùng API thật và chỉ cho role Giao_Vien truy cập. */}
-            <Route path="/teacher/profile" element={<PrivateRoute allowedRoles={['Giao_Vien']}><TeacherProfile /></PrivateRoute>} />
+            <Route path="/teacher/classes" element={<PrivateRoute requiredPermissions={['CLASSES_STUDENTS_VIEW']}><TeacherClasses /></PrivateRoute>} />
+            <Route path="/teacher/exams" element={<PrivateRoute requiredPermissions={['STUDY_CONTENT_TEACHER']}><TeacherExams /></PrivateRoute>} />
+            <Route path="/teacher/exams/generate" element={<PrivateRoute requiredPermissions={['STUDY_CONTENT_TEACHER']}><ExamGenerationManager /></PrivateRoute>} />
+            <Route path="/teacher/grading" element={<PrivateRoute requiredPermissions={['STUDY_CONTENT_TEACHER']}><Placeholder title="Chấm điểm" /></PrivateRoute>} />
+            <Route path="/teacher/content" element={<PrivateRoute requiredPermissions={['STUDY_CONTENT_TEACHER']}><TeacherStudyContent /></PrivateRoute>} />
+            <Route path="/teacher/notifications" element={<PrivateRoute><Placeholder title="Thông báo" /></PrivateRoute>} />
+            <Route path="/teacher/messages" element={<PrivateRoute requiredPermissions={['MESSAGES_ACCESS']}><TeacherMessages /></PrivateRoute>} />
+            <Route path="/teacher/attendance" element={<PrivateRoute requiredPermissions={['ATTENDANCE_EDIT']}><TeacherAttendance /></PrivateRoute>} />
+            <Route path="/teacher/reports" element={<PrivateRoute requiredPermissions={['PAGE_TEACHER_REPORTS_VIEW']}><TeacherReports /></PrivateRoute>} />
+            {/* Trang hồ sơ giảng viên dùng API thật — chỉ cần đăng nhập, bảo vệ bởi userId trong JWT. */}
+            <Route path="/teacher/profile" element={<PrivateRoute><TeacherProfile /></PrivateRoute>} />
 
             {/* --- NHÓM HỌC SINH (STUDENT) --- */}
-            <Route path="/student" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentDashboard /></PrivateRoute>} />
+            <Route path="/student" element={<PrivateRoute requiredPermissions={['PAGE_STUDENT_SCHEDULE_VIEW']}><StudentDashboard /></PrivateRoute>} />
             <Route path="/student/schedule" element={<PrivateRoute requiredPermissions={['PAGE_STUDENT_SCHEDULE_VIEW']}><SchedulePage /></PrivateRoute>} />
             <Route path="/student/homework-list" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentAssignmentPage /></PrivateRoute>} />
             <Route path="/student/reports" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentReports /></PrivateRoute>} />
@@ -152,17 +159,19 @@ function App() {
             <Route path="/student/profile" element={<PrivateRoute allowedRoles={['Hoc_Sinh']}><StudentProfile /></PrivateRoute>} />
 
             {/* --- NHÓM PHỤ HUYNH (PARENT) --- */}
-            <Route path="/parent" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><ParentDashboard /></PrivateRoute>} />
+            <Route path="/parent" element={<PrivateRoute requiredPermissions={['PAGE_PARENT_SCHEDULE_VIEW']}><ParentDashboard /></PrivateRoute>} />
             <Route path="/parent/schedule" element={<PrivateRoute requiredPermissions={['PAGE_PARENT_SCHEDULE_VIEW']}><ParentSchedule /></PrivateRoute>} />
-            <Route path="/parent/attendance" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><ParentAttendance /></PrivateRoute>} />
-            <Route path="/parent/messages" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><ParentMessages /></PrivateRoute>} />
-            <Route path="/parent/reports" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><Placeholder title="Báo cáo thống kê" /></PrivateRoute>} />
-            {/* Trang hồ sơ phụ huynh dùng API thật và chỉ cho role Phu_Huynh truy cập. */}
-            <Route path="/parent/profile" element={<PrivateRoute allowedRoles={['Phu_Huynh']}><ParentProfile /></PrivateRoute>} />
+            <Route path="/parent/attendance" element={<PrivateRoute requiredPermissions={['ATTENDANCE_VIEW_PARENT']}><ParentAttendance /></PrivateRoute>} />
+            <Route path="/parent/messages" element={<PrivateRoute requiredPermissions={['MESSAGES_ACCESS']}><ParentMessages /></PrivateRoute>} />
+            <Route path="/parent/reports" element={<PrivateRoute requiredPermissions={['PAGE_PARENT_SCHEDULE_VIEW']}><ParentReports /></PrivateRoute>} />
+            {/* Trang hồ sơ phụ huynh dùng API thật — chỉ cần đăng nhập, bảo vệ bởi userId trong JWT. */}
+            <Route path="/parent/profile" element={<PrivateRoute><ParentProfile /></PrivateRoute>} />
+            
+            {/* Trang 403 hiển thị trong layout có sidebar */}
+            <Route path="/unauthorized" element={<PrivateRoute><Unauthorized height="70vh" /></PrivateRoute>} />
           </Route>
 
           {/* Error Routes & Catch-All */}
-          <Route path="/unauthorized" element={<div className="d-flex align-items-center justify-content-center" style={{ height: '100vh' }}><div className="text-center"><i className="bi bi-shield-lock-fill fs-1 text-danger"></i><h1 className="mt-3">403 - Không có quyền truy cập</h1><p className="text-muted">Bạn không có quyền truy cập trang này</p></div></div>} />
           <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Router>

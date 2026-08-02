@@ -1,3 +1,4 @@
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Helpers;
@@ -32,7 +33,7 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpGet("api/classes/{classId:guid}/sessions/{sessionId:guid}/attendance")]
-    [Authorize(Roles = "Admin,Giao_Vien")]
+    [AuthorizeByPermission("ATTENDANCE_VIEW")]
     public async Task<IActionResult> GetClassSessionAttendance(Guid classId, Guid sessionId)
     {
         if (!await SessionBelongsToClassAsync(classId, sessionId))
@@ -75,7 +76,7 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpPost("api/classes/{classId:guid}/sessions/{sessionId:guid}/attendance")]
-    [Authorize(Roles = "Giao_Vien")]
+    [AuthorizeByPermission("ATTENDANCE_EDIT")]
     public async Task<IActionResult> SaveClassSessionAttendance(Guid classId, Guid sessionId, [FromBody] SaveAttendanceRequestDto request)
     {
         if (!await SessionBelongsToClassAsync(classId, sessionId))
@@ -151,7 +152,7 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpGet("api/parents/{parentUserId:guid}/children/attendance")]
-    [Authorize(Roles = "Phu_Huynh")]
+    [AuthorizeByPermission("ATTENDANCE_VIEW_PARENT")]
     public async Task<IActionResult> GetParentChildrenAttendance(Guid parentUserId)
     {
         var currentUserId = User.GetUserId();
@@ -207,7 +208,7 @@ public class AttendanceController : ControllerBase
     }
 
     [HttpGet("api/students/me/attendance")]
-    [Authorize(Roles = "Hoc_Sinh")]
+    [AuthorizeByPermission("ATTENDANCE_VIEW_STUDENT")]
     public async Task<IActionResult> GetMyAttendance()
     {
         var studentId = User.GetProfileId();

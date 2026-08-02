@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using Microsoft.EntityFrameworkCore;
 using Pomelo.EntityFrameworkCore.MySql.Scaffolding.Internal;
@@ -53,6 +53,8 @@ public partial class AppDbContext : DbContext
 
     public virtual DbSet<Giangvienlophoc> Giangvienlophocs { get; set; }
 
+    public virtual DbSet<GiangvienKhoahoc> GiangvienKhoahocs { get; set; }
+
     public virtual DbSet<Hocsinh> Hocsinhs { get; set; }
 
     public virtual DbSet<Hocsinhlophoc> Hocsinhlophocs { get; set; }
@@ -82,6 +84,8 @@ public partial class AppDbContext : DbContext
     public virtual DbSet<Phuhuynh> Phuhuynhs { get; set; }
 
     public virtual DbSet<Phuhuynhhocsinh> Phuhuynhhocsinhs { get; set; }
+
+    public virtual DbSet<RefreshSession> RefreshSessions { get; set; }
 
     public virtual DbSet<Quyen> Quyens { get; set; }
 
@@ -793,6 +797,41 @@ public partial class AppDbContext : DbContext
                 .HasForeignKey<Giangvien>(d => d.MaNguoiDung)
                 .OnDelete(DeleteBehavior.ClientSetNull)
                 .HasConstraintName("giangvien_ibfk_1");
+        });
+
+        modelBuilder.Entity<GiangvienKhoahoc>(entity =>
+        {
+            entity.HasKey(e => new { e.MaGiangVien, e.MaKhoaHoc })
+                .HasName("PRIMARY")
+                .HasAnnotation("MySql:IndexPrefixLength", new[] { 0, 0 });
+
+            entity.ToTable("giangvienkhoahoc");
+
+            entity.Property(e => e.MaGiangVien)
+                .UseCollation("ascii_general_ci")
+                .HasCharSet("ascii");
+
+            entity.Property(e => e.MaKhoaHoc)
+                .UseCollation("ascii_general_ci")
+                .HasCharSet("ascii");
+
+            entity.Property(e => e.NguoiTao)
+                .UseCollation("ascii_general_ci")
+                .HasCharSet("ascii");
+
+            entity.Property(e => e.ThoiGianTao)
+                .HasDefaultValueSql("CURRENT_TIMESTAMP")
+                .HasColumnType("datetime");
+
+            entity.HasOne(d => d.MaGiangVienNavigation).WithMany()
+                .HasForeignKey(d => d.MaGiangVien)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("giangvienkhoahoc_ibfk_1");
+
+            entity.HasOne(d => d.MaKhoaHocNavigation).WithMany()
+                .HasForeignKey(d => d.MaKhoaHoc)
+                .OnDelete(DeleteBehavior.Cascade)
+                .HasConstraintName("giangvienkhoahoc_ibfk_2");
         });
 
         modelBuilder.Entity<Giangvienlophoc>(entity =>

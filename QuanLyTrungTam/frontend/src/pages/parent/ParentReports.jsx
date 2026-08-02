@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { p0Api } from '../../api/p0Api';
-import apiClient from '../../api/BaseApi';
+import { Bar } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -10,7 +10,6 @@ import {
   Tooltip,
   Legend
 } from 'chart.js';
-import { Bar } from 'react-chartjs-2';
 
 ChartJS.register(
   CategoryScale,
@@ -21,71 +20,85 @@ ChartJS.register(
   Legend
 );
 
-const StudentReports = () => {
-  const [classes, setClasses] = useState([]);
-  const [selectedClassId, setSelectedClassId] = useState('');
-  const [dashboardData, setDashboardData] = useState(null);
-  const [allClassesData, setAllClassesData] = useState([]);
-  const [loadingClasses, setLoadingClasses] = useState(true);
+const ParentReports = () => {
+  const [childrenData, setChildrenData] = useState([]);
+  const [selectedChildId, setSelectedChildId] = useState('');
+  const [selectedChild, setSelectedChild] = useState(null);
+  
+  const [selectedClassId, setSelectedClassId] = useState('all');
+  const [singleClassData, setSingleClassData] = useState(null);
+  const [allCoursesData, setAllCoursesData] = useState([]);
+  
+  const [loading, setLoading] = useState(true);
   const [loadingDashboard, setLoadingDashboard] = useState(false);
   const [error, setError] = useState('');
 
-  // Load student classes first
-  const loadStudentClasses = async () => {
-    setLoadingClasses(true);
+  // Fetch children list first
+  const loadParentDashboard = async () => {
+    setLoading(true);
     setError('');
     try {
-      // Use the student-classes endpoint in ScheduleController
-      const res = await apiClient.get("Schedule/student-classes");
-      const dataPayload = res.data?.classes || res.classes || [];
-      setClasses(dataPayload);
-      if (dataPayload.length > 0) {
-        setSelectedClassId('all');
+      const data = await p0Api.reports.parentDashboard();
+      setChildrenData(data || []);
+      if (data && data.length > 0) {
+        setSelectedChildId(data[0].studentId);
+        setSelectedChild(data[0]);
       }
     } catch (err) {
       console.error(err);
-      setError(err.message || 'Không thể tải danh sách khóa học của bạn.');
+      setError(err.message || 'Không thể tải thông tin con của bạn.');
     } finally {
-      setLoadingClasses(false);
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    loadStudentClasses();
+    loadParentDashboard();
   }, []);
 
-  // Load dashboard when class changes
+  // Handle changing child
+  const handleChildChange = (studentId) => {
+    setSelectedChildId(studentId);
+    const child = childrenData.find(c => c.studentId === studentId);
+    setSelectedChild(child);
+    setSelectedClassId('all');
+  };
+
+  // Load dashboard statistics when class or child changes
   useEffect(() => {
-    if (selectedClassId) {
+    if (selectedChildId) {
       if (selectedClassId === 'all') {
-        loadAllClassesDashboard(classes);
+        loadAllCoursesDashboard(selectedChildId, selectedChild?.courses || []);
       } else {
-        loadDashboard(selectedClassId);
+        loadDashboard(selectedClassId, selectedChildId);
       }
     }
-  }, [selectedClassId, classes]);
+  }, [selectedClassId, selectedChildId, selectedChild]);
 
-  const loadDashboard = async (classId) => {
+  const loadDashboard = async (classId, studentId) => {
     setLoadingDashboard(true);
     try {
-      const res = await p0Api.reports.studentDashboard(classId);
-      setDashboardData(res);
+      const res = await p0Api.reports.studentDashboard(classId, studentId);
+      setSingleClassData(res);
     } catch (err) {
       console.error(err);
-      alert('Không thể tải thống kê chi tiết khóa học này.');
+      alert('Không thể tải thống kê chi tiết khóa học của con.');
     } finally {
       setLoadingDashboard(false);
     }
   };
 
-  const loadAllClassesDashboard = async (studentClasses) => {
-    if (!studentClasses || studentClasses.length === 0) return;
+  const loadAllCoursesDashboard = async (studentId, childCourses) => {
+    if (!childCourses || childCourses.length === 0) {
+      setAllCoursesData([]);
+      return;
+    }
     setLoadingDashboard(true);
     try {
-      const promises = studentClasses.map(cls => p0Api.reports.studentDashboard(cls.id));
+      const promises = childCourses.map(c => p0Api.reports.studentDashboard(c.classId, studentId));
       const results = await Promise.all(promises);
-      const classesData = results.map((res, idx) => {
-        const classObj = studentClasses[idx];
+      const coursesData = results.map((res, idx) => {
+        const courseObj = childCourses[idx];
         const gradedScores = (res.tests || [])
           .filter(t => t.score !== null && t.score !== undefined)
           .map(t => t.score);
@@ -93,60 +106,38 @@ const StudentReports = () => {
           ? Math.round((gradedScores.reduce((a, b) => a + b, 0) / gradedScores.length) * 100) / 100
           : null;
         return {
-          classId: classObj.id,
-          classCode: classObj.classCode || '',
-          className: classObj.className || classObj.classCode || 'Lớp học',
-          teacher: classObj.teacher || 'Chưa phân công',
-          averageScore: avg,
+          classId: courseObj.classId,
+          className: courseObj.courseName || courseObj.className || 'Lớp học',
+          averageScore: avg ?? courseObj.finalAverageScore,
           tests: res.tests || [],
           attendanceRate: res.attendanceRate
         };
       });
-      setAllClassesData(classesData);
+      setAllCoursesData(coursesData);
     } catch (err) {
       console.error(err);
-      alert('Không thể tải thống kê tất cả các khóa học.');
+      alert('Không thể tải thông tin tổng hợp của con.');
     } finally {
       setLoadingDashboard(false);
     }
   };
 
-  if (loadingClasses) {
-    return (
-      <div className="d-flex align-items-center justify-content-center p-5" style={{ minHeight: '60vh' }}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Đang tải thông tin khóa học...</span>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="alert alert-danger m-4 rounded-4" role="alert">
-        <i className="bi bi-exclamation-triangle-fill me-2"></i>
-        {error}
-        <button onClick={loadStudentClasses} className="btn btn-outline-danger btn-sm ms-3">Thử lại</button>
-      </div>
-    );
-  }
-
   const renderAllClassesView = () => {
-    const validScores = allClassesData.filter(c => c.averageScore !== null);
+    const validScores = allCoursesData.filter(c => c.averageScore !== null);
     const overallGPA = validScores.length > 0
       ? Math.round((validScores.reduce((sum, c) => sum + c.averageScore, 0) / validScores.length) * 100) / 100
       : null;
 
-    const avgAttendance = allClassesData.length > 0
-      ? Math.round((allClassesData.reduce((sum, c) => sum + c.attendanceRate, 0) / allClassesData.length) * 100) / 100
+    const avgAttendance = allCoursesData.length > 0
+      ? Math.round((allCoursesData.reduce((sum, c) => sum + c.attendanceRate, 0) / allCoursesData.length) * 100) / 100
       : 100;
 
     const chartData = {
-      labels: allClassesData.map(c => c.className),
+      labels: allCoursesData.map(c => c.className),
       datasets: [
         {
           label: 'Điểm trung bình khóa học',
-          data: allClassesData.map(c => c.averageScore !== null ? c.averageScore : 0),
+          data: allCoursesData.map(c => c.averageScore !== null ? c.averageScore : 0),
           backgroundColor: '#4361ee',
           borderRadius: 6,
           maxBarThickness: 50,
@@ -174,32 +165,32 @@ const StudentReports = () => {
         {/* GPA & Attendance Summary widgets */}
         <div className="col-12 col-md-6">
           <div className="card border-0 shadow-sm rounded-4 p-4 text-center bg-white h-100 animate__animated animate__fadeInUp" style={{ borderLeft: "5px solid #4361ee" }}>
-            <span className="text-muted text-uppercase fw-bold mb-2 d-block" style={{ fontSize: '12px', letterSpacing: '1px' }}>Điểm Trung Bình Tích Lũy</span>
+            <span className="text-muted text-uppercase fw-bold mb-2 d-block" style={{ fontSize: '12px', letterSpacing: '1px' }}>Điểm Trung Bình Tích Lũy Của Con</span>
             <h2 className="fw-extrabold text-primary m-0" style={{ fontSize: '2.5rem' }}>
               {overallGPA !== null ? `${overallGPA.toFixed(2)} / 10.0` : 'Chưa có điểm'}
             </h2>
-            <p className="text-muted small mt-2 mb-0">Tính trung bình trên tất cả các khóa học đã chấm điểm</p>
+            <p className="text-muted small mt-2 mb-0">Tính trung bình trên các khóa học con đã học</p>
           </div>
         </div>
 
         <div className="col-12 col-md-6">
           <div className="card border-0 shadow-sm rounded-4 p-4 text-center bg-white h-100 animate__animated animate__fadeInUp" style={{ borderLeft: "5px solid #2ec4b6", animationDelay: '50ms' }}>
-            <span className="text-muted text-uppercase fw-bold mb-2 d-block" style={{ fontSize: '12px', letterSpacing: '1px' }}>Tỷ Lệ Chuyên Cần Chung</span>
+            <span className="text-muted text-uppercase fw-bold mb-2 d-block" style={{ fontSize: '12px', letterSpacing: '1px' }}>Chuyên Cần Chung Của Con</span>
             <h2 className="fw-extrabold text-success m-0" style={{ fontSize: '2.5rem' }}>{avgAttendance}%</h2>
-            <p className="text-muted small mt-2 mb-0">Tỷ lệ có mặt trung bình ở tất cả các lớp học</p>
+            <p className="text-muted small mt-2 mb-0">Tỷ lệ đi học đầy đủ trung bình ở tất cả các lớp</p>
           </div>
         </div>
 
         {/* Bar Chart of Course Averages */}
         <div className="col-12 animate__animated animate__fadeInUp" style={{ animationDelay: '100ms' }}>
           <div className="card border-0 shadow-sm rounded-4 p-4 bg-white">
-            <h5 className="fw-bold mb-3 text-secondary border-bottom pb-2">Biểu đồ điểm trung bình các khóa học</h5>
+            <h5 className="fw-bold mb-3 text-secondary border-bottom pb-2">Biểu đồ điểm trung bình học tập của con</h5>
             <div style={{ height: '300px' }}>
-              {allClassesData.length > 0 ? (
+              {allCoursesData.length > 0 ? (
                 <Bar data={chartData} options={chartOptions} />
               ) : (
                 <div className="d-flex align-items-center justify-content-center h-100 text-muted">
-                  Chưa có dữ liệu khóa học
+                  Con chưa tham gia khóa học nào hoặc chưa được chấm điểm
                 </div>
               )}
             </div>
@@ -212,7 +203,7 @@ const StudentReports = () => {
             <div className="border-bottom pb-2 mb-3">
               <h5 className="fw-bold m-0 text-secondary">
                 <i className="bi bi-collection-play-fill me-2 text-primary"></i>
-                Bảng điểm tổng hợp từng khóa học
+                Bảng điểm tổng hợp các khóa học của con
               </h5>
             </div>
             
@@ -221,20 +212,18 @@ const StudentReports = () => {
                 <thead className="table-light">
                   <tr>
                     <th scope="col" className="ps-3">Khóa học / Lớp học</th>
-                    <th scope="col">Giảng viên</th>
                     <th scope="col" className="text-center">Tỷ lệ đi học</th>
                     <th scope="col" className="text-center">Điểm trung bình khóa</th>
                     <th scope="col" className="text-end pe-3">Thao tác</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {allClassesData.length > 0 ? (
-                    allClassesData.map((clsItem, index) => (
+                  {allCoursesData.length > 0 ? (
+                    allCoursesData.map((clsItem, index) => (
                       <tr key={clsItem.classId || index}>
                         <td className="ps-3 fw-bold text-dark">
                           📚 {clsItem.className}
                         </td>
-                        <td>{clsItem.teacher}</td>
                         <td className="text-center fw-semibold text-secondary">{clsItem.attendanceRate}%</td>
                         <td className="text-center">
                           {clsItem.averageScore !== null ? (
@@ -242,7 +231,7 @@ const StudentReports = () => {
                               {clsItem.averageScore.toFixed(2)} / 10.0
                             </span>
                           ) : (
-                            <span className="badge bg-secondary px-3 py-2 fs-6">Chưa chấm / Chưa học</span>
+                            <span className="badge bg-secondary px-3 py-2 fs-6">Chưa có điểm</span>
                           )}
                         </td>
                         <td className="text-end pe-3">
@@ -257,7 +246,7 @@ const StudentReports = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="5" className="text-center py-4 text-muted">Bạn chưa tham gia lớp học nào.</td>
+                      <td colSpan="4" className="text-center py-4 text-muted">Con chưa tham gia lớp học nào.</td>
                     </tr>
                   )}
                 </tbody>
@@ -270,21 +259,21 @@ const StudentReports = () => {
   };
 
   const renderSingleClassView = () => {
-    if (!dashboardData) return null;
+    if (!singleClassData) return null;
 
     const testChartData = {
-      labels: dashboardData.tests.map(t => t.testName),
+      labels: singleClassData.tests.map(t => t.testName),
       datasets: [
         {
-          label: 'Điểm của bạn',
-          data: dashboardData.tests.map(t => t.score !== null ? t.score : 0),
+          label: 'Điểm của con',
+          data: singleClassData.tests.map(t => t.score !== null ? t.score : 0),
           backgroundColor: '#2ec4b6',
           borderRadius: 6,
           maxBarThickness: 40,
         },
         {
           label: 'Trung bình cả lớp',
-          data: dashboardData.tests.map(t => t.classAverage),
+          data: singleClassData.tests.map(t => t.classAverage),
           backgroundColor: '#ccd9ff',
           borderRadius: 6,
           maxBarThickness: 40,
@@ -310,21 +299,21 @@ const StudentReports = () => {
         <div className="col-12 col-md-4 mx-auto animate__animated animate__fadeInUp">
           <div className="card border-0 shadow-sm rounded-4 p-4 text-center bg-white" style={{ borderLeft: "5px solid #2ec4b6" }}>
             <span className="text-muted text-uppercase fw-bold mb-2 d-block" style={{ fontSize: '12px', letterSpacing: '1px' }}>Tỷ Lệ Điểm Danh Lớp</span>
-            <h2 className="fw-extrabold text-success m-0" style={{ fontSize: '2.5rem' }}>{dashboardData.attendanceRate}%</h2>
-            <p className="text-muted small mt-2 mb-0">Tính trên tổng số buổi đã điểm danh của lớp</p>
+            <h2 className="fw-extrabold text-success m-0" style={{ fontSize: '2.5rem' }}>{singleClassData.attendanceRate}%</h2>
+            <p className="text-muted small mt-2 mb-0">Tính trên các buổi học con đã điểm danh</p>
           </div>
         </div>
 
         {/* Test Performance Bar Chart */}
         <div className="col-12 animate__animated animate__fadeInUp" style={{ animationDelay: '50ms' }}>
           <div className="card border-0 shadow-sm rounded-4 p-4 bg-white">
-            <h5 className="fw-bold mb-3 text-secondary border-bottom pb-2">Biểu đồ kết quả bài kiểm tra</h5>
+            <h5 className="fw-bold mb-3 text-secondary border-bottom pb-2">Biểu đồ so sánh kết quả của con với lớp</h5>
             <div style={{ height: '300px' }}>
-              {dashboardData.tests.length > 0 ? (
+              {singleClassData.tests.length > 0 ? (
                 <Bar data={testChartData} options={testChartOptions} />
               ) : (
                 <div className="d-flex align-items-center justify-content-center h-100 text-muted">
-                  Lớp học này chưa có bài kiểm tra nào được chấm
+                  Khóa học này chưa có thông tin kiểm tra
                 </div>
               )}
             </div>
@@ -337,7 +326,7 @@ const StudentReports = () => {
             <div className="border-bottom pb-2 mb-3">
               <h5 className="fw-bold m-0 text-secondary">
                 <i className="bi bi-journal-check me-2 text-primary"></i>
-                Kết quả học tập lớp: {dashboardData.className}
+                Bảng điểm chi tiết khóa học của con: {singleClassData.className}
               </h5>
             </div>
             
@@ -346,15 +335,15 @@ const StudentReports = () => {
                 <thead className="table-light">
                   <tr>
                     <th scope="col" className="ps-3">Tên Bài Kiểm Tra</th>
-                    <th scope="col" className="text-center">Điểm Số Của Bạn</th>
+                    <th scope="col" className="text-center">Điểm Số Của Con</th>
                     <th scope="col" className="text-center">Trung Bình Cả Lớp</th>
-                    <th scope="col" className="text-center">Xếp Hạng Của Bạn</th>
+                    <th scope="col" className="text-center">Xếp Hạng Của Con</th>
                     <th scope="col" className="text-center">Đánh Giá</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {dashboardData.tests.length > 0 ? (
-                    dashboardData.tests.map((test, index) => {
+                  {singleClassData.tests.length > 0 ? (
+                    singleClassData.tests.map((test, index) => {
                       const hasScore = test.score !== null && test.score !== undefined;
                       let ratingText = 'Chưa chấm';
                       let ratingColor = 'text-muted';
@@ -403,7 +392,7 @@ const StudentReports = () => {
                     })
                   ) : (
                     <tr>
-                      <td colSpan="5" className="text-center py-4 text-muted">Lớp học này chưa được giao bài tập hay bài kiểm tra nào.</td>
+                      <td colSpan="5" className="text-center py-4 text-muted">Khóa học này chưa được giao bài tập hay bài kiểm tra nào.</td>
                     </tr>
                   )}
                 </tbody>
@@ -415,33 +404,72 @@ const StudentReports = () => {
     );
   };
 
+  if (loading) {
+    return (
+      <div className="d-flex align-items-center justify-content-center p-5" style={{ minHeight: '60vh' }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Đang tải thông tin...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="alert alert-danger m-4 rounded-4" role="alert">
+        <i className="bi bi-exclamation-triangle-fill me-2"></i>
+        {error}
+        <button onClick={loadParentDashboard} className="btn btn-outline-danger btn-sm ms-3">Thử lại</button>
+      </div>
+    );
+  }
+
   return (
     <div className="container py-4 animate__animated animate__fadeIn">
       {/* Header */}
       <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 pb-3 border-bottom gap-3">
         <div>
-          <h2 className="fw-bold text-uppercase text-primary m-0">Học Bạ & Bảng Điểm</h2>
-          <p className="text-muted m-0">Xem chi tiết điểm số, xếp hạng và chuyên cần theo từng lớp học</p>
+          <h2 className="fw-bold text-uppercase text-primary m-0">Học Bạ & Báo Cáo Học Tập Của Con</h2>
+          <p className="text-muted m-0">Xem biểu đồ điểm số, xếp hạng và chuyên cần của con</p>
         </div>
         
-        {classes.length > 0 ? (
-          <div className="d-flex align-items-center gap-2">
-            <span className="fw-bold text-secondary text-nowrap">Chọn lớp học:</span>
-            <select
-              className="form-select rounded-pill px-3 fw-bold text-primary border-primary w-auto"
-              value={selectedClassId}
-              onChange={(e) => setSelectedClassId(e.target.value)}
-            >
-              <option value="all">📚 Tất cả các khóa học</option>
-              {classes.map((cls) => (
-                <option key={cls.id} value={cls.id}>
-                  📚 {cls.className || cls.classCode}
-                </option>
-              ))}
-            </select>
+        {childrenData.length > 0 ? (
+          <div className="d-flex flex-wrap align-items-center gap-3">
+            {/* Child Selector */}
+            <div className="d-flex align-items-center gap-2">
+              <span className="fw-bold text-secondary text-nowrap">Chọn con:</span>
+              <select
+                className="form-select rounded-pill px-3 fw-bold text-primary border-primary w-auto"
+                value={selectedChildId}
+                onChange={(e) => handleChildChange(e.target.value)}
+              >
+                {childrenData.map((child) => (
+                  <option key={child.studentId} value={child.studentId}>
+                    👶 {child.studentName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Course Selector */}
+            <div className="d-flex align-items-center gap-2">
+              <span className="fw-bold text-secondary text-nowrap">Chọn lớp học:</span>
+              <select
+                className="form-select rounded-pill px-3 fw-bold text-primary border-primary w-auto"
+                value={selectedClassId}
+                onChange={(e) => setSelectedClassId(e.target.value)}
+              >
+                <option value="all">📚 Tất cả các khóa học</option>
+                {selectedChild?.courses?.map((cls) => (
+                  <option key={cls.classId} value={cls.classId}>
+                    📚 {cls.courseName || cls.className}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         ) : (
-          <span className="text-muted">Bạn chưa tham gia lớp học nào.</span>
+          <span className="text-muted">Tài khoản này chưa được liên kết với học sinh nào.</span>
         )}
       </div>
 
@@ -460,4 +488,4 @@ const StudentReports = () => {
   );
 };
 
-export default StudentReports;
+export default ParentReports;

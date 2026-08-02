@@ -1,3 +1,5 @@
+import toast from 'react-hot-toast';
+
 class BaseApi {
     // - chuc nang: Khoi tao BaseApi voi URL goc cua backend.
     // - nmkhue -29/2/2026
@@ -125,8 +127,15 @@ class BaseApi {
         }
 
         if (!response.ok) {
-            if (response.status === 401 || response.status === 403) {
-                localStorage.removeItem('user');
+            if (response.status === 403) {
+                toast.error('Bạn không có quyền truy cập tài nguyên này.', { id: '403-unauthorized' });
+                window.location.href = '/unauthorized';
+                return {
+                    success: false,
+                    message: 'Bạn không có quyền truy cập tài nguyên này.',
+                    status: 403,
+                    data: null
+                };
             }
 
             const validationMessage = Array.isArray(payload?.errors) && payload.errors.length > 0

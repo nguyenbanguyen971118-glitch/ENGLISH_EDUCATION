@@ -30,19 +30,31 @@ const AdminUsers = () => {
   const [selectedChildId, setSelectedChildId] = useState("");
   const [relationLoading, setRelationLoading] = useState(false);
 
+  // States for Teacher Course Assignment
+  const [assigningTeacher, setAssigningTeacher] = useState(null);
+  const [teacherCourses, setTeacherCourses] = useState([]);
+  const [coursesList, setCoursesList] = useState([]);
+  const [teacherSpecsList, setTeacherSpecsList] = useState([]);
+
   const loadData = async () => {
     setLoading(true);
     setError("");
     try {
-      const [userRows, roleRows] = await Promise.all([p0Api.users.list(), p0Api.roles.list()]);
+      const [userRows, roleRows, specRows] = await Promise.all([
+        p0Api.users.list(),
+        p0Api.roles.list(),
+        p0Api.teacherSpecializations.list()
+      ]);
       setUsers(userRows || []);
       setRoles(roleRows || []);
+      setTeacherSpecsList(specRows || []);
     } catch (err) {
       setError(err.message || "Khong tai duoc danh sach nguoi dung.");
     } finally {
       setLoading(false);
     }
   };
+
 
   useEffect(() => {
     loadData();
@@ -167,6 +179,46 @@ const AdminUsers = () => {
     }
   };
 
+  const openTeacherCourses = async (item) => {
+    setAssigningTeacher(item);
+    setTeacherCourses([]);
+    setRelationLoading(true);
+    setError("");
+    try {
+      if (coursesList.length === 0) {
+        const list = await p0Api.courses.list();
+        setCoursesList(list);
+      }
+      const teacherSpecs = teacherSpecsList.find(
+        (s) => String(s.maGiangVien) === String(item.profileId)
+      );
+      setTeacherCourses(teacherSpecs ? teacherSpecs.courseIds : []);
+    } catch (err) {
+      setError(err.message || "Không thể tải danh sách môn học của giáo viên.");
+    } finally {
+      setRelationLoading(false);
+    }
+  };
+
+  const handleSaveTeacherCourses = async () => {
+    if (!assigningTeacher) return;
+    setRelationLoading(true);
+    setError("");
+    try {
+      await p0Api.teacherSpecializations.assign({
+        MaGiangVien: assigningTeacher.profileId,
+        CourseIds: teacherCourses
+      });
+      setToast("Đã phân công môn dạy cho giảng viên.");
+      setAssigningTeacher(null);
+      await loadData();
+    } catch (err) {
+      setError(err.message || "Phân công môn dạy thất bại.");
+    } finally {
+      setRelationLoading(false);
+    }
+  };
+
   const roleColor = (role) => {
     if (role === "Admin") return "bg-danger";
     if (role === "Giao_Vien") return "bg-success";
@@ -248,7 +300,17 @@ const AdminUsers = () => {
                         <i className="bi bi-person-circle me-2 fs-4"></i>
                         <div>
                           <div>{item.fullName || item.username}</div>
-                          <small className="text-muted">{item.username}</small>
+                          <div className="d-flex flex-column">
+                            <small className="text-muted">{item.username}</small>
+                            {hasRole(item, "Giao_Vien") && item.profileId && (
+                              <small className="text-info fw-semibold mt-1">
+                                <i className="bi bi-book-half me-1"></i>
+                                Chuyên môn: {
+                                  teacherSpecsList.find(s => String(s.maGiangVien) === String(item.profileId))?.courseNames.join(", ") || "Chưa phân công"
+                                }
+                              </small>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -265,7 +327,13 @@ const AdminUsers = () => {
                           <i className="bi bi-diagram-3"></i>
                         </button>
                       )}
+                      {canEditUser && hasRole(item, "Giao_Vien") && item.profileId && (
+                        <button className="btn btn-outline-info btn-sm me-2" disabled={saving || relationLoading} onClick={() => openTeacherCourses(item)} title="Phân công môn dạy">
+                          <i className="bi bi-book"></i>
+                        </button>
+                      )}
                       {canEditUser && <button className="btn btn-outline-primary btn-sm me-2" disabled={saving} onClick={() => openEdit(item)}><i className="bi bi-pencil"></i></button>}
+
                       {canDeleteUser && <button className="btn btn-outline-danger btn-sm" disabled={saving} onClick={() => handleDelete(item)}><i className="bi bi-trash"></i></button>}
                     </td>
                   </tr>
@@ -395,6 +463,64 @@ const AdminUsers = () => {
               </div>
               <div className="modal-footer">
                 <button className="btn btn-light" onClick={() => setLinkingParent(null)}>Dong</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      {assigningTeacher && (
+        <div className="modal d-block" style={{ backgroundColor: "rgba(0,0,0,.45)" }}>
+          <div className="modal-dialog modal-md modal-dialog-centered">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Phân công môn dạy cho giảng viên</h5>
+                <button className="btn-close" onClick={() => setAssigningTeacher(null)}></button>
+              </div>
+              <div className="modal-body">
+                <div className="mb-3">
+                  <div className="fw-semibold text-primary fs-5">{assigningTeacher.fullName || assigningTeacher.username}</div>
+                  <small className="text-muted">Username: {assigningTeacher.username}</small>
+                </div>
+                
+                <label className="form-label fw-bold">Danh sách môn học (Khóa học):</label>
+                {relationLoading ? (
+                  <div className="text-center py-3">Đang tải danh sách...</div>
+                ) : coursesList.length === 0 ? (
+                  <div className="text-muted py-2">Không có môn học nào khả dụng.</div>
+                ) : (
+                  <div className="d-flex flex-column gap-2" style={{ maxHeight: "300px", overflowY: "auto" }}>
+                    {coursesList.map((course) => {
+                      const isChecked = teacherCourses.includes(course.id);
+                      return (
+                        <label key={course.id} className="form-check d-flex align-items-center">
+                          <input 
+                            className="form-check-input me-2" 
+                            type="checkbox" 
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setTeacherCourses([...teacherCourses, course.id]);
+                              } else {
+                                setTeacherCourses(teacherCourses.filter(id => id !== course.id));
+                              }
+                            }}
+                          />
+                          <span className="form-check-label">{course.name}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+              <div className="modal-footer">
+                <button className="btn btn-light" onClick={() => setAssigningTeacher(null)}>Hủy</button>
+                <button 
+                  className="btn btn-primary" 
+                  disabled={relationLoading} 
+                  onClick={handleSaveTeacherCourses}
+                >
+                  {relationLoading ? "Đang lưu..." : "Lưu phân công"}
+                </button>
               </div>
             </div>
           </div>

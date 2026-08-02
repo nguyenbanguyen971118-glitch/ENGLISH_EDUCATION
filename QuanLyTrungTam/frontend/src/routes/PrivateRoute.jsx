@@ -1,9 +1,19 @@
+import React, { useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
+/**
+ * PrivateRoute — kiểm tra xác thực và phân quyền dựa trên ma trận chức năng.
+ *
+ * Cơ chế:
+ *  - Yêu cầu người dùng đã đăng nhập (có user trong AuthContext).
+ *  - Kiểm tra `requiredPermissions` theo danh sách permissionCodes được server cấp
+ *    trong JWT (tra cứu từ bảng VaiTroQuyen theo ma trận chức năng).
+ *  - KHÔNG còn kiểm tra theo `allowedRoles` nữa. Prop này bị bỏ để tránh nhầm lẫn.
+ */
 const PrivateRoute = ({
     children,
-    allowedRoles = [],
     requiredPermissions = [],
     requireAllPermissions = true
 }) => {
@@ -13,22 +23,33 @@ const PrivateRoute = ({
         return <Navigate to="/login" replace />;
     }
 
-    // Luon check role neu route co khai bao allowedRoles.
-    if (allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-        return <Navigate to="/unauthorized" replace />;
-    }
+    // Xác định đường dẫn redirect mặc định theo loại tài khoản để điều hướng sau khi từ chối
+    const rolePath = user?.role === 'Giao_Vien'
+        ? 'teacher'
+        : user?.role === 'Hoc_Sinh'
+            ? 'student'
+            : user?.role === 'Phu_Huynh'
+                ? 'parent'
+                : 'admin';
 
-    // Neu route co yeu cau permission, can vuot qua check permission.
-    if (requiredPermissions.length > 0) {
-        const userPermissions = Array.isArray(user.permissionCodes) ? user.permissionCodes : [];
+    const defaultRedirect = `/${rolePath}`;
 
-        const hasRequiredPermissions = requireAllPermissions
-            ? requiredPermissions.every((permission) => userPermissions.includes(permission))
-            : requiredPermissions.some((permission) => userPermissions.includes(permission));
+    // Kiểm tra quyền theo ma trận chức năng (permissionCodes từ JWT — server cấp)
+    const userPermissions = Array.isArray(user.permissionCodes) ? user.permissionCodes : [];
+    const isDenied = requiredPermissions.length > 0 && (
+        requireAllPermissions
+            ? !requiredPermissions.every((p) => userPermissions.includes(p))
+            : !requiredPermissions.some((p) => userPermissions.includes(p))
+    );
 
-        if (!hasRequiredPermissions) {
-            return <Navigate to="/unauthorized" replace />;
+    useEffect(() => {
+        if (isDenied) {
+            toast.error('Bạn không có quyền truy cập tài nguyên này.', { id: '403-unauthorized' });
         }
+    }, [isDenied]);
+
+    if (isDenied) {
+        return <Navigate to="/unauthorized" replace />;
     }
 
     return children;

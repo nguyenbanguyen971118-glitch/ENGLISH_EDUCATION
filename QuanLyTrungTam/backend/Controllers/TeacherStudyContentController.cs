@@ -1,3 +1,4 @@
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Helpers;
@@ -12,7 +13,7 @@ namespace backend.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Giao_Vien")]
+[AuthorizeByPermission("STUDY_CONTENT_TEACHER")]
 public class TeacherStudyContentController : ControllerBase
 {
     private const long MaxStudyFileSize = 100 * 1024 * 1024;

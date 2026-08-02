@@ -1,4 +1,5 @@
 using System.Text.Json;
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Helpers;
@@ -11,7 +12,7 @@ namespace backend.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")]
+[AuthorizeByPermission("ASSIGNMENTS_ADMIN_VIEW")]
 public class AdminAssignmentController : ControllerBase
 {
     private const string AssignmentMetadataSchema = "ADMIN_ASSIGNMENT_V1";

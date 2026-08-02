@@ -70,9 +70,9 @@ public class AuthorizationMiddleware
     {
         try
         {
-            // Lấy userId từ JWT token.
-            var userIdClaim = context.User.FindFirst(ClaimTypes.NameIdentifier);
-            if (userIdClaim == null || !Guid.TryParse(userIdClaim.Value, out var userId))
+            // Lấy userId từ JWT token sử dụng helper mở rộng thống nhất.
+            var userId = context.User.GetUserId();
+            if (userId == null)
             {
                 return false;
             }
@@ -81,7 +81,7 @@ public class AuthorizationMiddleware
             if (!string.IsNullOrWhiteSpace(authAttribute.PermissionCode))
             {
                 return await permissionHelper.HasPermissionAsync(
-                    userId,
+                    userId.Value,
                     authAttribute.MaChucNang,
                     authAttribute.PermissionCode
                 );
@@ -92,7 +92,7 @@ public class AuthorizationMiddleware
                 foreach (var permissionId in authAttribute.PermissionIds)
                 {
                     var hasPermission = await permissionHelper.HasPermissionByIdAsync(
-                        userId,
+                        userId.Value,
                         authAttribute.MaChucNang,
                         permissionId
                     );

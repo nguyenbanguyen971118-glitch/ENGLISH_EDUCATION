@@ -11,10 +11,10 @@ const MainLayout = () => {
             <div className="row g-0 h-100">
                 {/* Sidebar cố định bên trái */}
                 {!isTestActive && <Sidebar />}
-                
+
                 {/* Nội dung thay đổi (Outlet) bên phải */}
                 <div className={`${isTestActive ? 'col-12' : 'col-md-9 col-lg-10'} p-4 overflow-auto h-100`}>
-                    <Outlet /> 
+                    <Outlet />
                 </div>
             </div>
         </div>

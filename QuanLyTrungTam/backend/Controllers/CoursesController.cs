@@ -1,3 +1,4 @@
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Models;
@@ -41,7 +42,7 @@ public class CoursesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeByPermission("COURSES_CREATE")]
     public async Task<IActionResult> Create([FromBody] UpsertCourseRequestDto request)
     {
         var validation = await ValidateRequestAsync(request);
@@ -68,7 +69,7 @@ public class CoursesController : ControllerBase
     }
 
     [HttpPut("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeByPermission("COURSES_EDIT")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpsertCourseRequestDto request)
     {
         var course = await _db.Khoahocs.FirstOrDefaultAsync(c => c.MaKhoaHoc == id && c.DaXoa != true);
@@ -94,7 +95,7 @@ public class CoursesController : ControllerBase
     }
 
     [HttpDelete("{id:guid}")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeByPermission("COURSES_DELETE")]
     public async Task<IActionResult> Delete(Guid id)
     {
         var course = await _db.Khoahocs.FirstOrDefaultAsync(c => c.MaKhoaHoc == id && c.DaXoa != true);

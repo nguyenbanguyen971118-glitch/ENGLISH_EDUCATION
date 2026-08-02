@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Models;
@@ -372,11 +373,26 @@ namespace backend.Controllers
                 .Select(x => new ScheduleLookupItemDto { Id = x.MaLopHoc, Name = x.TenLop })
                 .ToListAsync();
 
-            var teachers = await _db.Giangviens
+            var rawTeachers = await _db.Giangviens
                 .Where(x => x.DaXoa == null || x.DaXoa == false)
                 .OrderBy(x => x.MaNguoiDungNavigation.HoTen)
-                .Select(x => new ScheduleLookupItemDto { Id = x.MaGiangVien, Name = x.MaNguoiDungNavigation.HoTen })
+                .Select(x => new
+                {
+                    x.MaGiangVien,
+                    x.MaNguoiDungNavigation.HoTen,
+                    Specializations = _db.GiangvienKhoahocs
+                        .Where(gk => gk.MaGiangVien == x.MaGiangVien)
+                        .Select(gk => gk.MaKhoaHocNavigation.TenKhoaHoc)
+                        .ToList()
+                })
                 .ToListAsync();
+
+            var teachers = rawTeachers.Select(t => new ScheduleLookupItemDto
+            {
+                Id = t.MaGiangVien,
+                Name = t.HoTen + (t.Specializations.Any() ? " (" + string.Join(", ", t.Specializations) + ")" : "")
+            }).ToList();
+
 
             var rooms = await _db.Phonghocs
                 .Where(x => x.DaXoa == null || x.DaXoa == false)
@@ -1105,7 +1121,7 @@ namespace backend.Controllers
         /// <summary>
         /// Lấy danh sách yêu cầu đổi lịch chờ duyệt (chỉ admin)
         /// </summary>
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("SCHEDULE_CHANGE_REQUEST_ADMIN")]
         [HttpGet("change-requests/pending")]
         public async Task<IActionResult> GetPendingScheduleChangeRequests()
         {
@@ -1148,7 +1164,7 @@ namespace backend.Controllers
         /// <summary>
         /// Admin duyệt yêu cầu đổi lịch
         /// </summary>
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("SCHEDULE_CHANGE_REQUEST_ADMIN")]
         [HttpPost("change-request/approve")]
         public async Task<IActionResult> ApproveScheduleChangeRequest([FromBody] ApproveScheduleChangeRequestDto dto)
         {
@@ -1179,7 +1195,7 @@ namespace backend.Controllers
         /// <summary>
         /// Admin từ chối yêu cầu đổi lịch
         /// </summary>
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("SCHEDULE_CHANGE_REQUEST_ADMIN")]
         [HttpPost("change-request/reject")]
         public async Task<IActionResult> RejectScheduleChangeRequest([FromBody] ApproveScheduleChangeRequestDto dto)
         {

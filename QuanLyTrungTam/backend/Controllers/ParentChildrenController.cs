@@ -1,3 +1,4 @@
+using backend.Attributes;
 using backend.Data;
 using backend.DTOs;
 using backend.Helpers;
@@ -44,7 +45,7 @@ public class ParentChildrenController : ControllerBase
     }
 
     [HttpPost("api/parents/{parentUserId:guid}/children")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeByPermission("PARENT_CHILDREN_EDIT")]
     public async Task<IActionResult> AddChild(Guid parentUserId, [FromBody] AddParentChildRequestDto request)
     {
         var parent = await _db.Phuhuynhs.FirstOrDefaultAsync(x => x.MaNguoiDung == parentUserId && x.DaXoa != true);
@@ -82,7 +83,7 @@ public class ParentChildrenController : ControllerBase
     }
 
     [HttpDelete("api/parents/{parentUserId:guid}/children/{studentId:guid}")]
-    [Authorize(Roles = "Admin")]
+    [AuthorizeByPermission("PARENT_CHILDREN_EDIT")]
     public async Task<IActionResult> RemoveChild(Guid parentUserId, Guid studentId)
     {
         var parent = await _db.Phuhuynhs.FirstOrDefaultAsync(x => x.MaNguoiDung == parentUserId && x.DaXoa != true);

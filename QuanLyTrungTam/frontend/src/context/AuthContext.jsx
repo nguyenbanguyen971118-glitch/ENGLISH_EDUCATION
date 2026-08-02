@@ -34,6 +34,11 @@ export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
+    const userRef = React.useRef(user);
+    useEffect(() => {
+        userRef.current = user;
+    }, [user]);
+
     useEffect(() => {
         // Kiểm tra xem đã đăng nhập trước đó chưa (trong localStorage)
         const savedUser = localStorage.getItem('user');
@@ -92,20 +97,21 @@ export const AuthProvider = ({ children }) => {
     // - chuc nang: Gui request refresh token de cap new access token khi het han.
     // - nmkhue -31/3/2026
     const refreshAccessToken = async () => {
-        if (!user?.sessionId || !user?.refreshToken) {
+        const currentUser = userRef.current;
+        if (!currentUser?.sessionId || !currentUser?.refreshToken) {
             return { success: false, message: 'Không tìm thấy refresh token' };
         }
 
         try {
-            const result = await authApi.refresh(user.sessionId, user.refreshToken);
+            const result = await authApi.refresh(currentUser.sessionId, currentUser.refreshToken);
 
             if (result?.success && result?.data) {
                 // Cập nhật user với token mới
                 const updatedUser = {
-                    ...user,
+                    ...currentUser,
                     token: result.data.accessToken,
-                    refreshToken: result.data.refreshToken || user.refreshToken,
-                    sessionId: result.data.sessionId || user.sessionId
+                    refreshToken: result.data.refreshToken || currentUser.refreshToken,
+                    sessionId: result.data.sessionId || currentUser.sessionId
                 };
                 login(updatedUser);
                 return { success: true, message: 'Token đã được làm mới' };

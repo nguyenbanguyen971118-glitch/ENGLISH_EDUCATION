@@ -1,4 +1,5 @@
-﻿using backend.DTOs;
+using backend.Attributes;
+using backend.DTOs;
 using backend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -29,7 +30,7 @@ namespace backend.Controllers
         /// Lấy tất cả thông báo (chỉ Admin)
         /// </summary>
         [HttpGet]
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("NOTIFICATIONS_VIEW_ALL")]
         public async Task<IActionResult> GetAll()
         {
             var result = await _notificationService.GetAllAsync();
@@ -110,7 +111,7 @@ namespace backend.Controllers
         /// Tạo thông báo mới (chỉ Admin). Hỗ trợ đính kèm nhiều file (Word, Excel, PowerPoint, PDF).
         /// </summary>
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("NOTIFICATIONS_CREATE")]
         [RequestSizeLimit(250_000_000)]
         public async Task<IActionResult> Create([FromForm] CreateNotificationDto dto)
         {
@@ -150,7 +151,7 @@ namespace backend.Controllers
         /// Cập nhật thông báo (chỉ Admin)
         /// </summary>
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("NOTIFICATIONS_EDIT")]
         public async Task<IActionResult> Update(Guid id, [FromBody] UpdateNotificationDto dto)
         {
             dto.Id = id; // Đảm bảo ID đồng nhất
@@ -162,7 +163,7 @@ namespace backend.Controllers
         /// Xóa thông báo (chỉ Admin)
         /// </summary>
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+        [AuthorizeByPermission("NOTIFICATIONS_DELETE")]
         public async Task<IActionResult> Delete(Guid id)
         {
             var result = await _notificationService.DeleteAsync(id, GetCurrentUserId());

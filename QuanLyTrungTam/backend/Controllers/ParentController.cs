@@ -12,7 +12,7 @@ namespace QuanLyTrungTam.Controllers
 {
     // Controller phục vụ toàn bộ luồng hồ sơ phụ huynh:
     // xem profile, cập nhật thông tin, upload avatar, xóa avatar.
-    [Authorize(Roles = "Phu_Huynh")]
+    [Authorize] // Profile cá nhân - chỉ cần đăng nhập, bảo vệ bằng userId từ JWT
     [Route("api/[controller]")]
     [ApiController]
     public class ParentController : ControllerBase

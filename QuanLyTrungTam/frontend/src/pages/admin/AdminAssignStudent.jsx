@@ -24,7 +24,7 @@ const AdminAssignStudent = () => {
     Promise.all([p0Api.classes.list(), p0Api.users.list()])
       .then(([classRows, userRows]) => {
         setClasses(classRows || []);
-        setStudents((userRows || []).filter((item) => (item.roles || []).some((role) => role.name === "Hoc_Sinh") && item.profileId));
+        setStudents((userRows || []).filter((item) => (item.accountType === 3 || (item.roles || []).some((role) => role.name === "Hoc_Sinh")) && item.profileId));
       })
       .catch((err) => setError(err.message || "Khong tai duoc du lieu."))
       .finally(() => setLoading(false));
