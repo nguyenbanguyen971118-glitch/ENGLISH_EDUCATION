@@ -1,58 +1,59 @@
-USE HeThongHocOnline_Final;
+USE railway;
 
 -- ==============================================================================
 -- XÓA DỮ LIỆU CŨ (DỌN DẸP SẠCH TRƯỚC KHI NẠP DEMO)
 -- ==============================================================================
-SET FOREIGN_KEY_CHECKS = 0;
-TRUNCATE TABLE YeuCauLichDay; 
-TRUNCATE TABLE BuoiHoc; 
-TRUNCATE TABLE GiangVienLopHoc;
-TRUNCATE TABLE HocSinhLopHoc; 
-TRUNCATE TABLE PhuHuynhHocSinh; 
-TRUNCATE TABLE NguoiDungVaiTro;
-TRUNCATE TABLE GiangVien; 
-TRUNCATE TABLE HocSinh; 
-TRUNCATE TABLE PhuHuynh;
-TRUNCATE TABLE NguoiDung; 
-TRUNCATE TABLE LopHoc; 
-TRUNCATE TABLE KhoaHoc;
-TRUNCATE TABLE PhongHoc; 
-TRUNCATE TABLE TietHoc;
-SET FOREIGN_KEY_CHECKS = 1;
+set foreign_key_checks = 0;
+truncate table yeucaulichday;
+truncate table buoihoc;
+truncate table giangvienlophoc;
+truncate table hocsinhlophoc;
+truncate table phuhuynhhocsinh;
+truncate table nguoidungvaitro;
+truncate table giangvien;
+truncate table hocsinh;
+truncate table phuhuynh;
+truncate table nguoidung;
+truncate table lophoc;
+truncate table khoahoc;
+truncate table phonghoc;
+truncate table tiethoc;
+set foreign_key_checks = 1;
 
 -- ==============================================================================
 -- THIẾT LẬP KHUNG GIỜ HỌC (14 TIẾT)
 -- ==============================================================================
-INSERT INTO TietHoc (MaTiet, TenTiet, GioBatDau, GioKetThuc) VALUES
-(1, 'Tiết 1', '07:00:00', '07:50:00'), (2, 'Tiết 2', '07:55:00', '08:45:00'),
-(3, 'Tiết 3', '08:50:00', '09:40:00'), (4, 'Tiết 4', '09:50:00', '10:40:00'),
-(5, 'Tiết 5', '10:45:00', '11:35:00'), (6, 'Tiết 6', '12:30:00', '13:20:00'),
-(7, 'Tiết 7', '13:25:00', '14:15:00'), (8, 'Tiết 8', '14:20:00', '15:10:00'),
-(9, 'Tiết 9', '15:20:00', '16:10:00'), (10, 'Tiết 10', '16:15:00', '17:05:00'),
-(11, 'Tiết 11', '17:30:00', '18:20:00'), (12, 'Tiết 12', '18:25:00', '19:15:00'),
-(13, 'Tiết 13', '19:20:00', '20:10:00'), (14, 'Tiết 14', '20:15:00', '21:05:00');
+insert into tiethoc (matiet, tentiet, giobatdau, gioketthuc) values
+(1, 'tiết 1', '07:00:00', '07:50:00'), (2, 'tiết 2', '07:55:00', '08:45:00'),
+(3, 'tiết 3', '08:50:00', '09:40:00'), (4, 'tiết 4', '09:50:00', '10:40:00'),
+(5, 'tiết 5', '10:45:00', '11:35:00'), (6, 'tiết 6', '12:30:00', '13:20:00'),
+(7, 'tiết 7', '13:25:00', '14:15:00'), (8, 'tiết 8', '14:20:00', '15:10:00'),
+(9, 'tiết 9', '15:20:00', '16:10:00'), (10, 'tiết 10', '16:15:00', '17:05:00'),
+(11, 'tiết 11', '17:30:00', '18:20:00'), (12, 'tiết 12', '18:25:00', '19:15:00'),
+(13, 'tiết 13', '19:20:00', '20:10:00'), (14, 'tiết 14', '20:15:00', '21:05:00');
 
 -- ==============================================================================
 -- TẠO CÁC KHÓA HỌC (CHUYÊN VỀ TIẾNG ANH)
 -- ==============================================================================
-SET @kh_pt = UUID(), @kh_ielts = UUID();
-INSERT INTO KhoaHoc (MaKhoaHoc, TenKhoaHoc, MoTa, GiaCoBan, DaXoa) VALUES
-(@kh_pt, 'Tiếng Anh Phổ Thông', 'Chương trình Tiếng Anh bám sát SGK từ lớp 1-12', 5000000, 0),
-(@kh_ielts, 'Lộ trình IELTS chuyên sâu', 'Target 6.5 - 7.5+', 15000000, 0);
+set @kh_pt = uuid(), @kh_ielts = uuid();
+
+insert into khoahoc (makhoahoc, tenkhoahoc, mota, giacoban, daxoa) values
+(@kh_pt, 'tiếng anh phổ thông', 'chương trình tiếng anh bám sát sgk từ lớp 1-12', 5000000, 0),
+(@kh_ielts, 'lộ trình ielts chuyên sâu', 'target 6.5 - 7.5+', 15000000, 0);
 
 -- ==============================================================================
 -- TẠO CÁC LỚP HỌC (LỚP 1 -> 12 VÀ CÁC LỚP IELTS)
 -- ==============================================================================
-SET @c_l1=UUID(), @c_l2=UUID(), @c_l3=UUID(), @c_l4=UUID(), @c_l5=UUID(), @c_l6=UUID();
-SET @c_l7=UUID(), @c_l8=UUID(), @c_l9=UUID(), @c_l10=UUID(), @c_l11=UUID(), @c_l12=UUID();
-SET @c_i1=UUID(), @c_i2=UUID(), @c_i3=UUID();
+set @c_l1=uuid(), @c_l2=uuid(), @c_l3=uuid(), @c_l4=uuid(), @c_l5=uuid(), @c_l6=uuid();
+set @c_l7=uuid(), @c_l8=uuid(), @c_l9=uuid(), @c_l10=uuid(), @c_l11=uuid(), @c_l12=uuid();
+set @c_i1=uuid(), @c_i2=uuid(), @c_i3=uuid();
 
-INSERT INTO LopHoc (MaLopHoc, TenLop, SiSoToiDa, DaXoa) VALUES
-(@c_l1, 'Tiếng Anh Lớp 1', 30, 0), (@c_l2, 'Tiếng Anh Lớp 2', 30, 0), (@c_l3, 'Tiếng Anh Lớp 3', 30, 0),
-(@c_l4, 'Tiếng Anh Lớp 4', 30, 0), (@c_l5, 'Tiếng Anh Lớp 5', 30, 0), (@c_l6, 'Tiếng Anh Lớp 6', 35, 0),
-(@c_l7, 'Tiếng Anh Lớp 7', 35, 0), (@c_l8, 'Tiếng Anh Lớp 8', 35, 0), (@c_l9, 'Tiếng Anh Lớp 9', 35, 0),
-(@c_l10, 'Tiếng Anh Lớp 10', 40, 0), (@c_l11, 'Tiếng Anh Lớp 11', 40, 0), (@c_l12, 'Tiếng Anh Lớp 12', 40, 0),
-(@c_i1, 'IELTS 5.0', 15, 0), (@c_i2, 'IELTS 6.0', 15, 0), (@c_i3, 'IELTS 7.0', 10, 0);
+insert into lophoc (malophoc, tenlop, sisotoida, daxoa) values
+(@c_l1, 'tiếng anh lớp 1', 30, 0), (@c_l2, 'tiếng anh lớp 2', 30, 0), (@c_l3, 'tiếng anh lớp 3', 30, 0),
+(@c_l4, 'tiếng anh lớp 4', 30, 0), (@c_l5, 'tiếng anh lớp 5', 30, 0), (@c_l6, 'tiếng anh lớp 6', 35, 0),
+(@c_l7, 'tiếng anh lớp 7', 35, 0), (@c_l8, 'tiếng anh lớp 8', 35, 0), (@c_l9, 'tiếng anh lớp 9', 35, 0),
+(@c_l10, 'tiếng anh lớp 10', 40, 0), (@c_l11, 'tiếng anh lớp 11', 40, 0), (@c_l12, 'tiếng anh lớp 12', 40, 0),
+(@c_i1, 'ielts 5.0', 15, 0), (@c_i2, 'ielts 6.0', 15, 0), (@c_i3, 'ielts 7.0', 10, 0);
 
 -- ==============================================================================
 -- KHỞI TẠO BIẾN CHO 40 USERS (10 GV, 10 PH, 20 HS)
@@ -72,56 +73,56 @@ SET @hs11=UUID(), @hs12=UUID(), @hs13=UUID(), @hs14=UUID(), @hs15=UUID(), @hs16=
 -- INSERT BẢNG NGUOIDUNG & VAI TRÒ
 -- ==============================================================================
 -- INSERT 10 Giảng Viên
-INSERT INTO NguoiDung (MaNguoiDung, LoaiTaiKhoan, TenDangNhap, MatKhauHash, HoTen, Email, DaXoa) VALUES
-(@u_gv1, 2, 'gv_minhthu', 'hash', 'Trần Thị Minh Thu', 'minhthu@epu.edu.vn', 0),
-(@u_gv2, 2, 'gv_hoanghai', 'hash', 'Lê Hoàng Hải', 'hoanghai@epu.edu.vn', 0),
-(@u_gv3, 2, 'gv_tuananh', 'hash', 'Phạm Tuấn Anh', 'tuananh@epu.edu.vn', 0),
-(@u_gv4, 2, 'gv_bichngoc', 'hash', 'Vũ Bích Ngọc', 'bichngoc@epu.edu.vn', 0),
-(@u_gv5, 2, 'gv_xuantruong', 'hash', 'Đặng Xuân Trường', 'xuantruong@epu.edu.vn', 0),
-(@u_gv6, 2, 'gv_thuha', 'hash', 'Bùi Thu Hà', 'thuha@epu.edu.vn', 0),
-(@u_gv7, 2, 'gv_quanghieu', 'hash', 'Hồ Quang Hiếu', 'quanghieu@epu.edu.vn', 0),
-(@u_gv8, 2, 'gv_phuongthao', 'hash', 'Ngô Phương Thảo', 'phuongthao@epu.edu.vn', 0),
-(@u_gv9, 2, 'gv_vanquyet', 'hash', 'Trịnh Văn Quyết', 'vanquyet@epu.edu.vn', 0),
-(@u_gv10, 2, 'gv_lananh', 'hash', 'Nguyễn Lan Anh', 'lananh@epu.edu.vn', 0);
+insert into nguoidung (manguoidung, loaitaikhoan, tendangnhap, matkhauhash, hoten, email, daxoa) values
+(@u_gv1, 2, 'gv_minhthu', 'hash', 'trần thị minh thu', 'minhthu@epu.edu.vn', 0),
+(@u_gv2, 2, 'gv_hoanghai', 'hash', 'lê hoàng hải', 'hoanghai@epu.edu.vn', 0),
+(@u_gv3, 2, 'gv_tuananh', 'hash', 'phạm tuấn anh', 'tuananh@epu.edu.vn', 0),
+(@u_gv4, 2, 'gv_bichngoc', 'hash', 'vũ bích ngọc', 'bichngoc@epu.edu.vn', 0),
+(@u_gv5, 2, 'gv_xuantruong', 'hash', 'đặng xuân trường', 'xuantruong@epu.edu.vn', 0),
+(@u_gv6, 2, 'gv_thuha', 'hash', 'bùi thu hà', 'thuha@epu.edu.vn', 0),
+(@u_gv7, 2, 'gv_quanghieu', 'hash', 'hồ quang hiếu', 'quanghieu@epu.edu.vn', 0),
+(@u_gv8, 2, 'gv_phuongthao', 'hash', 'ngô phương thảo', 'phuongthao@epu.edu.vn', 0),
+(@u_gv9, 2, 'gv_vanquyet', 'hash', 'trịnh văn quyết', 'vanquyet@epu.edu.vn', 0),
+(@u_gv10, 2, 'gv_lananh', 'hash', 'nguyễn lan anh', 'lananh@epu.edu.vn', 0);
 
 -- INSERT 10 Phụ Huynh
-INSERT INTO NguoiDung (MaNguoiDung, LoaiTaiKhoan, TenDangNhap, MatKhauHash, HoTen, Email, DaXoa) VALUES
-(@u_ph1, 4, 'ph_daiquang', 'hash', 'Trần Đại Quang', 'daiquang.tran@gmail.com', 0),
-(@u_ph2, 4, 'ph_thimai', 'hash', 'Nguyễn Thị Mai', 'thimai.nguyen@gmail.com', 0),
-(@u_ph3, 4, 'ph_vanluan', 'hash', 'Lê Văn Luân', 'vanluan.le@gmail.com', 0),
-(@u_ph4, 4, 'ph_thuthuy', 'hash', 'Phạm Thu Thủy', 'thuthuy.pham@gmail.com', 0),
-(@u_ph5, 4, 'ph_anhtuan', 'hash', 'Hoàng Anh Tuấn', 'anhtuan.hoang@gmail.com', 0),
-(@u_ph6, 4, 'ph_thihong', 'hash', 'Vũ Thị Hồng', 'thihong.vu@gmail.com', 0),
-(@u_ph7, 4, 'ph_tridung', 'hash', 'Đặng Trí Dũng', 'tridung.dang@gmail.com', 0),
-(@u_ph8, 4, 'ph_vanhung', 'hash', 'Bùi Văn Hùng', 'vanhung.bui@gmail.com', 0),
-(@u_ph9, 4, 'ph_thituyet', 'hash', 'Phan Thị Tuyết', 'thituyet.phan@gmail.com', 0),
-(@u_ph10, 4, 'ph_minhkhang', 'hash', 'Đỗ Minh Khang', 'minhkhang.do@gmail.com', 0);
+insert into nguoidung (manguoidung, loaitaikhoan, tendangnhap, matkhauhash, hoten, email, daxoa) values
+(@u_ph1, 4, 'ph_daiquang', 'hash', 'trần đại quang', 'daiquang.tran@gmail.com', 0),
+(@u_ph2, 4, 'ph_thimai', 'hash', 'nguyễn thị mai', 'thimai.nguyen@gmail.com', 0),
+(@u_ph3, 4, 'ph_vanluan', 'hash', 'lê văn luân', 'vanluan.le@gmail.com', 0),
+(@u_ph4, 4, 'ph_thuthuy', 'hash', 'phạm thu thủy', 'thuthuy.pham@gmail.com', 0),
+(@u_ph5, 4, 'ph_anhtuan', 'hash', 'hoàng anh tuấn', 'anhtuan.hoang@gmail.com', 0),
+(@u_ph6, 4, 'ph_thihong', 'hash', 'vũ thị hồng', 'thihong.vu@gmail.com', 0),
+(@u_ph7, 4, 'ph_tridung', 'hash', 'đặng trí dũng', 'tridung.dang@gmail.com', 0),
+(@u_ph8, 4, 'ph_vanhung', 'hash', 'bùi văn hùng', 'vanhung.bui@gmail.com', 0),
+(@u_ph9, 4, 'ph_thituyet', 'hash', 'phan thị tuyết', 'thituyet.phan@gmail.com', 0),
+(@u_ph10, 4, 'ph_minhkhang', 'hash', 'đỗ minh khang', 'minhkhang.do@gmail.com', 0);
 
 -- INSERT 20 Học Sinh
-INSERT INTO NguoiDung (MaNguoiDung, LoaiTaiKhoan, TenDangNhap, MatKhauHash, HoTen, Email, DaXoa) VALUES
-(@u_hs1, 3, 'hs_tranlam', 'hash', 'Trần Lâm', 'tranlam@gmail.com', 0),
-(@u_hs2, 3, 'hs_tranlena', 'hash', 'Trần Lê Na', 'tranlena@gmail.com', 0),
-(@u_hs3, 3, 'hs_nguyenbach', 'hash', 'Nguyễn Hoàng Bách', 'hoangbach@gmail.com', 0),
-(@u_hs4, 3, 'hs_nguyenyen', 'hash', 'Nguyễn Thị Yến', 'thiyen@gmail.com', 0),
-(@u_hs5, 3, 'hs_lebaotram', 'hash', 'Lê Bảo Trâm', 'baotram@gmail.com', 0),
-(@u_hs6, 3, 'hs_leminhtriet', 'hash', 'Lê Minh Triết', 'minhtriet@gmail.com', 0),
-(@u_hs7, 3, 'hs_phamgiabao', 'hash', 'Phạm Gia Bảo', 'giabao@gmail.com', 0),
-(@u_hs8, 3, 'hs_phamhuonggiang', 'hash', 'Phạm Hương Giang', 'huonggiang@gmail.com', 0),
-(@u_hs9, 3, 'hs_hoangminhdat', 'hash', 'Hoàng Minh Đạt', 'minhdat@gmail.com', 0),
-(@u_hs10, 3, 'hs_hoangthutrang', 'hash', 'Hoàng Thu Trang', 'thutrang@gmail.com', 0),
-(@u_hs11, 3, 'hs_vutuankiet', 'hash', 'Vũ Tuấn Kiệt', 'tuankiet@gmail.com', 0),
-(@u_hs12, 3, 'hs_vuphuonganh', 'hash', 'Vũ Phương Anh', 'phuonganh@gmail.com', 0),
-(@u_hs13, 3, 'hs_dangquynhchi', 'hash', 'Đặng Quỳnh Chi', 'quynhchi@gmail.com', 0),
-(@u_hs14, 3, 'hs_danghaidang', 'hash', 'Đặng Hải Đăng', 'haidang@gmail.com', 0),
-(@u_hs15, 3, 'hs_buiducphat', 'hash', 'Bùi Đức Phát', 'ducphat@gmail.com', 0),
-(@u_hs16, 3, 'hs_buingocdiep', 'hash', 'Bùi Ngọc Diệp', 'ngocdiep@gmail.com', 0),
-(@u_hs17, 3, 'hs_phanbaolong', 'hash', 'Phan Bảo Long', 'baolong@gmail.com', 0),
-(@u_hs18, 3, 'hs_phanthaovy', 'hash', 'Phan Thảo Vy', 'thaovy@gmail.com', 0),
-(@u_hs19, 3, 'hs_doquangsang', 'hash', 'Đỗ Quang Sang', 'quangsang@gmail.com', 0),
-(@u_hs20, 3, 'hs_dogiahan', 'hash', 'Đỗ Gia Hân', 'giahan@gmail.com', 0);
+insert into nguoidung (manguoidung, loaitaikhoan, tendangnhap, matkhauhash, hoten, email, daxoa) values
+(@u_hs1, 3, 'hs_tranlam', 'hash', 'trần lâm', 'tranlam@gmail.com', 0),
+(@u_hs2, 3, 'hs_tranlena', 'hash', 'trần lê na', 'tranlena@gmail.com', 0),
+(@u_hs3, 3, 'hs_nguyenbach', 'hash', 'nguyễn hoàng bách', 'hoangbach@gmail.com', 0),
+(@u_hs4, 3, 'hs_nguyenyen', 'hash', 'nguyễn thị yến', 'thiyen@gmail.com', 0),
+(@u_hs5, 3, 'hs_lebaotram', 'hash', 'lê bảo trâm', 'baotram@gmail.com', 0),
+(@u_hs6, 3, 'hs_leminhtriet', 'hash', 'lê minh triết', 'minhtriet@gmail.com', 0),
+(@u_hs7, 3, 'hs_phamgiabao', 'hash', 'phạm gia bảo', 'giabao@gmail.com', 0),
+(@u_hs8, 3, 'hs_phamhuonggiang', 'hash', 'phạm hương giang', 'huonggiang@gmail.com', 0),
+(@u_hs9, 3, 'hs_hoangminhdat', 'hash', 'hoàng minh đạt', 'minhdat@gmail.com', 0),
+(@u_hs10, 3, 'hs_hoangthutrang', 'hash', 'hoàng thu trang', 'thutrang@gmail.com', 0),
+(@u_hs11, 3, 'hs_vutuankiet', 'hash', 'vũ tuấn kiệt', 'tuankiet@gmail.com', 0),
+(@u_hs12, 3, 'hs_vuphuonganh', 'hash', 'vũ phương anh', 'phuonganh@gmail.com', 0),
+(@u_hs13, 3, 'hs_dangquynhchi', 'hash', 'đặng quỳnh chi', 'quynhchi@gmail.com', 0),
+(@u_hs14, 3, 'hs_danghaidang', 'hash', 'đặng hải đăng', 'haidang@gmail.com', 0),
+(@u_hs15, 3, 'hs_buiducphat', 'hash', 'bùi đức phát', 'ducphat@gmail.com', 0),
+(@u_hs16, 3, 'hs_buingocdiep', 'hash', 'bùi ngọc diệp', 'ngocdiep@gmail.com', 0),
+(@u_hs17, 3, 'hs_phanbaolong', 'hash', 'phan bảo long', 'baolong@gmail.com', 0),
+(@u_hs18, 3, 'hs_phanthaovy', 'hash', 'phan thảo vy', 'thaovy@gmail.com', 0),
+(@u_hs19, 3, 'hs_doquangsang', 'hash', 'đỗ quang sang', 'quangsang@gmail.com', 0),
+(@u_hs20, 3, 'hs_dogiahan', 'hash', 'đỗ gia hân', 'giahan@gmail.com', 0);
 
 -- INSERT Quyền (NguoiDungVaiTro)
-INSERT INTO NguoiDungVaiTro (MaNguoiDung, MaVaiTro) VALUES 
+insert into nguoidungvaitro (manguoidung, mavaitro) values 
 (@u_gv1, 2), (@u_gv2, 2), (@u_gv3, 2), (@u_gv4, 2), (@u_gv5, 2), (@u_gv6, 2), (@u_gv7, 2), (@u_gv8, 2), (@u_gv9, 2), (@u_gv10, 2),
 (@u_ph1, 4), (@u_ph2, 4), (@u_ph3, 4), (@u_ph4, 4), (@u_ph5, 4), (@u_ph6, 4), (@u_ph7, 4), (@u_ph8, 4), (@u_ph9, 4), (@u_ph10, 4),
 (@u_hs1, 3), (@u_hs2, 3), (@u_hs3, 3), (@u_hs4, 3), (@u_hs5, 3), (@u_hs6, 3), (@u_hs7, 3), (@u_hs8, 3), (@u_hs9, 3), (@u_hs10, 3),
@@ -130,164 +131,54 @@ INSERT INTO NguoiDungVaiTro (MaNguoiDung, MaVaiTro) VALUES
 -- ==============================================================================
 -- INSERT PROFILE (GIẢNG VIÊN, HỌC SINH, PHỤ HUYNH)
 -- ==============================================================================
-INSERT INTO GiangVien (MaGiangVien, MaNguoiDung, TrinhDoChuyenMon, DaXoa) VALUES
-(@gv1, @u_gv1, 'Sư phạm Tiếng Anh', 0), (@gv2, @u_gv2, 'Cử nhân Ngôn ngữ Anh', 0), (@gv3, @u_gv3, 'Thạc sĩ TESOL', 0), (@gv4, @u_gv4, 'IELTS 8.0, Nghiệp vụ Sư phạm', 0),
-(@gv5, @u_gv5, 'Sư phạm Tiếng Anh Tiểu học', 0), (@gv6, @u_gv6, 'Cử nhân Ngôn ngữ Anh', 0), (@gv7, @u_gv7, 'IELTS 8.0', 0), (@gv8, @u_gv8, 'IELTS 8.5', 0),
-(@gv9, @u_gv9, 'Thạc sĩ Ngôn ngữ học', 0), (@gv10, @u_gv10, 'IELTS 8.5, TESOL', 0);
+insert into giangvien (magiangvien, manguoidung, trinhdochuyenmon, daxoa) values
+(@gv1, @u_gv1, 'sư phạm tiếng anh', 0), (@gv2, @u_gv2, 'cử nhân ngôn ngữ anh', 0), (@gv3, @u_gv3, 'thạc sĩ tesol', 0), (@gv4, @u_gv4, 'ielts 8.0, nghiệp vụ sư phạm', 0),
+(@gv5, @u_gv5, 'sư phạm tiếng anh tiểu học', 0), (@gv6, @u_gv6, 'cử nhân ngôn ngữ anh', 0), (@gv7, @u_gv7, 'ielts 8.0', 0), (@gv8, @u_gv8, 'ielts 8.5', 0),
+(@gv9, @u_gv9, 'thạc sĩ ngôn ngữ học', 0), (@gv10, @u_gv10, 'ielts 8.5, tesol', 0);
 
-INSERT INTO PhuHuynh (MaPhuHuynh, MaNguoiDung, SoDienThoai, DaXoa) VALUES
+insert into phuhuynh (maphuhuynh, manguoidung, sodienthoai, daxoa) values
 (@ph1, @u_ph1, '0901234567', 0), (@ph2, @u_ph2, '0988765432', 0), (@ph3, @u_ph3, '0912345678', 0), (@ph4, @u_ph4, '0933456789', 0),
 (@ph5, @u_ph5, '0944567890', 0), (@ph6, @u_ph6, '0977890123', 0), (@ph7, @u_ph7, '0966789012', 0), (@ph8, @u_ph8, '0988901234', 0),
 (@ph9, @u_ph9, '0999012345', 0), (@ph10, @u_ph10, '0900123456', 0);
 
-INSERT INTO HocSinh (MaHocSinh, MaNguoiDung, TruongDangTheoHoc, DaXoa) VALUES
-(@hs1, @u_hs1, 'TH Kim Đồng', 0), (@hs2, @u_hs2, 'TH Kim Đồng', 0), (@hs3, @u_hs3, 'TH Nguyễn Du', 0), (@hs4, @u_hs4, 'TH Nguyễn Du', 0),
-(@hs5, @u_hs5, 'THCS Cầu Giấy', 0), (@hs6, @u_hs6, 'THCS Cầu Giấy', 0), (@hs7, @u_hs7, 'THCS Trưng Vương', 0), (@hs8, @u_hs8, 'THCS Trưng Vương', 0),
-(@hs9, @u_hs9, 'THPT Chu Văn An', 0), (@hs10, @u_hs10, 'THPT Chuyên Sư Phạm', 0), (@hs11, @u_hs11, 'THPT Yên Hòa', 0), (@hs12, @u_hs12, 'THPT Kim Liên', 0),
-(@hs13, @u_hs13, 'THPT Phan Đình Phùng', 0), (@hs14, @u_hs14, 'THPT Việt Đức', 0), (@hs15, @u_hs15, 'THPT Trần Phú', 0), (@hs16, @u_hs16, 'ĐH Ngoại Thương', 0),
-(@hs17, @u_hs17, 'ĐH Kinh tế Quốc dân', 0), (@hs18, @u_hs18, 'ĐH Bách Khoa', 0), (@hs19, @u_hs19, 'ĐH Quốc Gia', 0), (@hs20, @u_hs20, 'ĐH FPT', 0);
+insert into hocsinh (mahocsinh, manguoidung, truongdangtheohoc, daxoa) values
+(@hs1, @u_hs1, 'th kim đồng', 0), (@hs2, @u_hs2, 'th kim đồng', 0), (@hs3, @u_hs3, 'th nguyễn du', 0), (@hs4, @u_hs4, 'th nguyễn du', 0),
+(@hs5, @u_hs5, 'thcs cầu giấy', 0), (@hs6, @u_hs6, 'thcs cầu giấy', 0), (@hs7, @u_hs7, 'thcs trưng vương', 0), (@hs8, @u_hs8, 'thcs trưng vương', 0),
+(@hs9, @u_hs9, 'thpt chu văn an', 0), (@hs10, @u_hs10, 'thpt chuyên sư phạm', 0), (@hs11, @u_hs11, 'thpt yên hòa', 0), (@hs12, @u_hs12, 'thpt kim liên', 0),
+(@hs13, @u_hs13, 'thpt phan đình phùng', 0), (@hs14, @u_hs14, 'thpt việt đức', 0), (@hs15, @u_hs15, 'thpt trần phú', 0), (@hs16, @u_hs16, 'đh ngoại thương', 0),
+(@hs17, @u_hs17, 'đh kinh tế quốc dân', 0), (@hs18, @u_hs18, 'đh bách khoa', 0), (@hs19, @u_hs19, 'đh quốc gia', 0), (@hs20, @u_hs20, 'đh fpt', 0);
 
--- Map: 1 Phụ huynh quản lý 2 Học sinh (cùng họ)
-INSERT INTO PhuHuynhHocSinh (MaPhuHuynh, MaHocSinh, MaQuanHe) VALUES 
-(@ph1, @hs1, NULL), (@ph1, @hs2, NULL), (@ph2, @hs3, NULL), (@ph2, @hs4, NULL),
-(@ph3, @hs5, NULL), (@ph3, @hs6, NULL), (@ph4, @hs7, NULL), (@ph4, @hs8, NULL),
-(@ph5, @hs9, NULL), (@ph5, @hs10, NULL), (@ph6, @hs11, NULL), (@ph6, @hs12, NULL),
-(@ph7, @hs13, NULL), (@ph7, @hs14, NULL), (@ph8, @hs15, NULL), (@ph8, @hs16, NULL),
-(@ph9, @hs17, NULL), (@ph9, @hs18, NULL), (@ph10, @hs19, NULL), (@ph10, @hs20, NULL);
+-- map: 1 phụ huynh quản lý 2 học sinh (cùng họ)
+insert into phuhuynhhocsinh (maphuhuynh, mahocsinh, maquanhe) values
+(@ph1, @hs1, null), (@ph1, @hs2, null), (@ph2, @hs3, null), (@ph2, @hs4, null),
+(@ph3, @hs5, null), (@ph3, @hs6, null), (@ph4, @hs7, null), (@ph4, @hs8, null),
+(@ph5, @hs9, null), (@ph5, @hs10, null), (@ph6, @hs11, null), (@ph6, @hs12, null),
+(@ph7, @hs13, null), (@ph7, @hs14, null), (@ph8, @hs15, null), (@ph8, @hs16, null),
+(@ph9, @hs17, null), (@ph9, @hs18, null), (@ph10, @hs19, null), (@ph10, @hs20, null);
 
 -- ==============================================================================
--- PHÂN CÔNG GIẢNG DẠY VÀ NHẬP HỌC (LỚP HỌC)
+-- phân công giảng dạy và nhập học (lớp học)
 -- ==============================================================================
-INSERT INTO GiangVienLopHoc (MaLopHoc, MaGiangVien, LoaiVaiTro) VALUES 
+insert into giangvienlophoc (malophoc, magiangvien, loaivaitro) values
 (@c_l1, @gv5, 1), (@c_l2, @gv5, 1), (@c_l3, @gv5, 1), (@c_l4, @gv5, 1),
 (@c_l5, @gv4, 1), (@c_l6, @gv2, 1), (@c_l7, @gv3, 1), (@c_l8, @gv1, 1),
 (@c_l9, @gv9, 1), (@c_l10, @gv4, 1), (@c_l11, @gv2, 1), (@c_l12, @gv9, 1),
 (@c_i1, @gv6, 1), (@c_i2, @gv7, 1), (@c_i3, @gv10, 1);
 
--- Thêm Học sinh vào các lớp
-INSERT INTO HocSinhLopHoc (MaLopHoc, MaHocSinh, NgayThamGia) VALUES 
-(@c_l1, @hs1, CURDATE()), (@c_l1, @hs2, CURDATE()), (@c_l2, @hs3, CURDATE()), (@c_l2, @hs4, CURDATE()),
-(@c_l5, @hs5, CURDATE()), (@c_l6, @hs6, CURDATE()), (@c_l7, @hs7, CURDATE()), (@c_l8, @hs8, CURDATE()),
-(@c_l10, @hs9, CURDATE()), (@c_l11, @hs10, CURDATE()), (@c_l12, @hs11, CURDATE()), (@c_l12, @hs12, CURDATE()),
-(@c_i1, @hs13, CURDATE()), (@c_i1, @hs14, CURDATE()), (@c_i2, @hs15, CURDATE()), (@c_i2, @hs16, CURDATE()),
-(@c_i3, @hs17, CURDATE()), (@c_i3, @hs18, CURDATE()), (@c_i3, @hs19, CURDATE()), (@c_i3, @hs20, CURDATE());
+-- thêm học sinh vào các lớp
+insert into hocsinhlophoc (malophoc, mahocsinh, ngaythamgia) values
+(@c_l1, @hs1, curdate()), (@c_l1, @hs2, curdate()), (@c_l2, @hs3, curdate()), (@c_l2, @hs4, curdate()),
+(@c_l5, @hs5, curdate()), (@c_l6, @hs6, curdate()), (@c_l7, @hs7, curdate()), (@c_l8, @hs8, curdate()),
+(@c_l10, @hs9, curdate()), (@c_l11, @hs10, curdate()), (@c_l12, @hs11, curdate()), (@c_l12, @hs12, curdate()),
+(@c_i1, @hs13, curdate()), (@c_i1, @hs14, curdate()), (@c_i2, @hs15, curdate()), (@c_i2, @hs16, curdate()),
+(@c_i3, @hs17, curdate()), (@c_i3, @hs18, curdate()), (@c_i3, @hs19, curdate()), (@c_i3, @hs20, curdate());
 
 -- ==============================================================================
--- TẠO DANH SÁCH PHÒNG HỌC
+-- tạo danh sách phòng học
 -- ==============================================================================
-SET @r1=UUID(), @r2=UUID(), @r3=UUID(), @r4=UUID(), @r5=UUID();
-SET @r6=UUID(), @r7=UUID(), @r8=UUID(), @r9=UUID(), @r10=UUID();
+set @r1=uuid(), @r2=uuid(), @r3=uuid(), @r4=uuid(), @r5=uuid();
+set @r6=uuid(), @r7=uuid(), @r8=uuid(), @r9=uuid(), @r10=uuid();
 
-INSERT INTO PhongHoc (MaPhongHoc, TenPhong, SucChua, DaXoa) VALUES 
-(@r1, 'A101', 30, 0), (@r2, 'A102', 30, 0), (@r3, 'A103', 30, 0), (@r4, 'A104', 30, 0), (@r5, 'A105', 40, 0),
-(@r6, 'A106', 40, 0), (@r7, 'A107', 40, 0), (@r8, 'A108', 20, 0), (@r9, 'A109', 20, 0), (@r10, 'A110', 50, 0);
-
--- ==============================================================================
--- TẠO LỊCH HỌC CHI TIẾT CHO CÁC LỚP (2 TUẦN - NGÀY HỌM BỀ)
--- ==============================================================================
-SET @monday = CURDATE() - INTERVAL (WEEKDAY(CURDATE())) DAY;
-
--- === LỚP 1 & 2: GV Trần Thị Minh Thu (Monday & Wednesday) ===
-INSERT INTO BuoiHoc (MaBuoiHoc, MaLopHoc, MaPhongHoc, NgayHoc, MaTietBatDau, MaTietKetThuc, TieuDe, DaXoa) VALUES
-(UUID(), @c_l1, @r1, @monday, 2, 4, 'Tiếng Anh Lớp 1 - Từ vựng cơ bản', 0),
-(UUID(), @c_l1, @r1, DATE_ADD(@monday, INTERVAL 2 DAY), 2, 4, 'Tiếng Anh Lớp 1 - Cách phát âm chữ cái', 0),
-(UUID(), @c_l1, @r1, DATE_ADD(@monday, INTERVAL 7 DAY), 2, 4, 'Tiếng Anh Lớp 1 - Tập viết chữ cái', 0),
-(UUID(), @c_l1, @r1, DATE_ADD(@monday, INTERVAL 9 DAY), 2, 4, 'Tiếng Anh Lớp 1 - Bài kiểm tra tuần', 0),
-
-(UUID(), @c_l2, @r2, DATE_ADD(@monday, INTERVAL 1 DAY), 2, 4, 'Tiếng Anh Lớp 2 - Giới thiệu con vật', 0),
-(UUID(), @c_l2, @r2, DATE_ADD(@monday, INTERVAL 3 DAY), 2, 4, 'Tiếng Anh Lớp 2 - Các loại thực phẩm', 0),
-(UUID(), @c_l2, @r2, DATE_ADD(@monday, INTERVAL 8 DAY), 2, 4, 'Tiếng Anh Lớp 2 - Bài tập luyện tập', 0),
-(UUID(), @c_l2, @r2, DATE_ADD(@monday, INTERVAL 10 DAY), 2, 4, 'Tiếng Anh Lớp 2 - Cuối cùng tuần', 0),
-
--- === LỚP 3 & 4: GV Trần Thị Minh Thu (Tuesday & Thursday) ===
-(UUID(), @c_l3, @r3, DATE_ADD(@monday, INTERVAL 1 DAY), 5, 7, 'Tiếng Anh Lớp 3 - Động từ cơ bản', 0),
-(UUID(), @c_l3, @r3, DATE_ADD(@monday, INTERVAL 3 DAY), 5, 7, 'Tiếng Anh Lớp 3 - Thì hiện tại đơn', 0),
-(UUID(), @c_l3, @r3, DATE_ADD(@monday, INTERVAL 8 DAY), 5, 7, 'Tiếng Anh Lớp 3 - Câu hỏi & Trả lời', 0),
-(UUID(), @c_l3, @r3, DATE_ADD(@monday, INTERVAL 10 DAY), 5, 7, 'Tiếng Anh Lớp 3 - Bài tập tổng hợp', 0),
-
-(UUID(), @c_l4, @r4, DATE_ADD(@monday, INTERVAL 2 DAY), 5, 7, 'Tiếng Anh Lớp 4 - Các tenses cơ bản', 0),
-(UUID(), @c_l4, @r4, DATE_ADD(@monday, INTERVAL 4 DAY), 5, 7, 'Tiếng Anh Lớp 4 - Modal verbs', 0),
-(UUID(), @c_l4, @r4, DATE_ADD(@monday, INTERVAL 9 DAY), 5, 7, 'Tiếng Anh Lớp 4 - Câu gián tiếp', 0),
-(UUID(), @c_l4, @r4, DATE_ADD(@monday, INTERVAL 11 DAY), 5, 7, 'Tiếng Anh Lớp 4 - Kiểm tra định kỳ', 0),
-
--- === LỚP 5: GV Vũ Bích Ngọc (Wednesday & Friday) ===
-(UUID(), @c_l5, @r5, DATE_ADD(@monday, INTERVAL 2 DAY), 9, 11, 'Tiếng Anh Lớp 5 - Từ vựng chủ đề', 0),
-(UUID(), @c_l5, @r5, DATE_ADD(@monday, INTERVAL 4 DAY), 9, 11, 'Tiếng Anh Lớp 5 - Phát triển kỹ năng đọc', 0),
-(UUID(), @c_l5, @r5, DATE_ADD(@monday, INTERVAL 9 DAY), 9, 11, 'Tiếng Anh Lớp 5 - Kỹ năng viết', 0),
-(UUID(), @c_l5, @r5, DATE_ADD(@monday, INTERVAL 11 DAY), 9, 11, 'Tiếng Anh Lớp 5 - Ôn tập tổng kết', 0),
-
--- === LỚP 6: GV Lê Hoàng Hải (Monday & Wednesday) ===
-(UUID(), @c_l6, @r6, @monday, 11, 13, 'Tiếng Anh Lớp 6 - Cấu trúc ngữ pháp', 0),
-(UUID(), @c_l6, @r6, DATE_ADD(@monday, INTERVAL 2 DAY), 11, 13, 'Tiếng Anh Lớp 6 - Bài đọc hiểu', 0),
-(UUID(), @c_l6, @r6, DATE_ADD(@monday, INTERVAL 7 DAY), 11, 13, 'Tiếng Anh Lớp 6 - Listening practice', 0),
-(UUID(), @c_l6, @r6, DATE_ADD(@monday, INTERVAL 9 DAY), 11, 13, 'Tiếng Anh Lớp 6 - Speaking exercise', 0),
-
--- === LỚP 7: GV Phạm Tuấn Anh (Tuesday & Thursday) ===
-(UUID(), @c_l7, @r7, DATE_ADD(@monday, INTERVAL 1 DAY), 6, 8, 'Tiếng Anh Lớp 7 - Present Perfect', 0),
-(UUID(), @c_l7, @r7, DATE_ADD(@monday, INTERVAL 3 DAY), 6, 8, 'Tiếng Anh Lớp 7 - Past tenses', 0),
-(UUID(), @c_l7, @r7, DATE_ADD(@monday, INTERVAL 8 DAY), 6, 8, 'Tiếng Anh Lớp 7 - Conditional sentences', 0),
-(UUID(), @c_l7, @r7, DATE_ADD(@monday, INTERVAL 10 DAY), 6, 8, 'Tiếng Anh Lớp 7 - Ôn tập kiểm tra', 0),
-
--- === LỚP 8: GV Trần Thị Minh Thu (Wednesday & Friday) ===
-(UUID(), @c_l8, @r8, DATE_ADD(@monday, INTERVAL 2 DAY), 7, 9, 'Tiếng Anh Lớp 8 - Reported speech', 0),
-(UUID(), @c_l8, @r8, DATE_ADD(@monday, INTERVAL 4 DAY), 7, 9, 'Tiếng Anh Lớp 8 - Passive voice', 0),
-(UUID(), @c_l8, @r8, DATE_ADD(@monday, INTERVAL 9 DAY), 7, 9, 'Tiếng Anh Lớp 8 - Viết luận', 0),
-(UUID(), @c_l8, @r8, DATE_ADD(@monday, INTERVAL 11 DAY), 7, 9, 'Tiếng Anh Lớp 8 - Luyện tập tổng hợp', 0),
-
--- === LỚP 9: GV Trịnh Văn Quyết (Monday & Wednesday) ===
-(UUID(), @c_l9, @r9, @monday, 13, 14, 'Tiếng Anh Lớp 9 - Ôn thi vào lớp 10', 0),
-(UUID(), @c_l9, @r9, DATE_ADD(@monday, INTERVAL 2 DAY), 13, 14, 'Tiếng Anh Lớp 9 - Đề thi thử', 0),
-(UUID(), @c_l9, @r9, DATE_ADD(@monday, INTERVAL 7 DAY), 13, 14, 'Tiếng Anh Lớp 9 - Chữa bài tập', 0),
-(UUID(), @c_l9, @r9, DATE_ADD(@monday, INTERVAL 9 DAY), 13, 14, 'Tiếng Anh Lớp 9 - Hỏi đáp kiến thức', 0),
-
--- === LỚP 10: GV Vũ Bích Ngọc (Tuesday & Thursday) ===
-(UUID(), @c_l10, @r5, DATE_ADD(@monday, INTERVAL 1 DAY), 1, 3, 'Tiếng Anh Lớp 10 - Cấu trúc câu phức', 0),
-(UUID(), @c_l10, @r5, DATE_ADD(@monday, INTERVAL 3 DAY), 1, 3, 'Tiếng Anh Lớp 10 - Bài đọc tiếng Anh', 0),
-(UUID(), @c_l10, @r5, DATE_ADD(@monday, INTERVAL 8 DAY), 1, 3, 'Tiếng Anh Lớp 10 - Viết câu phức', 0),
-(UUID(), @c_l10, @r5, DATE_ADD(@monday, INTERVAL 10 DAY), 1, 3, 'Tiếng Anh Lớp 10 - Ôn tập môn học', 0),
-
--- === LỚP 11: GV Lê Hoàng Hải (Wednesday & Friday) ===
-(UUID(), @c_l11, @r6, DATE_ADD(@monday, INTERVAL 2 DAY), 3, 5, 'Tiếng Anh Lớp 11 - Cấu trúc nâng cao', 0),
-(UUID(), @c_l11, @r6, DATE_ADD(@monday, INTERVAL 4 DAY), 3, 5, 'Tiếng Anh Lớp 11 - Bài mẫu văn xã hội', 0),
-(UUID(), @c_l11, @r6, DATE_ADD(@monday, INTERVAL 9 DAY), 3, 5, 'Tiếng Anh Lớp 11 - Kỹ năng viết lá thư', 0),
-(UUID(), @c_l11, @r6, DATE_ADD(@monday, INTERVAL 11 DAY), 3, 5, 'Tiếng Anh Lớp 11 - Chuẩn bị thi THPT', 0),
-
--- === LỚP 12: GV Trịnh Văn Quyết (Monday & Wednesday) ===
-(UUID(), @c_l12, @r10, @monday, 4, 6, 'Ôn thi THPT Quốc gia - Ngữ pháp', 0),
-(UUID(), @c_l12, @r10, DATE_ADD(@monday, INTERVAL 2 DAY), 4, 6, 'Ôn thi THPT Quốc gia - Từ vựng', 0),
-(UUID(), @c_l12, @r10, DATE_ADD(@monday, INTERVAL 7 DAY), 4, 6, 'Ôn thi THPT Quốc gia - Đề thi mẫu', 0),
-(UUID(), @c_l12, @r10, DATE_ADD(@monday, INTERVAL 9 DAY), 4, 6, 'Ôn thi THPT Quốc gia - Chữa đề thi', 0),
-
--- === IELTS 5.0: GV Bùi Thu Hà (Tuesday & Thursday) ===
-(UUID(), @c_i1, @r8, DATE_ADD(@monday, INTERVAL 1 DAY), 12, 14, 'IELTS 5.0 - Listening practice', 0),
-(UUID(), @c_i1, @r8, DATE_ADD(@monday, INTERVAL 3 DAY), 12, 14, 'IELTS 5.0 - Reading comprehension', 0),
-(UUID(), @c_i1, @r8, DATE_ADD(@monday, INTERVAL 8 DAY), 12, 14, 'IELTS 5.0 - Writing skills', 0),
-(UUID(), @c_i1, @r8, DATE_ADD(@monday, INTERVAL 10 DAY), 12, 14, 'IELTS 5.0 - Speaking tips', 0),
-
--- === IELTS 6.0: GV Hồ Quang Hiếu (Wednesday & Friday) ===
-(UUID(), @c_i2, @r9, DATE_ADD(@monday, INTERVAL 2 DAY), 8, 10, 'IELTS 6.0 - Advanced listening', 0),
-(UUID(), @c_i2, @r9, DATE_ADD(@monday, INTERVAL 4 DAY), 8, 10, 'IELTS 6.0 - Academic reading', 0),
-(UUID(), @c_i2, @r9, DATE_ADD(@monday, INTERVAL 9 DAY), 8, 10, 'IELTS 6.0 - Essay writing', 0),
-(UUID(), @c_i2, @r9, DATE_ADD(@monday, INTERVAL 11 DAY), 8, 10, 'IELTS 6.0 - Fluency practice', 0),
-
--- === IELTS 7.0: GV Nguyễn Lan Anh (Monday & Wednesday) ===
-(UUID(), @c_i3, @r10, @monday, 10, 12, 'IELTS 7.0 - Native-like listening', 0),
-(UUID(), @c_i3, @r10, DATE_ADD(@monday, INTERVAL 2 DAY), 10, 12, 'IELTS 7.0 - Dense text reading', 0),
-(UUID(), @c_i3, @r10, DATE_ADD(@monday, INTERVAL 7 DAY), 10, 12, 'IELTS 7.0 - High-level writing', 0),
-(UUID(), @c_i3, @r10, DATE_ADD(@monday, INTERVAL 9 DAY), 10, 12, 'IELTS 7.0 - Sophisticated speaking', 0);
-
--- ==============================================================================
--- KIỂM TRA DỮ LIỆU ĐÃ NHẬP
--- ==============================================================================
-SELECT CONCAT('✓ TietHoc: ', COUNT(*)) AS Result FROM TietHoc;
-SELECT CONCAT('✓ KhoaHoc: ', COUNT(*)) AS Result FROM KhoaHoc;
-SELECT CONCAT('✓ LopHoc: ', COUNT(*)) AS Result FROM LopHoc;
-SELECT CONCAT('✓ NguoiDung: ', COUNT(*)) AS Result FROM NguoiDung;
-SELECT CONCAT('✓ GiangVien: ', COUNT(*)) AS Result FROM GiangVien;
-SELECT CONCAT('✓ HocSinh: ', COUNT(*)) AS Result FROM HocSinh;
-SELECT CONCAT('✓ PhuHuynh: ', COUNT(*)) AS Result FROM PhuHuynh;
-SELECT CONCAT('✓ GiangVienLopHoc: ', COUNT(*)) AS Result FROM GiangVienLopHoc;
-SELECT CONCAT('✓ HocSinhLopHoc: ', COUNT(*)) AS Result FROM HocSinhLopHoc;
-SELECT CONCAT('✓ PhuHuynhHocSinh: ', COUNT(*)) AS Result FROM PhuHuynhHocSinh;
-SELECT CONCAT('✓ PhongHoc: ', COUNT(*)) AS Result FROM PhongHoc;
-SELECT CONCAT('✓ BuoiHoc: ', COUNT(*)) AS Result FROM BuoiHoc;
+insert into phonghoc (maphonghoc, tenphong, succhua, daxoa) values
+(@r1, 'a101', 30, 0), (@r2, 'a102', 30, 0), (@r3, 'a103', 30, 0), (@r4, 'a104', 30, 0), (@r5, 'a105', 40, 0),
+(@r6, 'a106', 40, 0), (@r7, 'a107', 40, 0), (@r8, 'a108', 20, 0), (@r9, 'a109', 20, 0), (@r10, 'a110', 50, 0);

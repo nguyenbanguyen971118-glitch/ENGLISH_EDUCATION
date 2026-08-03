@@ -1,0 +1,105 @@
+{
+  "Files": [
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/avatars/avatar_00459f0b587a428d884984f2af08de29_c8faf79d63114f90b5e0d7d90ba4b301.png",
+      "PackagePath": "staticwebassets/uploads/avatars/avatar_00459f0b587a428d884984f2af08de29_c8faf79d63114f90b5e0d7d90ba4b301.png"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/avatars/avatar_89e689d77994464a92cb19b00239d876_c63a095e873242109740c05ace9b5570.png",
+      "PackagePath": "staticwebassets/uploads/avatars/avatar_89e689d77994464a92cb19b00239d876_c63a095e873242109740c05ace9b5570.png"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/avatars/avatar_b3d959788de811f1a3f6623c12af6464_6166dca98d4c4011bd7d36ed6220a9cd.jpg",
+      "PackagePath": "staticwebassets/uploads/avatars/avatar_b3d959788de811f1a3f6623c12af6464_6166dca98d4c4011bd7d36ed6220a9cd.jpg"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/avatars/avatar_b68f1505d18c4f8da32369be3736aebf_0ccb6f0501fb4fd8b470d6517c686eb2.png",
+      "PackagePath": "staticwebassets/uploads/avatars/avatar_b68f1505d18c4f8da32369be3736aebf_0ccb6f0501fb4fd8b470d6517c686eb2.png"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/message-attachments/attachment_03cfe678-f2aa-46a1-a2d2-7758a26c9986.jpeg",
+      "PackagePath": "staticwebassets/uploads/message-attachments/attachment_03cfe678-f2aa-46a1-a2d2-7758a26c9986.jpeg"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/message-attachments/attachment_3a66ccd5-8372-4e85-a719-bb1b50a7bd40.jpeg",
+      "PackagePath": "staticwebassets/uploads/message-attachments/attachment_3a66ccd5-8372-4e85-a719-bb1b50a7bd40.jpeg"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/message-attachments/attachment_71665a96-48ad-4f0c-82bd-01a8c8fe35b5.jpeg",
+      "PackagePath": "staticwebassets/uploads/message-attachments/attachment_71665a96-48ad-4f0c-82bd-01a8c8fe35b5.jpeg"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/message-attachments/attachment_7da7d525-74bd-425a-b7ea-f813c376bb5e.jpg",
+      "PackagePath": "staticwebassets/uploads/message-attachments/attachment_7da7d525-74bd-425a-b7ea-f813c376bb5e.jpg"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/message-attachments/attachment_bd474a1b-0d26-44bd-a16c-3d85624eb96d.jpeg",
+      "PackagePath": "staticwebassets/uploads/message-attachments/attachment_bd474a1b-0d26-44bd-a16c-3d85624eb96d.jpeg"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/message-attachments/attachment_c453d790-6520-46be-9978-946db9759da9.pdf",
+      "PackagePath": "staticwebassets/uploads/message-attachments/attachment_c453d790-6520-46be-9978-946db9759da9.pdf"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/notifications/notif_89a6fc1681f34344b0c32e678148a855_48a6aa43e5d34b979276d6e0f3004780.docx",
+      "PackagePath": "staticwebassets/uploads/notifications/notif_89a6fc1681f34344b0c32e678148a855_48a6aa43e5d34b979276d6e0f3004780.docx"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/notifications/notif_89a6fc1681f34344b0c32e678148a855_49b9712855324f7a91e347b97d278709.docx",
+      "PackagePath": "staticwebassets/uploads/notifications/notif_89a6fc1681f34344b0c32e678148a855_49b9712855324f7a91e347b97d278709.docx"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/notifications/notif_89a6fc1681f34344b0c32e678148a855_4ed684d75fd14f13aa62f3fcdb6bc49a.docx",
+      "PackagePath": "staticwebassets/uploads/notifications/notif_89a6fc1681f34344b0c32e678148a855_4ed684d75fd14f13aa62f3fcdb6bc49a.docx"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/notifications/notif_89a6fc1681f34344b0c32e678148a855_8a358a8c14ee4221ae5c345251fe5082.docx",
+      "PackagePath": "staticwebassets/uploads/notifications/notif_89a6fc1681f34344b0c32e678148a855_8a358a8c14ee4221ae5c345251fe5082.docx"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/notifications/notif_89a6fc1681f34344b0c32e678148a855_d631e2abe6ab4237a48f88fc8aa83f8c.docx",
+      "PackagePath": "staticwebassets/uploads/notifications/notif_89a6fc1681f34344b0c32e678148a855_d631e2abe6ab4237a48f88fc8aa83f8c.docx"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/notifications/notif_ed103d8184ab42278f56ee4bfacb7554_5be53c1a62944e4489f3faa781d48ed5.pdf",
+      "PackagePath": "staticwebassets/uploads/notifications/notif_ed103d8184ab42278f56ee4bfacb7554_5be53c1a62944e4489f3faa781d48ed5.pdf"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/study-materials/seed/teacher-study-content/class-a-daily-conversation-checklist.docx",
+      "PackagePath": "staticwebassets/uploads/study-materials/seed/teacher-study-content/class-a-daily-conversation-checklist.docx"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/study-materials/seed/teacher-study-content/class-a-intro-guide.pdf",
+      "PackagePath": "staticwebassets/uploads/study-materials/seed/teacher-study-content/class-a-intro-guide.pdf"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/study-materials/seed/teacher-study-content/class-b-review-vocabulary.xlsx",
+      "PackagePath": "staticwebassets/uploads/study-materials/seed/teacher-study-content/class-b-review-vocabulary.xlsx"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/study-materials/seed/teacher-study-content/toeic-part1-part2-listening-practice.wav",
+      "PackagePath": "staticwebassets/uploads/study-materials/seed/teacher-study-content/toeic-part1-part2-listening-practice.wav"
+    },
+    {
+      "Id": "/Users/banhan/ENGLISH_EDUCATION/QuanLyTrungTam/backend/wwwroot/uploads/study-materials/study_00459f0b587a428d884984f2af08de29_4eda576324e349839ca7e66e4ac3cee2.docx",
+      "PackagePath": "staticwebassets/uploads/study-materials/study_00459f0b587a428d884984f2af08de29_4eda576324e349839ca7e66e4ac3cee2.docx"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.backend.Microsoft.AspNetCore.StaticWebAssets.props",
+      "PackagePath": "build\\Microsoft.AspNetCore.StaticWebAssets.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.build.backend.props",
+      "PackagePath": "build\\backend.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildMultiTargeting.backend.props",
+      "PackagePath": "buildMultiTargeting\\backend.props"
+    },
+    {
+      "Id": "obj/Debug/net8.0/staticwebassets/msbuild.buildTransitive.backend.props",
+      "PackagePath": "buildTransitive\\backend.props"
+    }
+  ],
+  "ElementsToRemove": []
+}

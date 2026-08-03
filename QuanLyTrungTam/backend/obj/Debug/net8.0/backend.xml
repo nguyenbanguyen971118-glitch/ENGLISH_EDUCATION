@@ -1,0 +1,1014 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>backend</name>
+    </assembly>
+    <members>
+        <member name="T:backend.Attributes.AuthorizeByPermissionAttribute">
+            <summary>
+            Attribute metadata để middleware kiểm tra quyền truy cập dựa vào MaChucNang và MaQuyen.
+            Sử dụng: [AuthorizeByPermission(MaChucNang = 1, PermissionIds = new[] { 2 })]
+            Có thể truyền MaChucNang = 0 để chỉ kiểm tra theo PermissionIds.
+            </summary>
+        </member>
+        <member name="P:backend.Attributes.AuthorizeByPermissionAttribute.MaChucNang">
+            <summary>
+            Mã chức năng (trang) cần kiểm tra
+            </summary>
+        </member>
+        <member name="P:backend.Attributes.AuthorizeByPermissionAttribute.PermissionIds">
+            <summary>
+            Danh sách MaQuyen cần kiểm tra.
+            Nếu user có đủ toàn bộ mã quyền trong danh sách này thì được phép.
+            </summary>
+        </member>
+        <member name="P:backend.Attributes.AuthorizeByPermissionAttribute.PermissionCode">
+            <summary>
+            Mã quyền dạng chuỗi (ví dụ: USERS_CREATE, PAGE_PARENT_SCHEDULE_VIEW)
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.AdminAttendanceController.GetAttendanceSummaries(System.String,System.String,System.Nullable{System.DateOnly},System.Nullable{System.DateOnly})">
+            <summary>
+            GET /api/admin/attendance
+            Query params: classCode, status, fromDate (yyyy-MM-dd), toDate (yyyy-MM-dd)
+            </summary>
+        </member>
+        <member name="T:backend.Controllers.AuthController">
+            <summary>
+            Controller xử lý các nghiệp vụ xác thực: đăng nhập, làm mới token, đăng xuất
+            và cập nhật lại quyền trong phiên làm việc.
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.AuthController.Logout(System.Text.Json.JsonElement)">
+            <summary>
+            Đăng xuất bằng cách vô hiệu hóa session refresh token ở server.
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.AuthController.RefreshPermissions(System.Guid)">
+            <summary>
+            Cập nhật lại danh sách quyền của một người dùng sau khi admin thay đổi phân quyền.
+            Endpoint này giúp FE refresh dữ liệu mà không cần bắt người dùng đăng nhập lại.
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.NotificationController.GetAll">
+            <summary>
+            Lấy tất cả thông báo (chỉ Admin)
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.NotificationController.GetMyNotifications">
+            <summary>
+            Lấy thông báo của người dùng hiện tại
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.NotificationController.GetUnreadNotifications">
+            <summary>
+            Lấy thông báo chưa đọc của người dùng hiện tại
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.NotificationController.GetUnreadCount">
+            <summary>
+            Đếm số lượng thông báo chưa đọc của người dùng hiện tại
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.NotificationController.MarkAsRead(System.Guid)">
+            <summary>
+            Đánh dấu một thông báo là đã đọc
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.NotificationController.MarkAllAsRead">
+            <summary>
+            Đánh dấu tất cả thông báo là đã đọc
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.NotificationController.Create(backend.DTOs.CreateNotificationDto)">
+            <summary>
+            Tạo thông báo mới (chỉ Admin). Hỗ trợ đính kèm nhiều file (Word, Excel, PowerPoint, PDF).
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.NotificationController.DownloadAttachment(System.Guid)">
+            <summary>
+            Tải file đính kèm của một thông báo. Admin tải được mọi file;
+            người dùng khác chỉ tải được file của thông báo mình là người nhận.
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.NotificationController.Update(System.Guid,backend.DTOs.UpdateNotificationDto)">
+            <summary>
+            Cập nhật thông báo (chỉ Admin)
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.NotificationController.Delete(System.Guid)">
+            <summary>
+            Xóa thông báo (chỉ Admin)
+            </summary>
+        </member>
+        <member name="T:backend.Controllers.PermissionsController">
+            <summary>
+            Controller quản lý ma trận phân quyền, nhóm quyền và các thao tác cập nhật quyền.
+            Toàn bộ nghiệp vụ chính được đẩy xuống tầng service để giữ đúng cấu trúc 3 lớp.
+            </summary>
+        </member>
+        <member name="T:backend.Controllers.ReportsController">
+            <summary>
+            API Controller cung cấp các dịch vụ xuất báo cáo thống kê chuyên cần, điểm số
+            và hỗ trợ xuất dữ liệu ra file Excel (.csv) cho các phân hệ Admin, Giáo viên và Học sinh.
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.GetAdminOverview">
+            <summary>
+            Lấy thống kê tổng quan toàn trung tâm (sĩ số, giảng viên, khóa học, chuyên cần và phân bổ điểm số) dành cho Admin.
+            Yêu cầu quyền: PAGE_ADMIN_REPORTS_VIEW
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.ExportAdminReport">
+            <summary>
+            Xuất file Excel (.csv UTF-8 BOM) thống kê tổng quan danh sách lớp học cho Admin.
+            Yêu cầu quyền: PAGE_ADMIN_REPORTS_VIEW
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.GetTeacherOverview">
+            <summary>
+            Lấy thống kê tổng quan của tất cả các lớp giảng dạy dành cho Giáo viên.
+            Yêu cầu quyền: PAGE_TEACHER_REPORTS_VIEW
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.ExportTeacherOverview">
+            <summary>
+            Xuất file Excel (.csv UTF-8 BOM) thống kê tổng quan các lớp phụ trách cho Giáo viên.
+            Yêu cầu quyền: PAGE_TEACHER_REPORTS_VIEW
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.GetTeacherClassOverview(System.Guid)">
+            <summary>
+            Lấy thống kê chuyên cần, phổ điểm bài tập và tiến độ nộp bài chi tiết của từng học sinh trong một lớp học.
+            Yêu cầu quyền: PAGE_TEACHER_REPORTS_VIEW
+            </summary>
+            <param name="classId">Mã định danh duy nhất của lớp học cần xem báo cáo</param>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.ExportTeacherClassReport(System.Guid)">
+            <summary>
+            Xuất báo cáo điểm thi và chuyên cần chi tiết của học sinh trong lớp phụ trách dưới dạng file Excel (.csv).
+            Yêu cầu quyền: PAGE_TEACHER_REPORTS_VIEW
+            </summary>
+            <param name="classId">Mã định danh duy nhất của lớp học cần xuất báo cáo</param>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.GetStudentOverview">
+            <summary>
+            Lấy thống kê kết quả học tập cá nhân (điểm trung bình, chuyên cần, xu hướng điểm bài tập) của học sinh đang đăng nhập.
+            Yêu cầu quyền: PAGE_STUDENT_SCHEDULE_VIEW
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.ExportStudentReport">
+            <summary>
+            Xuất học bạ điện tử cá nhân (lịch sử nộp bài, điểm số) của học sinh đang đăng nhập dưới dạng file Excel (.csv).
+            Yêu cầu quyền: PAGE_STUDENT_SCHEDULE_VIEW
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.GetClassDashboard(System.Guid)">
+            <summary>
+            Lấy thống kê chi tiết của một lớp học phục vụ cho Dashboard.
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.GetStudentCourseDashboard(System.Guid,System.Nullable{System.Guid})">
+            <summary>
+            Lấy dashboard học tập của một học sinh cụ thể trong một lớp học.
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ReportsController.GetParentDashboard">
+            <summary>
+            Lấy danh sách con và thống kê các khoá học của từng con dành cho Phụ huynh.
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ScheduleController.CreateScheduleChangeRequest(backend.DTOs.CreateScheduleChangeRequestDto)">
+            <summary>
+            Giáo viên tạo yêu cầu đổi lịch dạy
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ScheduleController.GetPendingScheduleChangeRequests">
+            <summary>
+            Lấy danh sách yêu cầu đổi lịch chờ duyệt (chỉ admin)
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ScheduleController.GetMyScheduleChangeRequests">
+            <summary>
+            Lấy danh sách yêu cầu đổi lịch của giáo viên đăng nhập
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ScheduleController.GetScheduleChangeRequestDetail(System.Guid)">
+            <summary>
+            Lấy chi tiết một yêu cầu đổi lịch
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ScheduleController.ApproveScheduleChangeRequest(backend.DTOs.ApproveScheduleChangeRequestDto)">
+            <summary>
+            Admin duyệt yêu cầu đổi lịch
+            </summary>
+        </member>
+        <member name="M:backend.Controllers.ScheduleController.RejectScheduleChangeRequest(backend.DTOs.ApproveScheduleChangeRequestDto)">
+            <summary>
+            Admin từ chối yêu cầu đổi lịch
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.PermissionFlatDto">
+            <summary>
+            DTO phẳng dùng để trả dữ liệu quyền theo chức năng cho màn hình ma trận phân quyền.
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.RoleLiteDto">
+            <summary>
+            DTO rút gọn để hiển thị danh sách vai trò trong màn hình phân quyền.
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.RolePermissionMapDto">
+            <summary>
+            DTO ánh xạ vai trò với quyền để dựng ma trận phân quyền.
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.RefreshTokenResultDto">
+            <summary>
+            Dto chuan cho ket qua refresh token, gom co cac token moi va thong tin session.
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.BaseOverviewReportDto">
+            <summary>
+            Lớp DTO cơ sở chứa các số liệu thống kê tổng quan (Sĩ số học sinh, số lớp học,
+            chuyên cần, phân phối điểm số và kích thước lớp). Dùng làm lớp cha cho Admin và Giáo viên.
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.AdminOverviewReportDto">
+            <summary>
+            DTO chứa dữ liệu thống kê tổng quan toàn trung tâm dành cho Admin.
+            Kế thừa các chỉ số cơ bản từ BaseOverviewReportDto và bổ sung tổng số giáo viên và khóa học.
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.TeacherOverviewReportDto">
+            <summary>
+            DTO chứa dữ liệu thống kê tổng quan các lớp giảng dạy dành cho Giáo viên.
+            Kế thừa toàn bộ các thuộc tính tổng hợp từ BaseOverviewReportDto.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.AdminRescheduleRequestDto.LoaiYeuCau">
+            <summary>1: Đổi thời gian, 2: Đổi phòng</summary>
+        </member>
+        <member name="P:backend.DTOs.CreateBuoiHocDto.MaLopHoc">
+            <summary>
+            Mã lớp học cần sắp xếp buổi học.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateBuoiHocDto.MaPhongHoc">
+            <summary>
+            Mã phòng học dự kiến sử dụng. Có thể để trống nếu chưa chốt phòng.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateBuoiHocDto.NgayHoc">
+            <summary>
+            Ngày học của buổi học. Backend chỉ lấy phần ngày.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateBuoiHocDto.MaTietBatDau">
+            <summary>
+            Tiết bắt đầu của buổi học.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateBuoiHocDto.MaTietKetThuc">
+            <summary>
+            Tiết kết thúc của buổi học.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateBuoiHocDto.TieuDe">
+            <summary>
+            Tiêu đề hiển thị của buổi học.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateBuoiHocDto.NoiDung">
+            <summary>
+            Nội dung hoặc ghi chú của buổi học.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.AvailableRoomDto.MaPhongHoc">
+            <summary>
+            Mã phòng học.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.AvailableRoomDto.TenPhong">
+            <summary>
+            Tên phòng học.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateRoomDto.TenPhong">
+            <summary>
+            Tên phòng học mới.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.UpdateRoomDto.TenPhong">
+            <summary>
+            Tên phòng học (tùy chọn để cập nhật).
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.UpdateRoomDto.TrangThai">
+            <summary>
+            Trạng thái hoạt động (tùy chọn).
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.AvailableTeacherDto.MaGiangVien">
+            <summary>
+            Mã giảng viên.
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.AvailableTeacherDto.MaNguoiDung">
+            <summary>
+            Mã người dùng của giảng viên.
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.CreateScheduleChangeRequestDto">
+            <summary>
+            DTO để giáo viên tạo yêu cầu đổi lịch dạy
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateScheduleChangeRequestDto.MaBuoiHoc">
+            <summary>
+            Mã buổi học cần đổi
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateScheduleChangeRequestDto.LoaiYeuCau">
+            <summary>
+            1: Đổi thời gian, 2: Đổi phòng
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateScheduleChangeRequestDto.NgayHocDeXuat">
+            <summary>
+            Ngày học mới (nếu đổi thời gian)
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateScheduleChangeRequestDto.MaTietBatDauDeXuat">
+            <summary>
+            Tiết bắt đầu mới (nếu đổi thời gian)
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateScheduleChangeRequestDto.MaTietKetThucDeXuat">
+            <summary>
+            Tiết kết thúc mới (nếu đổi thời gian)
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateScheduleChangeRequestDto.MaPhongHocDeXuat">
+            <summary>
+            Mã phòng học mới (nếu đổi phòng)
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.CreateScheduleChangeRequestDto.LyDo">
+            <summary>
+            Lý do đề xuất đổi
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.ScheduleChangeRequestDetailDto">
+            <summary>
+            DTO chi tiết yêu cầu đổi lịch (hiển thị trong danh sách admin duyệt)
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.ScheduleChangeRequestDetailDto.NgayHocHienTai">
+            <summary>
+            Thông tin buổi học hiện tại
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.ScheduleChangeRequestDetailDto.NgayHocDeXuat">
+            <summary>
+            Thông tin đề xuất mới
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.ScheduleChangeRequestDetailDto.TrangThaiDuyet">
+            <summary>
+            0: Chờ xử lý, 1: Đã duyệt, 2: Từ chối
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.ScheduleChangeRequestResponseDto">
+            <summary>
+            DTO Response sau khi tạo yêu cầu đổi lịch thành công
+            </summary>
+        </member>
+        <member name="T:backend.DTOs.ApproveScheduleChangeRequestDto">
+            <summary>
+            DTO duyệt/từ chối yêu cầu đổi lịch (cho Admin)
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.ApproveScheduleChangeRequestDto.TrangThaiDuyet">
+            <summary>
+            1: Duyệt, 2: Từ chối
+            </summary>
+        </member>
+        <member name="P:backend.DTOs.ApproveScheduleChangeRequestDto.GhiChuAdmin">
+            <summary>
+            Ghi chú từ Admin
+            </summary>
+        </member>
+        <member name="T:backend.Helpers.PermissionHelper">
+            <summary>
+            Helper dùng để truy vấn và kiểm tra quyền của người dùng.
+            Helper này đọc trực tiếp từ DbContext nên chỉ nên dùng trong tầng nghiệp vụ/hạ tầng,
+            không gọi từ controller.
+            </summary>
+        </member>
+        <!-- Badly formed XML comment ignored for member "M:backend.Helpers.PermissionHelper.HasPermissionByIdAsync(System.Guid,System.Int32,System.Int32)" -->
+        <!-- Badly formed XML comment ignored for member "M:backend.Helpers.PermissionHelper.HasPermissionAsync(System.Guid,System.Int32,System.String)" -->
+        <member name="M:backend.Helpers.PermissionHelper.GetUserPermissionsAsync(System.Guid)">
+            <summary>
+            Lấy toàn bộ quyền của người dùng theo từng chức năng.
+            </summary>
+            <param name="userId">Mã người dùng.</param>
+            <returns>Dictionary có dạng { MaChucNang: ["Xem", "Tạo", ...] }.</returns>
+        </member>
+        <member name="M:backend.Helpers.PermissionHelper.GetUserPrimaryRoleAsync(System.Guid)">
+            <summary>
+            Lấy vai trò chính của người dùng.
+            </summary>
+            <param name="userId">Mã người dùng.</param>
+            <returns>Tên vai trò như Admin, Giao_Vien, Hoc_Sinh, Phu_Huynh.</returns>
+        </member>
+        <member name="M:backend.Helpers.PermissionHelper.HasRoleAsync(System.Guid,System.String)">
+            <summary>
+            Kiểm tra người dùng có mang một vai trò cụ thể hay không.
+            </summary>
+            <param name="userId">Mã người dùng.</param>
+            <param name="roleName">Tên vai trò cần kiểm tra.</param>
+            <returns>True nếu người dùng có vai trò này, ngược lại trả về false.</returns>
+        </member>
+        <member name="T:backend.Hubs.NotificationHub">
+            <summary>
+            Hub để gửi và nhận thông báo real-time
+            Người dùng sẽ được thêm vào các group theo vai trò của họ để nhận thông báo phù hợp
+            </summary>
+        </member>
+        <member name="M:backend.Hubs.NotificationHub.MarkNotificationAsRead(System.Guid)">
+            <summary>
+            Client gọi để đánh dấu một thông báo là đã đọc
+            </summary>
+        </member>
+        <member name="M:backend.Hubs.NotificationHub.GetUnreadCount">
+            <summary>
+            Client gọi để lấy số lượng thông báo chưa đọc
+            </summary>
+        </member>
+        <member name="T:backend.Middlewares.AuthorizationMiddleware">
+            <summary>
+            Middleware kiểm tra quyền chi tiết dựa trên AuthorizeByPermissionAttribute.
+            Luồng xử lý:
+            1. Lấy endpoint hiện tại từ routing.
+            2. Kiểm tra endpoint có khai báo quyền chi tiết hay không.
+            3. Lấy userId từ JWT claim.
+            4. Đối chiếu PermissionIds (MaQuyen) với dữ liệu VaiTroQuyen + Quyen.
+            5. Từ chối bằng 403 nếu người dùng không đủ quyền.
+            </summary>
+        </member>
+        <member name="T:backend.Middlewares.AuthorizationMiddlewareExtensions">
+            <summary>
+            Extension method để thêm AuthorizationMiddleware vào pipeline cho gọn hơn.
+            </summary>
+        </member>
+        <member name="T:backend.Middlewares.ExceptionMiddleware">
+            <summary>
+            Bọc lỗi toàn cục để ẩn chi tiết kỹ thuật với người dùng nhưng vẫn log đủ cho dev.
+            </summary>
+        </member>
+        <member name="T:backend.Middlewares.LoginAuditMiddleware">
+            <summary>
+            Ghi log sự kiện auth (login/refresh) phục vụ audit và theo dõi vận hành.
+            Người tạo: nmkhue
+            Ngày tạo: 28/3
+            </summary>
+        </member>
+        <member name="T:backend.Middlewares.LoginRateLimitMiddleware">
+            <summary>
+            Giới hạn tần suất gọi endpoint login theo IP để giảm brute-force.
+            </summary>
+        </member>
+        <member name="T:backend.Migrations.Baseline_HeThongHocOnline_Final">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.Baseline_HeThongHocOnline_Final.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.Baseline_HeThongHocOnline_Final.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.Baseline_HeThongHocOnline_Final.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:backend.Migrations.CheckModelSync_20260325_v2">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.CheckModelSync_20260325_v2.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.CheckModelSync_20260325_v2.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.CheckModelSync_20260325_v2.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:backend.Migrations.AddLanCuoiDangNhapToNguoiDung">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddLanCuoiDangNhapToNguoiDung.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddLanCuoiDangNhapToNguoiDung.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddLanCuoiDangNhapToNguoiDung.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:backend.Migrations.CodeFirstSync_20260413">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.CodeFirstSync_20260413.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.CodeFirstSync_20260413.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.CodeFirstSync_20260413.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:backend.Migrations.AddClassScopedStudyContent">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddClassScopedStudyContent.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddClassScopedStudyContent.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddClassScopedStudyContent.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:backend.Migrations.AddQuestionBankRichFieldsForAssignments">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddQuestionBankRichFieldsForAssignments.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddQuestionBankRichFieldsForAssignments.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddQuestionBankRichFieldsForAssignments.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:backend.Migrations.AddScheduleApi">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddScheduleApi.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddScheduleApi.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddScheduleApi.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:backend.Migrations.AddScheduleChangeRequestColumns">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddScheduleChangeRequestColumns.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddScheduleChangeRequestColumns.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddScheduleChangeRequestColumns.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:backend.Migrations.AddDoiTuongToThongBao2">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddDoiTuongToThongBao2.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddDoiTuongToThongBao2.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddDoiTuongToThongBao2.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="T:backend.Migrations.AddMissingFieldsAndTables">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddMissingFieldsAndTables.Up(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddMissingFieldsAndTables.Down(Microsoft.EntityFrameworkCore.Migrations.MigrationBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="M:backend.Migrations.AddMissingFieldsAndTables.BuildTargetModel(Microsoft.EntityFrameworkCore.ModelBuilder)">
+            <inheritdoc />
+        </member>
+        <member name="P:backend.Models.Baitap.LoaiBaiTap">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Chitietdanhmuc.MaCode">
+            <summary>
+            VD: PH_LAB, TKH_OPEN
+            </summary>
+        </member>
+        <member name="P:backend.Models.Diemdanh.MaTrangThai">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Hocsinhlophoc.MaTrangThai">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Khoahoc.MaTrangThai">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Lophoc.MaTrangThai">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Nganhangcauhoi.LoaiCauHoi">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Nganhangcauhoi.MucDo">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Nguoidung.MaNguoiDung">
+            <summary>
+            GUID cho tài khoản
+            </summary>
+        </member>
+        <member name="P:backend.Models.Nguoidung.LoaiTaiKhoan">
+            <summary>
+            1: Admin, 2: GiangVien, 3: HocSinh, 4: PhuHuynh
+            </summary>
+        </member>
+        <member name="P:backend.Models.Nguoidung.MaTrangThai">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Nhomdanhmuc.MaCode">
+            <summary>
+            VD: LOAI_PHONG, TRANG_THAI_KHOA_HOC
+            </summary>
+        </member>
+        <member name="P:backend.Models.Nopbai.MaTrangThai">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Phonghoc.LoaiPhong">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Phuhuynhhocsinh.MaQuanHe">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Sukienlophoc.DangSuKien">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Sukienlophoc.MaTrangThai">
+            <summary>
+            Trỏ về ChiTietDanhMuc
+            </summary>
+        </member>
+        <member name="P:backend.Models.Thongbao.DoiTuong">
+            <summary>
+            Đối tượng nhận thông báo: Admin, Giao_Vien, Hoc_Sinh, Phu_Huynh, Tat_Ca
+            </summary>
+        </member>
+        <member name="P:backend.Models.Yeucaulichday.LoaiYeuCau">
+            <summary>
+            1: Đổi thời gian, 2: Đổi phòng
+            </summary>
+        </member>
+        <member name="P:backend.Models.Yeucaulichday.MaPhongHocDeXuat">
+            <summary>
+            Mã phòng học được đề xuất nếu yêu cầu đổi phòng
+            </summary>
+        </member>
+        <member name="P:backend.Models.Yeucaulichday.MaPhongHocDeXuatNavigation">
+            <summary>
+            Foreign key navigation cho phòng học được đề xuất
+            </summary>
+        </member>
+        <member name="T:backend.Repositories.PermissionRepository">
+            <summary>
+            Kho dữ liệu phục vụ toàn bộ nghiệp vụ phân quyền.
+            Lớp này chỉ chịu trách nhiệm truy xuất và ghi dữ liệu, không chứa logic điều phối.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.#ctor(backend.Data.AppDbContext)">
+            <summary>
+            Khởi tạo repository với DbContext dùng chung của backend.
+            </summary>
+            <param name="context">DbContext của ứng dụng.</param>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.GetRawPermissionsAsync">
+            <summary>
+            Lấy danh sách quyền thô từ cơ sở dữ liệu để dựng ma trận phân quyền.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.GetActiveRolesAsync">
+            <summary>
+            Lấy các vai trò còn hiệu lực để hiển thị và gán quyền.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.GetActiveMappingsAsync">
+            <summary>
+            Lấy toàn bộ mapping vai trò - quyền đang còn hiệu lực.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.GetRoleByIdAsync(System.Int32)">
+            <summary>
+            Tìm vai trò theo mã định danh.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.RoleNameExistsAsync(System.String)">
+            <summary>
+            Kiểm tra tên vai trò đã tồn tại hay chưa.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.GetPermissionIdsByCodesAsync(System.Collections.Generic.List{System.String})">
+            <summary>
+            Chuyển danh sách mã quyền sang danh sách ID quyền tương ứng trong bảng Quyền.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.GetPermissionCodesByRoleIdAsync(System.Int32)">
+            <summary>
+            Lấy danh sách mã quyền của một vai trò.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.HasPermissionAsync(System.Int32,System.String)">
+            <summary>
+            Kiểm tra một vai trò có quyền cụ thể hay không.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.CreateRoleAsync(System.String)">
+            <summary>
+            Tạo vai trò mới và trả về mã vai trò vừa sinh.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.ReplaceRolePermissionsAsync(System.Int32,System.Collections.Generic.List{System.Int32})">
+            <summary>
+            Ghi đè toàn bộ quyền của một vai trò bằng danh sách quyền mới.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.HasAssignedUsersAsync(System.Int32)">
+            <summary>
+            Kiểm tra vai trò có còn người dùng nào đang được gán hay không.
+            </summary>
+        </member>
+        <member name="M:backend.Repositories.PermissionRepository.SoftDeleteRoleAsync(System.Int32)">
+            <summary>
+            Xóa mềm vai trò và các mapping quyền liên quan.
+            </summary>
+        </member>
+        <member name="T:backend.Services.Interfaces.IReportsService">
+            <summary>
+            Giao diện định nghĩa các nghiệp vụ báo cáo, thống kê và xuất dữ liệu báo cáo ra file CSV (Excel-compatible).
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.GetAdminOverviewAsync">
+            <summary>
+            Lấy số liệu thống kê tổng quan toàn trung tâm (Học viên, Giáo viên, Lớp học, Khóa học, Chuyên cần chung, Phổ điểm) cho Admin.
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.ExportAdminReportCsvAsync">
+            <summary>
+            Tạo báo cáo danh sách lớp học và các chỉ số chuyên cần/học lực dưới dạng chuỗi định dạng CSV cho Admin.
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.GetTeacherClassOverviewAsync(System.Guid,System.Guid)">
+            <summary>
+            Lấy số liệu chuyên cần, phổ điểm và bảng tiến độ học tập chi tiết của từng học sinh trong một lớp dành cho Giáo viên.
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.ExportTeacherClassReportCsvAsync(System.Guid,System.Guid)">
+            <summary>
+            Tạo báo cáo kết quả chi tiết của từng học viên trong lớp dưới dạng chuỗi định dạng CSV cho Giáo viên.
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.GetTeacherOverviewAsync(System.Guid)">
+            <summary>
+            Lấy số liệu thống kê tổng quan của tất cả các lớp giảng dạy dành cho Giáo viên.
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.ExportTeacherOverviewCsvAsync(System.Guid)">
+            <summary>
+            Tạo nội dung báo cáo tổng quan tất cả các lớp giảng dạy dưới dạng chuỗi CSV cho Giáo viên.
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.GetStudentOverviewAsync(System.Guid)">
+            <summary>
+            Lấy báo cáo chuyên cần cá nhân, tiến độ hoàn thành bài tập và biểu đồ xu hướng điểm số cho Học sinh.
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.ExportStudentReportCsvAsync(System.Guid)">
+            <summary>
+            Tạo học bạ điện tử cá nhân lưu trữ lịch sử nộp bài tập và chuyên cần dạng CSV cho Học sinh.
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.GetClassDashboardAsync(System.Guid)">
+            <summary>
+            Lấy thống kê chi tiết của một lớp học phục vụ dashboard (sĩ số, số bài kiểm tra, phân bố điểm từng bài, chuyên cần từng học sinh, phân phối điểm trung bình).
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.GetStudentCourseDashboardAsync(System.Guid,System.Guid)">
+            <summary>
+            Lấy thông tin điểm các bài kiểm tra, thứ hạng và tỷ lệ chuyên cần của 1 học sinh cụ thể trong 1 lớp học.
+            </summary>
+        </member>
+        <member name="M:backend.Services.Interfaces.IReportsService.GetParentChildrenDashboardAsync(System.Guid)">
+            <summary>
+            Lấy danh sách học sinh (con) của phụ huynh kèm danh sách khoá học.
+            </summary>
+        </member>
+        <member name="T:backend.Services.NotificationEventService">
+            <summary>
+            Service để xử lý các sự kiện tự động sinh ra thông báo
+            Ví dụ: tạo bài tập mới, thay đổi lịch học, tạo bài kiểm tra, v.v.
+            </summary>
+        </member>
+        <member name="M:backend.Services.NotificationEventService.NotifyNewAssignmentAsync(System.Guid,System.String,System.String)">
+            <summary>
+            Gửi thông báo cho tất cả sinh viên khi có bài tập mới
+            </summary>
+        </member>
+        <member name="M:backend.Services.NotificationEventService.NotifyTeachersAsync(System.Guid,System.String,System.String)">
+            <summary>
+            Gửi thông báo cho tất cả giáo viên khi có sự kiện quan trọng
+            </summary>
+        </member>
+        <member name="M:backend.Services.NotificationEventService.NotifyParentsAsync(System.Guid,System.String,System.String)">
+            <summary>
+            Gửi thông báo cho tất cả phụ huynh
+            </summary>
+        </member>
+        <member name="M:backend.Services.NotificationEventService.NotifyAllAsync(System.Guid,System.String,System.String)">
+            <summary>
+            Gửi thông báo cho tất cả người dùng (Admin sẽ dùng)
+            </summary>
+        </member>
+        <member name="M:backend.Services.NotificationEventService.NotifyUserAsync(System.Guid,System.Guid,System.String,System.String)">
+            <summary>
+            Gửi thông báo cho một người dùng cụ thể
+            </summary>
+        </member>
+        <member name="M:backend.Services.NotificationEventService.NotifyScheduleChangeAsync(System.Guid,System.String,System.String)">
+            <summary>
+            Gửi thông báo khi có thay đổi lịch học
+            </summary>
+        </member>
+        <member name="M:backend.Services.NotificationEventService.NotifyAssignmentSubmittedAsync(System.Guid,System.String,System.String)">
+            <summary>
+            Gửi thông báo khi một sinh viên nộp bài
+            </summary>
+        </member>
+        <member name="M:backend.Services.NotificationEventService.NotifyGradeAsync(System.Guid,System.Guid,System.String,System.String)">
+            <summary>
+            Gửi thông báo về điểm số cho sinh viên
+            </summary>
+        </member>
+        <member name="T:backend.Services.ReportsService">
+            <summary>
+            Dịch vụ tổng hợp dữ liệu báo cáo thống kê chuyên cần, điểm số 
+            và hỗ trợ xuất dữ liệu ra file CSV cho các đối tượng người dùng: Admin, Giáo viên, Học sinh.
+            </summary>
+        </member>
+        <member name="M:backend.Services.ReportsService.CalculateScoreDistribution(System.Collections.Generic.List{System.Double})">
+            <summary>
+            Phương thức dùng chung để phân tích phân phối phổ điểm từ danh sách điểm số bài tập.
+            </summary>
+        </member>
+        <member name="M:backend.Services.ReportsService.CalculateAttendanceRate(System.Collections.Generic.List{backend.Models.Diemdanh})">
+            <summary>
+            Phương thức dùng chung để phân tích tỷ lệ chuyên cần từ danh sách bản ghi điểm danh.
+            </summary>
+        </member>
+        <member name="M:backend.Services.ReportsService.FillBaseOverviewReportAsync(backend.DTOs.BaseOverviewReportDto,System.Collections.Generic.List{System.Guid})">
+            <summary>
+            Phương thức dùng chung để điền đầy các chỉ số cơ bản của BaseOverviewReportDto (Học sinh, chuyên cần, phổ điểm, kích thước lớp).
+            Hỗ trợ lọc theo danh sách lớp học được gán (dành cho Giáo viên) hoặc toàn bộ trung tâm (dành cho Admin).
+            </summary>
+        </member>
+        <member name="M:backend.Services.ReportsService.GetAdminOverviewAsync">
+            <summary>
+            Lấy dữ liệu thống kê tổng quan toàn trung tâm dành cho tài khoản Admin.
+            Bao gồm: Tổng số lượng học sinh/giáo viên/lớp học/khóa học, tỷ lệ điểm danh chung, 
+            phổ điểm trung bình toàn hệ thống và biểu đồ quy mô sĩ số của từng lớp.
+            </summary>
+            <returns>Đối tượng chứa dữ liệu thống kê tổng quan AdminOverviewReportDto</returns>
+        </member>
+        <member name="M:backend.Services.ReportsService.ExportAdminReportCsvAsync">
+            <summary>
+            Tạo nội dung báo cáo tổng quan toàn hệ thống dưới dạng chuỗi CSV tương thích với MS Excel.
+            Chứa thông tin về danh sách các lớp, sĩ số, sức chứa, tỷ lệ chuyên cần và điểm trung bình của lớp.
+            </summary>
+            <returns>Chuỗi ký tự định dạng CSV kèm UTF-8 BOM để hiển thị đúng tiếng Việt</returns>
+        </member>
+        <member name="M:backend.Services.ReportsService.GetTeacherClassOverviewAsync(System.Guid,System.Guid)">
+            <summary>
+            Lấy báo cáo chi tiết của một lớp học cụ thể dưới vai trò của Giáo viên phụ trách.
+            Kiểm tra quyền truy cập của giáo viên, lấy danh sách học sinh, phân tích tỷ lệ chuyên cần của lớp, 
+            phổ điểm số và danh sách tiến độ (tỷ lệ chuyên cần, điểm TB, số bài nộp) của từng học sinh trong lớp.
+            </summary>
+            <param name="teacherProfileId">Mã hồ sơ giảng viên của người dùng đang đăng nhập</param>
+            <param name="classId">Mã lớp học cần xem báo cáo thống kê</param>
+            <returns>Đối tượng chứa dữ liệu thống kê lớp học TeacherClassReportDto</returns>
+        </member>
+        <member name="M:backend.Services.ReportsService.ExportTeacherClassReportCsvAsync(System.Guid,System.Guid)">
+            <summary>
+            Xuất file CSV báo cáo thống kê tình hình học tập và chuyên cần của tất cả học sinh trong một lớp.
+            Thường được giáo viên sử dụng để quản lý tiến độ hoặc nhập điểm xuất ra Excel.
+            </summary>
+            <param name="teacherProfileId">Mã hồ sơ giảng viên của người dùng đăng nhập</param>
+            <param name="classId">Mã lớp học cần xuất dữ liệu</param>
+            <returns>Nội dung file CSV dạng chuỗi ký tự UTF-8 BOM</returns>
+        </member>
+        <member name="M:backend.Services.ReportsService.GetStudentOverviewAsync(System.Guid)">
+            <summary>
+            Lấy báo cáo thống kê học tập cá nhân dành riêng cho tài khoản Học sinh đang đăng nhập.
+            Tổng hợp: Tỷ lệ chuyên cần cá nhân, tỷ lệ hoàn thành bài tập về nhà và biểu đồ đường (Line) xu hướng điểm số qua các bài tập đã nộp.
+            </summary>
+            <param name="studentProfileId">Mã hồ sơ học sinh của tài khoản đang đăng nhập</param>
+            <returns>Đối tượng chứa dữ liệu thống kê cá nhân StudentReportDto</returns>
+        </member>
+        <member name="M:backend.Services.ReportsService.ExportStudentReportCsvAsync(System.Guid)">
+            <summary>
+            Xuất báo cáo kết quả học tập và lịch sử bài tập của cá nhân học sinh.
+            Thường được dùng như học bạ điện tử cá nhân để gửi cho phụ huynh hoặc lưu trữ cá nhân.
+            </summary>
+            <param name="studentProfileId">Mã hồ sơ học sinh đang đăng nhập</param>
+            <returns>Nội dung học bạ CSV dạng chuỗi ký tự UTF-8 BOM</returns>
+        </member>
+        <member name="M:backend.Services.ReportsService.GetTeacherOverviewAsync(System.Guid)">
+            <summary>
+            Lấy số liệu thống kê tổng quan của tất cả các lớp giảng dạy dành cho Giáo viên.
+            </summary>
+        </member>
+        <member name="M:backend.Services.ReportsService.ExportTeacherOverviewCsvAsync(System.Guid)">
+            <summary>
+            Tạo nội dung báo cáo tổng quan tất cả các lớp giảng dạy dưới dạng chuỗi CSV cho Giáo viên.
+            </summary>
+        </member>
+        <member name="M:backend.Services.ScheduleChangeRequestService.CreateScheduleChangeRequestAsync(System.Guid,backend.DTOs.CreateScheduleChangeRequestDto)">
+            <summary>
+            Tạo yêu cầu đổi lịch dạy từ giáo viên
+            </summary>
+        </member>
+        <member name="M:backend.Services.ScheduleChangeRequestService.GetPendingRequestsAsync">
+            <summary>
+            Lấy danh sách yêu cầu chờ xử lý
+            </summary>
+        </member>
+        <member name="M:backend.Services.ScheduleChangeRequestService.GetRequestsByTeacherAsync(System.Guid)">
+            <summary>
+            Lấy danh sách yêu cầu của một giáo viên
+            </summary>
+        </member>
+        <member name="M:backend.Services.ScheduleChangeRequestService.GetRequestByIdAsync(System.Guid)">
+            <summary>
+            Lấy chi tiết một yêu cầu
+            </summary>
+        </member>
+        <member name="M:backend.Services.ScheduleChangeRequestService.ApproveRequestAsync(System.Guid,System.String)">
+            <summary>
+            Duyệt yêu cầu đổi lịch
+            </summary>
+        </member>
+        <member name="M:backend.Services.ScheduleChangeRequestService.RejectRequestAsync(System.Guid,System.String)">
+            <summary>
+            Từ chối yêu cầu đổi lịch
+            </summary>
+        </member>
+        <member name="T:backend.Services.UserService">
+            <summary>
+            Xử lý toàn bộ nghiệp vụ xác thực người dùng: đăng nhập, làm mới token,
+            đăng xuất và đồng bộ lại quyền của người dùng.
+            </summary>
+        </member>
+        <member name="M:backend.Services.UserService.RefreshPermissionsAsync(System.Guid)">
+            <summary>
+            Cập nhật lại danh sách quyền của người dùng sau khi admin thay đổi phân quyền.
+            </summary>
+        </member>
+        <member name="M:backend.Services.UserService.LogoutAsync(System.String)">
+            <summary>
+            Vô hiệu hóa phiên refresh token của người dùng để kết thúc đăng nhập.
+            </summary>
+        </member>
+    </members>
+</doc>

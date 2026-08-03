@@ -1,481 +1,480 @@
-﻿CREATE DATABASE IF NOT EXISTS HeThongHocOnline_Final;
-USE HeThongHocOnline_Final;
+use railway;
 
--- 1. HỆ THỐNG DANH MỤC ĐỘNG 
-CREATE TABLE NhomDanhMuc (
-    MaNhom INT PRIMARY KEY AUTO_INCREMENT,
-    MaCode VARCHAR(50) UNIQUE NOT NULL COMMENT 'VD: LOAI_PHONG, TRANG_THAI_KHOA_HOC',
-    TenNhom VARCHAR(255) NOT NULL,
-    GhiChu TEXT,
+-- 1. hệ thống danh mục động 
+create table nhomdanhmuc (
+    manhom int primary key auto_increment,
+    macode varchar(50) unique not null comment 'vd: loai_phong, trang_thai_khoa_hoc',
+    tennhom varchar(255) not null,
+    ghichu text,
     
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, 
-    NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, 
-    TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0
+    nguoitao char(36), thoigiantao datetime default current_timestamp, 
+    nguoisua char(36), thoigiansua datetime null on update current_timestamp, 
+    trangthai tinyint(1) default 1, daxoa tinyint(1) default 0
 );
 
-CREATE TABLE ChiTietDanhMuc (
-    MaChiTiet INT PRIMARY KEY AUTO_INCREMENT,
-    MaNhom INT NOT NULL,
-    MaCode VARCHAR(50) NULL COMMENT 'VD: PH_LAB, TKH_OPEN',
-    TenChiTiet VARCHAR(255) NOT NULL,
-    ThuTu INT DEFAULT 0,
+create table chitietdanhmuc (
+    machitiet int primary key auto_increment,
+    manhom int not null,
+    macode varchar(50) null comment 'vd: ph_lab, tkh_open',
+    tenchitiet varchar(255) not null,
+    thutu int default 0,
     
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, 
-    NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, 
-    TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaNhom) REFERENCES NhomDanhMuc(MaNhom)
+    nguoitao char(36), thoigiantao datetime default current_timestamp, 
+    nguoisua char(36), thoigiansua datetime null on update current_timestamp, 
+    trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (manhom) references nhomdanhmuc(manhom)
 );
 
--- 2. HỆ THỐNG PHÂN QUYỀN (Dùng INT)
-CREATE TABLE ChucNang (
-    MaChucNang INT PRIMARY KEY AUTO_INCREMENT,
-    TenChucNang VARCHAR(100) NOT NULL,
-    MoTa VARCHAR(255),
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0
+-- 2. hệ thống phân quyền (dùng int)
+create table chucnang (
+    machucnang int primary key auto_increment,
+    tenchucnang varchar(100) not null,
+    mota varchar(255),
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0
 );
 
-CREATE TABLE Quyen (
-    MaQuyen INT PRIMARY KEY AUTO_INCREMENT,
-    MaChucNang INT NOT NULL,
-    TenQuyen VARCHAR(100) NOT NULL,
-    MoTa VARCHAR(255),
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaChucNang) REFERENCES ChucNang(MaChucNang)
+create table quyen (
+    maquyen int primary key auto_increment,
+    machucnang int not null,
+    tenquyen varchar(100) not null,
+    mota varchar(255),
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (machucnang) references chucnang(machucnang)
 );
 
-CREATE TABLE VaiTro (
-    MaVaiTro INT PRIMARY KEY AUTO_INCREMENT,
-    TenVaiTro VARCHAR(50) NOT NULL,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0
+create table vaitro (
+    mavaitro int primary key auto_increment,
+    tenvaitro varchar(50) not null,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0
 );
 
-CREATE TABLE VaiTroQuyen (
-    MaVaiTro INT NOT NULL,
-    MaQuyen INT NOT NULL,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaVaiTro, MaQuyen),
-    FOREIGN KEY (MaVaiTro) REFERENCES VaiTro(MaVaiTro),
-    FOREIGN KEY (MaQuyen) REFERENCES Quyen(MaQuyen)
+create table vaitroquyen (
+    mavaitro int not null,
+    maquyen int not null,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (mavaitro, maquyen),
+    foreign key (mavaitro) references vaitro(mavaitro),
+    foreign key (maquyen) references quyen(maquyen)
 );
 
- -- 3 QUẢN LÝ NGƯỜI DÙNG (Dùng CHAR(36) cho GUID)
-CREATE TABLE NguoiDung (
-    MaNguoiDung CHAR(36) PRIMARY KEY COMMENT 'GUID cho tài khoản',
-    LoaiTaiKhoan TINYINT NOT NULL COMMENT '1: Admin, 2: GiangVien, 3: HocSinh, 4: PhuHuynh',
+ -- 3 quản lý người dùng (dùng char(36) cho guid)
+create table nguoidung (
+    manguoidung char(36) primary key comment 'guid cho tài khoản',
+    loaitaikhoan tinyint not null comment '1: admin, 2: giangvien, 3: hocsinh, 4: phuhuynh',
     
-    TenDangNhap VARCHAR(50) UNIQUE NOT NULL,
-    MatKhauHash VARCHAR(255) NOT NULL,
-    HoTen VARCHAR(100) NOT NULL,
-    Email VARCHAR(100) UNIQUE,
-    AnhDaiDien VARCHAR(255),
-    MaTrangThai INT COMMENT 'Trỏ về ChiTietDanhMuc',
-    TokenXacMinh VARCHAR(255) NULL,
-    DaXacMinhEmail TINYINT(1) DEFAULT 0,
+    tendangnhap varchar(50) unique not null,
+    matkhauhash varchar(255) not null,
+    hoten varchar(100) not null,
+    email varchar(100) unique,
+    anhdaidien varchar(255),
+    matrangthai int comment 'trỏ về chitietdanhmuc',
+    tokenxacminh varchar(255) null,
+    daxacminhemail tinyint(1) default 0,
     
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaTrangThai) REFERENCES ChiTietDanhMuc(MaChiTiet)
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (matrangthai) references chitietdanhmuc(machitiet)
 );
 
-CREATE TABLE NguoiDungVaiTro (
-    MaNguoiDung CHAR(36) NOT NULL,
-    MaVaiTro INT NOT NULL,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaNguoiDung, MaVaiTro),
-    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung),
-    FOREIGN KEY (MaVaiTro) REFERENCES VaiTro(MaVaiTro)
+create table nguoidungvaitro (
+    manguoidung char(36) not null,
+    mavaitro int not null,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (manguoidung, mavaitro),
+    foreign key (manguoidung) references nguoidung(manguoidung),
+    foreign key (mavaitro) references vaitro(mavaitro)
 );
 
-CREATE TABLE GiangVien ( 
-    MaGiangVien CHAR(36) PRIMARY KEY, 
-    MaNguoiDung CHAR(36) UNIQUE NOT NULL, 
+create table giangvien ( 
+    magiangvien char(36) primary key, 
+    manguoidung char(36) unique not null, 
     
-    SoDienThoai VARCHAR(15),
-    QueQuan VARCHAR(255),
-    TrinhDoChuyenMon VARCHAR(255) NOT NULL,
-    HocVi VARCHAR(100),
-    KinhNghiemGiangDay TEXT,
+    sodienthoai varchar(15),
+    quequan varchar(255),
+    trinhdochuyenmon varchar(255) not null,
+    hocvi varchar(100),
+    kinhnghiemgiangday text,
     
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung) 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (manguoidung) references nguoidung(manguoidung) 
 );
 
-CREATE TABLE HocSinh ( 
-    MaHocSinh CHAR(36) PRIMARY KEY, 
-    MaNguoiDung CHAR(36) UNIQUE NOT NULL, 
+create table hocsinh ( 
+    mahocsinh char(36) primary key, 
+    manguoidung char(36) unique not null, 
     
-    NgaySinh DATE,
-    QueQuan VARCHAR(255),
-    SoDienThoaiNguoiThan VARCHAR(15),
-    TruongDangTheoHoc VARCHAR(255),
+    ngaysinh date,
+    quequan varchar(255),
+    sodienthoainguoithan varchar(15),
+    truongdangtheohoc varchar(255),
     
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung) 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (manguoidung) references nguoidung(manguoidung) 
 );
 
-CREATE TABLE PhuHuynh ( 
-    MaPhuHuynh CHAR(36) PRIMARY KEY, 
-    MaNguoiDung CHAR(36) UNIQUE NOT NULL, 
+create table phuhuynh ( 
+    maphuhuynh char(36) primary key, 
+    manguoidung char(36) unique not null, 
     
-    SoDienThoai VARCHAR(15) NOT NULL,
-    DiaChiLienHe TEXT,
-    NgheNghiep VARCHAR(255),
+    sodienthoai varchar(15) not null,
+    diachilienhe text,
+    nghenghiep varchar(255),
     
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung) 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (manguoidung) references nguoidung(manguoidung) 
 );
 
-CREATE TABLE PhuHuynhHocSinh ( 
-    MaPhuHuynh CHAR(36) NOT NULL, 
-    MaHocSinh CHAR(36) NOT NULL, 
-    MaQuanHe INT COMMENT 'Trỏ về ChiTietDanhMuc', 
+create table phuhuynhhocsinh ( 
+    maphuhuynh char(36) not null, 
+    mahocsinh char(36) not null, 
+    maquanhe int comment 'trỏ về chitietdanhmuc', 
     
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaPhuHuynh, MaHocSinh),
-    FOREIGN KEY (MaPhuHuynh) REFERENCES PhuHuynh(MaPhuHuynh),
-    FOREIGN KEY (MaHocSinh) REFERENCES HocSinh(MaHocSinh),
-    FOREIGN KEY (MaQuanHe) REFERENCES ChiTietDanhMuc(MaChiTiet)
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (maphuhuynh, mahocsinh),
+    foreign key (maphuhuynh) references phuhuynh(maphuhuynh),
+    foreign key (mahocsinh) references hocsinh(mahocsinh),
+    foreign key (maquanhe) references chitietdanhmuc(machitiet)
 );
 
--- 4 QUẢN LÝ KHÓA HỌC & LỚP HỌC
-CREATE TABLE KhoaHoc (
-    MaKhoaHoc CHAR(36) PRIMARY KEY,
-    TenKhoaHoc VARCHAR(255) NOT NULL,
-    MoTa TEXT,
-    GiaCoBan DECIMAL(14,2),
-    MaTrangThai INT COMMENT 'Trỏ về ChiTietDanhMuc',
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaTrangThai) REFERENCES ChiTietDanhMuc(MaChiTiet)
+-- 4 quản lý khóa học & lớp học
+create table khoahoc (
+    makhoahoc char(36) primary key,
+    tenkhoahoc varchar(255) not null,
+    mota text,
+    giacoban decimal(14,2),
+    matrangthai int comment 'trỏ về chitietdanhmuc',
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (matrangthai) references chitietdanhmuc(machitiet)
 );
 
-CREATE TABLE ChuongHoc (
-    MaChuong CHAR(36) PRIMARY KEY,
-    MaKhoaHoc CHAR(36) NOT NULL,
-    TenChuong VARCHAR(255) NOT NULL,
-    MoTa TEXT,
-    ThuTu INT,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaKhoaHoc) REFERENCES KhoaHoc(MaKhoaHoc)
+create table chuonghoc (
+    machuong char(36) primary key,
+    makhoahoc char(36) not null,
+    tenchuong varchar(255) not null,
+    mota text,
+    thutu int,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (makhoahoc) references khoahoc(makhoahoc)
 );
 
-CREATE TABLE TaiLieu (
-    MaTaiLieu CHAR(36) PRIMARY KEY,
-    MaChuongHoc CHAR(36) NOT NULL,
-    TenTaiLieu VARCHAR(255) NOT NULL,
-    LinkTaiLieu VARCHAR(255),
-    MoTa TEXT,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaChuongHoc) REFERENCES ChuongHoc(MaChuong)
+create table tailieu (
+    matailieu char(36) primary key,
+    machuonghoc char(36) not null,
+    tentailieu varchar(255) not null,
+    linktailieu varchar(255),
+    mota text,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (machuonghoc) references chuonghoc(machuong)
 );
 
-CREATE TABLE PhongHoc (
-    MaPhongHoc CHAR(36) PRIMARY KEY,
-    TenPhong VARCHAR(50) NOT NULL,
-    SucChua INT,
-    LoaiPhong INT COMMENT 'Trỏ về ChiTietDanhMuc',
-    Link VARCHAR(255),
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (LoaiPhong) REFERENCES ChiTietDanhMuc(MaChiTiet)
+create table phonghoc (
+    maphonghoc char(36) primary key,
+    tenphong varchar(50) not null,
+    succhua int,
+    loaiphong int comment 'trỏ về chitietdanhmuc',
+    link varchar(255),
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (loaiphong) references chitietdanhmuc(machitiet)
 );
 
-CREATE TABLE LopHoc (
-    MaLopHoc CHAR(36) PRIMARY KEY,
-    TenLop VARCHAR(100) NOT NULL,
-    NgayBatDau DATE,
-    NgayKetThuc DATE,
-    SiSoHienTai INT DEFAULT 0,
-    SiSoToiDa INT,
-    MaTrangThai INT COMMENT 'Trỏ về ChiTietDanhMuc',
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaTrangThai) REFERENCES ChiTietDanhMuc(MaChiTiet)
+create table lophoc (
+    malophoc char(36) primary key,
+    tenlop varchar(100) not null,
+    ngaybatdau date,
+    ngayketthuc date,
+    sisohientai int default 0,
+    sisotoida int,
+    matrangthai int comment 'trỏ về chitietdanhmuc',
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (matrangthai) references chitietdanhmuc(machitiet)
 );
 
-CREATE TABLE ChiTietKhoaHoc_LopHoc ( 
-    MaKhoaHoc CHAR(36) NOT NULL, 
-    MaLopHoc CHAR(36) NOT NULL, 
-    GhiChu VARCHAR(255), 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaKhoaHoc, MaLopHoc),
-    FOREIGN KEY (MaKhoaHoc) REFERENCES KhoaHoc(MaKhoaHoc),
-    FOREIGN KEY (MaLopHoc) REFERENCES LopHoc(MaLopHoc)
+create table chitietkhoahoc_lophoc ( 
+    makhoahoc char(36) not null, 
+    malophoc char(36) not null, 
+    ghichu varchar(255), 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (makhoahoc, malophoc),
+    foreign key (makhoahoc) references khoahoc(makhoahoc),
+    foreign key (malophoc) references lophoc(malophoc)
 );
 
-CREATE TABLE GiangVienLopHoc ( 
-    MaLopHoc CHAR(36) NOT NULL, 
-    MaGiangVien CHAR(36) NOT NULL, 
-    LoaiVaiTro TINYINT CHECK (LoaiVaiTro IN (1, 2)) DEFAULT 1, 
-    NgayThamGia DATE, 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaLopHoc, MaGiangVien),
-    FOREIGN KEY (MaLopHoc) REFERENCES LopHoc(MaLopHoc),
-    FOREIGN KEY (MaGiangVien) REFERENCES GiangVien(MaGiangVien)
+create table giangvienlophoc ( 
+    malophoc char(36) not null, 
+    magiangvien char(36) not null, 
+    loaivaitro tinyint check (loaivaitro in (1, 2)) default 1, 
+    ngaythamgia date, 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (malophoc, magiangvien),
+    foreign key (malophoc) references lophoc(malophoc),
+    foreign key (magiangvien) references giangvien(magiangvien)
 );
 
-CREATE TABLE HocSinhLopHoc ( 
-    MaLopHoc CHAR(36) NOT NULL, 
-    MaHocSinh CHAR(36) NOT NULL, 
-    MaTrangThai INT COMMENT 'Trỏ về ChiTietDanhMuc', 
-    NgayThamGia DATE, 
-    NgayRoiLop DATE NULL, 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaLopHoc, MaHocSinh),
-    FOREIGN KEY (MaLopHoc) REFERENCES LopHoc(MaLopHoc),
-    FOREIGN KEY (MaHocSinh) REFERENCES HocSinh(MaHocSinh),
-    FOREIGN KEY (MaTrangThai) REFERENCES ChiTietDanhMuc(MaChiTiet)
+create table hocsinhlophoc ( 
+    malophoc char(36) not null, 
+    mahocsinh char(36) not null, 
+    matrangthai int comment 'trỏ về chitietdanhmuc', 
+    ngaythamgia date, 
+    ngayroilop date null, 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (malophoc, mahocsinh),
+    foreign key (malophoc) references lophoc(malophoc),
+    foreign key (mahocsinh) references hocsinh(mahocsinh),
+    foreign key (matrangthai) references chitietdanhmuc(machitiet)
 );
 
- -- 5 HOẠT ĐỘNG LỚP HỌC & ĐIỂM DANH
-CREATE TABLE TietHoc (
-    MaTiet INT PRIMARY KEY AUTO_INCREMENT,
-    TenTiet VARCHAR(50) NOT NULL,
-    GioBatDau TIME NOT NULL,
-    GioKetThuc TIME NOT NULL,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0
+ -- 5 hoạt động lớp học & điểm danh
+create table tiethoc (
+    matiet int primary key auto_increment,
+    tentiet varchar(50) not null,
+    giobatdau time not null,
+    gioketthuc time not null,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0
 );
 
-CREATE TABLE BuoiHoc (
-    MaBuoiHoc CHAR(36) PRIMARY KEY,
-    MaLopHoc CHAR(36) NOT NULL,
-    MaPhongHoc CHAR(36),
-    NgayHoc DATE NOT NULL,
-    MaTietBatDau INT NOT NULL,
-    MaTietKetThuc INT NOT NULL,
-    TieuDe VARCHAR(255),
-    NoiDung TEXT,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaLopHoc) REFERENCES LopHoc(MaLopHoc),
-    FOREIGN KEY (MaPhongHoc) REFERENCES PhongHoc(MaPhongHoc),
-    FOREIGN KEY (MaTietBatDau) REFERENCES TietHoc(MaTiet),
-    FOREIGN KEY (MaTietKetThuc) REFERENCES TietHoc(MaTiet)
+create table buoihoc (
+    mabuoihoc char(36) primary key,
+    malophoc char(36) not null,
+    maphonghoc char(36),
+    ngayhoc date not null,
+    matietbatdau int not null,
+    matietketthuc int not null,
+    tieude varchar(255),
+    noidung text,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (malophoc) references lophoc(malophoc),
+    foreign key (maphonghoc) references phonghoc(maphonghoc),
+    foreign key (matietbatdau) references tiethoc(matiet),
+    foreign key (matietketthuc) references tiethoc(matiet)
 );
 
-CREATE TABLE YeuCauLichDay (
-    MaYeuCau CHAR(36) PRIMARY KEY,
-    MaGiangVien CHAR(36) NOT NULL,
-    MaLopHoc CHAR(36) NOT NULL, 
-    MaBuoiHoc CHAR(36) NULL, 
-    NgayHocDeXuat DATE NOT NULL,
-    MaTietBatDauDeXuat INT NOT NULL,
-    MaTietKetThucDeXuat INT NOT NULL,
-    LyDo TEXT,
-    TrangThaiDuyet TINYINT DEFAULT 0, 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaGiangVien) REFERENCES GiangVien(MaGiangVien),
-    FOREIGN KEY (MaLopHoc) REFERENCES LopHoc(MaLopHoc),
-    FOREIGN KEY (MaBuoiHoc) REFERENCES BuoiHoc(MaBuoiHoc),
-    FOREIGN KEY (MaTietBatDauDeXuat) REFERENCES TietHoc(MaTiet),
-    FOREIGN KEY (MaTietKetThucDeXuat) REFERENCES TietHoc(MaTiet)
+create table yeucaulichday (
+    mayeucau char(36) primary key,
+    magiangvien char(36) not null,
+    malophoc char(36) not null, 
+    mabuoihoc char(36) null, 
+    ngayhocdexuat date not null,
+    matietbatdaudexuat int not null,
+    matietketthucdexuat int not null,
+    lydo text,
+    trangthaiduyet tinyint default 0, 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (magiangvien) references giangvien(magiangvien),
+    foreign key (malophoc) references lophoc(malophoc),
+    foreign key (mabuoihoc) references buoihoc(mabuoihoc),
+    foreign key (matietbatdaudexuat) references tiethoc(matiet),
+    foreign key (matietketthucdexuat) references tiethoc(matiet)
 );
 
-CREATE TABLE DiemDanh (
-    MaBuoiHoc CHAR(36) NOT NULL,
-    MaHocSinh CHAR(36) NOT NULL,
-    MaTrangThai INT COMMENT 'Trỏ về ChiTietDanhMuc',
-    GhiChu VARCHAR(255),
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaBuoiHoc, MaHocSinh),
-    FOREIGN KEY (MaBuoiHoc) REFERENCES BuoiHoc(MaBuoiHoc),
-    FOREIGN KEY (MaHocSinh) REFERENCES HocSinh(MaHocSinh),
-    FOREIGN KEY (MaTrangThai) REFERENCES ChiTietDanhMuc(MaChiTiet)
+create table diemdanh (
+    mabuoihoc char(36) not null,
+    mahocsinh char(36) not null,
+    matrangthai int comment 'trỏ về chitietdanhmuc',
+    ghichu varchar(255),
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (mabuoihoc, mahocsinh),
+    foreign key (mabuoihoc) references buoihoc(mabuoihoc),
+    foreign key (mahocsinh) references hocsinh(mahocsinh),
+    foreign key (matrangthai) references chitietdanhmuc(machitiet)
 );
 
-CREATE TABLE TaiNguyenLuuTru (
-    MaTaiNguyen CHAR(36) PRIMARY KEY,
-    MaNguoiDung CHAR(36) NOT NULL,
-    TenTaiNguyen VARCHAR(255) NOT NULL,
-    Link VARCHAR(255) NOT NULL,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung)
+create table tainguyenluutru (
+    matainguyen char(36) primary key,
+    manguoidung char(36) not null,
+    tentainguyen varchar(255) not null,
+    link varchar(255) not null,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (manguoidung) references nguoidung(manguoidung)
 );
 
--- 6  BÀI TẬP & SỰ KIỆN LỚP HỌC
-CREATE TABLE NganHangCauHoi (
-    MaCauHoi CHAR(36) PRIMARY KEY,
-    MaKhoaHoc CHAR(36) NOT NULL,
-    LoaiCauHoi INT COMMENT 'Trỏ về ChiTietDanhMuc', 
-    MucDo INT COMMENT 'Trỏ về ChiTietDanhMuc', 
-    MucDichSuDung TINYINT CHECK (MucDichSuDung IN (1, 2, 3)) DEFAULT 1, 
-    NoiDungCauHoi TEXT NOT NULL,
-    GiaiThichDapAn TEXT,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaKhoaHoc) REFERENCES KhoaHoc(MaKhoaHoc),
-    FOREIGN KEY (LoaiCauHoi) REFERENCES ChiTietDanhMuc(MaChiTiet),
-    FOREIGN KEY (MucDo) REFERENCES ChiTietDanhMuc(MaChiTiet)
+-- 6  bài tập & sự kiện lớp học
+create table nganhangcauhoi (
+    macauhoi char(36) primary key,
+    makhoahoc char(36) not null,
+    loaicauhoi int comment 'trỏ về chitietdanhmuc', 
+    mucdo int comment 'trỏ về chitietdanhmuc', 
+    mucdichsudung tinyint default 1, 
+    noidungcauhoi text not null,
+    giaithichdapan text,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (makhoahoc) references khoahoc(makhoahoc),
+    foreign key (loaicauhoi) references chitietdanhmuc(machitiet),
+    foreign key (mucdo) references chitietdanhmuc(machitiet),
+    constraint chk_mucdichsudung check (mucdichsudung in (1, 2, 3))
 );
 
-CREATE TABLE DapAn (
-    MaDapAn CHAR(36) PRIMARY KEY,
-    MaCauHoi CHAR(36) NOT NULL,
-    NoiDungDapAn TEXT NOT NULL,
-    LaDapAnDung TINYINT(1) DEFAULT 0,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaCauHoi) REFERENCES NganHangCauHoi(MaCauHoi)
+create table dapan (
+    madapan char(36) primary key,
+    macauhoi char(36) not null,
+    noidungdapan text not null,
+    ladapandung tinyint(1) default 0,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (macauhoi) references nganhangcauhoi(macauhoi)
 );
 
-CREATE TABLE BaiTap (
-    MaBaiTap CHAR(36) PRIMARY KEY,
-    MaKhoaHoc CHAR(36) NOT NULL,
-    TenBaiTap VARCHAR(255) NOT NULL,
-    MoTa TEXT,
-    LoaiBaiTap INT COMMENT 'Trỏ về ChiTietDanhMuc', 
-    ThoiGianLamBai INT NULL, 
-    DiemToiDa DECIMAL(5,2),
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaKhoaHoc) REFERENCES KhoaHoc(MaKhoaHoc),
-    FOREIGN KEY (LoaiBaiTap) REFERENCES ChiTietDanhMuc(MaChiTiet)
+create table baitap (
+    mabaitap char(36) primary key,
+    makhoahoc char(36) not null,
+    tenbaitap varchar(255) not null,
+    mota text,
+    loaibaitap int comment 'trỏ về chitietdanhmuc', 
+    thoigianlambai int null, 
+    diemtoida decimal(5,2),
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (makhoahoc) references khoahoc(makhoahoc),
+    foreign key (loaibaitap) references chitietdanhmuc(machitiet)
 );
 
-CREATE TABLE BaiTapCauHoi ( 
-    MaBaiTap CHAR(36) NOT NULL, 
-    MaCauHoi CHAR(36) NOT NULL, 
-    DiemCuaCau DECIMAL(5,2), 
-    ThuTu INT, 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaBaiTap, MaCauHoi),
-    FOREIGN KEY (MaBaiTap) REFERENCES BaiTap(MaBaiTap),
-    FOREIGN KEY (MaCauHoi) REFERENCES NganHangCauHoi(MaCauHoi)
+create table baitapcauhoi ( 
+    mabaitap char(36) not null, 
+    macauhoi char(36) not null, 
+    diemcuacau decimal(5,2), 
+    thutu int, 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (mabaitap, macauhoi),
+    foreign key (mabaitap) references baitap(mabaitap),
+    foreign key (macauhoi) references nganhangcauhoi(macauhoi)
 );
 
-CREATE TABLE SuKienLopHoc (
-    MaSuKien CHAR(36) PRIMARY KEY,
-    MaLopHoc CHAR(36) NOT NULL,
-    MaNguoiDung CHAR(36) NOT NULL,
-    DangSuKien INT COMMENT 'Trỏ về ChiTietDanhMuc',
-    MaBaiTap CHAR(36) NULL, 
-    NoiDung TEXT,
-    HanNop DATETIME,
-    MaTrangThai INT COMMENT 'Trỏ về ChiTietDanhMuc',
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaLopHoc) REFERENCES LopHoc(MaLopHoc),
-    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung),
-    FOREIGN KEY (DangSuKien) REFERENCES ChiTietDanhMuc(MaChiTiet),
-    FOREIGN KEY (MaBaiTap) REFERENCES BaiTap(MaBaiTap),
-    FOREIGN KEY (MaTrangThai) REFERENCES ChiTietDanhMuc(MaChiTiet)
+create table sukienlophoc (
+    masukien char(36) primary key,
+    malophoc char(36) not null,
+    manguoidung char(36) not null,
+    dangsukien int comment 'trỏ về chitietdanhmuc',
+    mabaitap char(36) null, 
+    noidung text,
+    hannop datetime,
+    matrangthai int comment 'trỏ về chitietdanhmuc',
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (malophoc) references lophoc(malophoc),
+    foreign key (manguoidung) references nguoidung(manguoidung),
+    foreign key (dangsukien) references chitietdanhmuc(machitiet),
+    foreign key (mabaitap) references baitap(mabaitap),
+    foreign key (matrangthai) references chitietdanhmuc(machitiet)
 );
 
-CREATE TABLE NguoiNhanSuKien ( 
-    MaSuKien CHAR(36) NOT NULL, 
-    MaHocSinh CHAR(36) NOT NULL, 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaSuKien, MaHocSinh),
-    FOREIGN KEY (MaSuKien) REFERENCES SuKienLopHoc(MaSuKien),
-    FOREIGN KEY (MaHocSinh) REFERENCES HocSinh(MaHocSinh)
+create table nguoinhansukien ( 
+    masukien char(36) not null, 
+    mahocsinh char(36) not null, 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (masukien, mahocsinh),
+    foreign key (masukien) references sukienlophoc(masukien),
+    foreign key (mahocsinh) references hocsinh(mahocsinh)
 );
 
-CREATE TABLE DinhKem ( 
-    MaSuKien CHAR(36) NOT NULL, 
-    MaTaiNguyen CHAR(36) NOT NULL, 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaSuKien, MaTaiNguyen),
-    FOREIGN KEY (MaSuKien) REFERENCES SuKienLopHoc(MaSuKien),
-    FOREIGN KEY (MaTaiNguyen) REFERENCES TaiNguyenLuuTru(MaTaiNguyen)
+create table dinhkem ( 
+    masukien char(36) not null, 
+    matainguyen char(36) not null, 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (masukien, matainguyen),
+    foreign key (masukien) references sukienlophoc(masukien),
+    foreign key (matainguyen) references tainguyenluutru(matainguyen)
 );
 
-CREATE TABLE NopBai (
-    MaNopBai CHAR(36) PRIMARY KEY,
-    MaSuKien CHAR(36) NOT NULL,
-    MaHocSinh CHAR(36) NOT NULL,
-    ThoiGianBatDau DATETIME NULL,
-    ThoiGianNop DATETIME NULL,
-    NhanXetGiaoVien TEXT,
-    DiemSo DECIMAL(5,2),
-    LanNop INT DEFAULT 1,
-    MaTrangThai INT COMMENT 'Trỏ về ChiTietDanhMuc',
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaSuKien) REFERENCES SuKienLopHoc(MaSuKien),
-    FOREIGN KEY (MaHocSinh) REFERENCES HocSinh(MaHocSinh),
-    FOREIGN KEY (MaTrangThai) REFERENCES ChiTietDanhMuc(MaChiTiet)
+create table nopbai (
+    manopbai char(36) primary key,
+    masukien char(36) not null,
+    mahocsinh char(36) not null,
+    thoigianbatdau datetime null,
+    thoigiannop datetime null,
+    nhanxetgiaovien text,
+    diemso decimal(5,2),
+    lannop int default 1,
+    matrangthai int comment 'trỏ về chitietdanhmuc',
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (masukien) references sukienlophoc(masukien),
+    foreign key (mahocsinh) references hocsinh(mahocsinh),
+    foreign key (matrangthai) references chitietdanhmuc(machitiet)
 );
 
-CREATE TABLE DinhKemNopBai ( 
-    MaNopBai CHAR(36) NOT NULL, 
-    MaTaiNguyen CHAR(36) NOT NULL, 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaNopBai, MaTaiNguyen),
-    FOREIGN KEY (MaNopBai) REFERENCES NopBai(MaNopBai),
-    FOREIGN KEY (MaTaiNguyen) REFERENCES TaiNguyenLuuTru(MaTaiNguyen)
+create table dinhkemnopbai ( 
+    manopbai char(36) not null, 
+    matainguyen char(36) not null, 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (manopbai, matainguyen),
+    foreign key (manopbai) references nopbai(manopbai),
+    foreign key (matainguyen) references tainguyenluutru(matainguyen)
 );
 
-CREATE TABLE ChiTietNopBai ( 
-    MaChiTiet CHAR(36) PRIMARY KEY, 
-    MaNopBai CHAR(36) NOT NULL, 
-    MaCauHoi CHAR(36) NOT NULL, 
-    MaDapAnChon CHAR(36) NULL, 
-    CauTraLoiDienKhuyet TEXT NULL, 
-    DiemDatDuoc DECIMAL(5,2) DEFAULT 0,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaNopBai) REFERENCES NopBai(MaNopBai),
-    FOREIGN KEY (MaCauHoi) REFERENCES NganHangCauHoi(MaCauHoi),
-    FOREIGN KEY (MaDapAnChon) REFERENCES DapAn(MaDapAn)
+create table chitietnopbai ( 
+    machitiet char(36) primary key, 
+    manopbai char(36) not null, 
+    macauhoi char(36) not null, 
+    madapanchon char(36) null, 
+    cautraloidienkhuyet text null, 
+    diemdatduoc decimal(5,2) default 0,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (manopbai) references nopbai(manopbai),
+    foreign key (macauhoi) references nganhangcauhoi(macauhoi),
+    foreign key (madapanchon) references dapan(madapan)
 );
 
-CREATE TABLE BinhLuan (
-    MaBinhLuan CHAR(36) PRIMARY KEY,
-    MaSuKien CHAR(36) NOT NULL,
-    MaNguoiDung CHAR(36) NOT NULL,
-    NoiDung TEXT NOT NULL,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaSuKien) REFERENCES SuKienLopHoc(MaSuKien),
-    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung)
+create table binhluan (
+    mabinhluan char(36) primary key,
+    masukien char(36) not null,
+    manguoidung char(36) not null,
+    noidung text not null,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (masukien) references sukienlophoc(masukien),
+    foreign key (manguoidung) references nguoidung(manguoidung)
 );
 
--- 7. GIAO TIẾP & TIỆN ÍCH KHÁC
-CREATE TABLE HoiThoai ( 
-    MaHoiThoai CHAR(36) PRIMARY KEY, 
-    TieuDe VARCHAR(255) NULL,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0
+-- 7. giao tiếp & tiện ích khác
+create table hoithoai ( 
+    mahoithoai char(36) primary key, 
+    tieude varchar(255) null,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0
 );
 
-CREATE TABLE ThanhVienHoiThoai ( 
-    MaHoiThoai CHAR(36) NOT NULL, 
-    MaNguoiDung CHAR(36) NOT NULL, 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaHoiThoai, MaNguoiDung),
-    FOREIGN KEY (MaHoiThoai) REFERENCES HoiThoai(MaHoiThoai),
-    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung)
+create table thanhvienhoithoai ( 
+    mahoithoai char(36) not null, 
+    manguoidung char(36) not null, 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (mahoithoai, manguoidung),
+    foreign key (mahoithoai) references hoithoai(mahoithoai),
+    foreign key (manguoidung) references nguoidung(manguoidung)
 );
 
-CREATE TABLE TinNhan ( 
-    MaTinNhan CHAR(36) PRIMARY KEY, 
-    MaHoiThoai CHAR(36) NOT NULL, 
-    MaNguoiDungGui CHAR(36) NOT NULL, 
-    NoiDung TEXT NOT NULL, 
-    DaDoc TINYINT(1) DEFAULT 0,
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    FOREIGN KEY (MaHoiThoai) REFERENCES HoiThoai(MaHoiThoai),
-    FOREIGN KEY (MaNguoiDungGui) REFERENCES NguoiDung(MaNguoiDung)
+create table tinnhan ( 
+    matinnhan char(36) primary key, 
+    mahoithoai char(36) not null, 
+    manguoidunggui char(36) not null, 
+    noidung text not null, 
+    dadoc tinyint(1) default 0,
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    foreign key (mahoithoai) references hoithoai(mahoithoai),
+    foreign key (manguoidunggui) references nguoidung(manguoidung)
 );
 
-CREATE TABLE ThongBao ( 
-    MaThongBao CHAR(36) PRIMARY KEY, 
-    TieuDe VARCHAR(255) NOT NULL, 
-    NoiDung TEXT NOT NULL, 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0
+create table thongbao ( 
+    mathongbao char(36) primary key, 
+    tieude varchar(255) not null, 
+    noidung text not null, 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0
 );
 
-CREATE TABLE NguoiNhanThongBao ( 
-    MaThongBao CHAR(36) NOT NULL, 
-    MaNguoiDung CHAR(36) NOT NULL, 
-    DaDoc TINYINT(1) DEFAULT 0, 
-    NgayDoc DATETIME, 
-    NguoiTao CHAR(36), ThoiGianTao DATETIME DEFAULT CURRENT_TIMESTAMP, NguoiSua CHAR(36), ThoiGianSua DATETIME NULL ON UPDATE CURRENT_TIMESTAMP, TrangThai TINYINT(1) DEFAULT 1, DaXoa TINYINT(1) DEFAULT 0,
-    PRIMARY KEY (MaThongBao, MaNguoiDung),
-    FOREIGN KEY (MaThongBao) REFERENCES ThongBao(MaThongBao),
-    FOREIGN KEY (MaNguoiDung) REFERENCES NguoiDung(MaNguoiDung)
+create table nguoinhanthongbao ( 
+    mathongbao char(36) not null, 
+    manguoidung char(36) not null, 
+    dadoc tinyint(1) default 0, 
+    ngaydoc datetime, 
+    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
+    primary key (mathongbao, manguoidung),
+    foreign key (mathongbao) references thongbao(mathongbao),
+    foreign key (manguoidung) references nguoidung(manguoidung)
 );
-ALTER TABLE thongbao
-ADD COLUMN DoiTuong LONGTEXT NOT NULL DEFAULT 'Tat_Ca'
-COLLATE utf8mb4_general_ci;
-CREATE INDEX idx_VaiTroQuyen_Quyen_Active ON VaiTroQuyen(MaQuyen, DaXoa, TrangThai);
-CREATE INDEX idx_NguoiDungVaiTro_VaiTro_Active ON NguoiDungVaiTro(MaVaiTro, DaXoa, TrangThai);
-CREATE INDEX idx_HocSinhLopHoc_HocSinh_Active ON HocSinhLopHoc(MaHocSinh, DaXoa, TrangThai);
-CREATE INDEX idx_GiangVienLopHoc_GiangVien_Active ON GiangVienLopHoc(MaGiangVien, DaXoa, TrangThai);
-CREATE INDEX idx_ChiTietKHLH_LopHoc_Active ON ChiTietKhoaHoc_LopHoc(MaLopHoc, DaXoa, TrangThai);
-CREATE INDEX idx_PhuHuynhHocSinh_HocSinh_Active ON PhuHuynhHocSinh(MaHocSinh, DaXoa, TrangThai);
-CREATE INDEX idx_BaiTapCauHoi_CauHoi_Active ON BaiTapCauHoi(MaCauHoi, DaXoa, TrangThai);
-CREATE INDEX idx_DiemDanh_HocSinh_Active ON DiemDanh(MaHocSinh, DaXoa, TrangThai);
-CREATE INDEX idx_NguoiNhanSuKien_HocSinh_Active ON NguoiNhanSuKien(MaHocSinh, DaXoa, TrangThai);
-CREATE INDEX idx_DinhKem_TaiNguyen_Active ON DinhKem(MaTaiNguyen, DaXoa, TrangThai);
-CREATE INDEX idx_DinhKemNopBai_TaiNguyen_Active ON DinhKemNopBai(MaTaiNguyen, DaXoa, TrangThai);
-CREATE INDEX idx_ChiTietNopBai_CauHoi_Active ON ChiTietNopBai(MaCauHoi, DaXoa, TrangThai);
-CREATE INDEX idx_ThanhVienHoiThoai_User_Active ON ThanhVienHoiThoai(MaNguoiDung, DaXoa, TrangThai);
-CREATE INDEX idx_NguoiNhanThongBao_User_DaDoc ON NguoiNhanThongBao(MaNguoiDung, DaDoc, DaXoa);
+alter table thongbao 
+add column doituong varchar(255) not null default 'tat_ca';
+create index idx_vaitroquyen_quyen_active on vaitroquyen(maquyen, daxoa, trangthai);
+create index idx_nguoidungvaitro_vaitro_active on nguoidungvaitro(mavaitro, daxoa, trangthai);
+create index idx_hocsinhlophoc_hocsinh_active on hocsinhlophoc(mahocsinh, daxoa, trangthai);
+create index idx_giangvienlophoc_giangvien_active on giangvienlophoc(magiangvien, daxoa, trangthai);
+create index idx_chitietkhlh_lophoc_active on chitietkhoahoc_lophoc(malophoc, daxoa, trangthai);
+create index idx_phuhuynhhocsinh_hocsinh_active on phuhuynhhocsinh(mahocsinh, daxoa, trangthai);
+create index idx_baitapcauhoi_cauhoi_active on baitapcauhoi(macauhoi, daxoa, trangthai);
+create index idx_diemdanh_hocsinh_active on diemdanh(mahocsinh, daxoa, trangthai);
+create index idx_nguoinhansukien_hocsinh_active on nguoinhansukien(mahocsinh, daxoa, trangthai);
+create index idx_dinhkem_tainguyen_active on dinhkem(matainguyen, daxoa, trangthai);
+create index idx_dinhkemnopbai_tainguyen_active on dinhkemnopbai(matainguyen, daxoa, trangthai);
+create index idx_chitietnopbai_cauhoi_active on chitietnopbai(macauhoi, daxoa, trangthai);
+create index idx_thanhvienhoithoai_user_active on thanhvienhoithoai(manguoidung, daxoa, trangthai);
+create index idx_nguoinhanthongbao_user_dadoc on nguoinhanthongbao(manguoidung, dadoc, daxoa);
