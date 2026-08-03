@@ -219,14 +219,22 @@ public class ChatService : IChatService
                 continue;
             }
 
-            var extension = Path.GetExtension(file.FileName);
-            var storedFileName = $"attachment_{Guid.NewGuid()}{extension}";
-            var filePath = Path.Combine(uploadFolder, storedFileName);
+            try
+            {
+                var extension = Path.GetExtension(file.FileName);
+                var storedFileName = $"attachment_{Guid.NewGuid()}{extension}";
+                var filePath = Path.Combine(uploadFolder, storedFileName);
 
-            await using var fileStream = File.Create(filePath);
-            await file.CopyToAsync(fileStream);
+                await using var fileStream = File.Create(filePath);
+                await file.CopyToAsync(fileStream);
 
-            urls.Add($"/uploads/message-attachments/{storedFileName}");
+                urls.Add($"/uploads/message-attachments/{storedFileName}");
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving attachment: {ex.Message}");
+                // Continue with other files if one fails
+            }
         }
 
         if (!urls.Any())

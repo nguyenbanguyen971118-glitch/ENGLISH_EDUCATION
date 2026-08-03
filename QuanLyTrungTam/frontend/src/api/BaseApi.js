@@ -225,6 +225,11 @@ const getApiBaseUrl = () => {
         return normalizeApiBaseUrl('/api');
     }
 
+    // Production: nếu không có env, fallback tới window.location.origin để tránh hardcode localhost
+    if (!import.meta.env.DEV && !envBaseUrl) {
+        return normalizeApiBaseUrl(window.location.origin);
+    }
+
     return normalizeApiBaseUrl(envBaseUrl || DEFAULT_BACKEND_BASE_URL);
 };
 
@@ -242,6 +247,11 @@ const getSignalRBaseUrl = () => {
         if (apiBase === '/api' || apiBase === normalizeApiBaseUrl('/api')) {
             return devBackend;
         }
+    }
+
+    // Production: nếu không có env, dùng window.location.origin
+    if (!import.meta.env.DEV && !import.meta.env.VITE_API_BASE_URL?.trim()) {
+        return window.location.origin;
     }
 
     return apiBase.replace(/\/api$/i, '');
