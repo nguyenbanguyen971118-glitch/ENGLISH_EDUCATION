@@ -36,9 +36,16 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 // 1. Cấu hình CORS: cho phép FE dev gọi vào backend trong quá trình phát triển.
+// 1. Cấu hình CORS: cho phép FE dev và FE trên Railway gọi vào backend.
 builder.Services.AddCors(options => {
     options.AddPolicy("AllowReactApp", policy => {
-        policy.WithOrigins("http://localhost:3000", "http://localhost:3001", "http://localhost:3002", "http://localhost:5173") 
+        policy.WithOrigins(
+                "http://localhost:3000", 
+                "http://localhost:3001", 
+                "http://localhost:3002", 
+                "http://localhost:5173",
+                "https://desirable-benevolence-production-b444.up.railway.app" // Thêm domain Frontend trên Railway vào đây
+              ) 
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials();
