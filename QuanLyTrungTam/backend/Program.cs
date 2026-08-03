@@ -94,7 +94,11 @@ builder.Services.AddScoped<ScheduleGeneratorService>();
 builder.Services.AddScoped<IReportsService, ReportsService>();
 
 builder.Services.AddControllers();
-builder.Services.AddSignalR();
+builder.Services.AddSignalR(options =>
+{
+    options.MaximumReceiveMessageSize = 32 * 1024 * 1024; // 32MB
+});
+builder.Services.AddSignalRCore();
 
 // Cấu hình JSON serialization để DateTime luôn là UTC và hỗ trợ DateOnly
 builder.Services.AddControllers().AddJsonOptions(options =>

@@ -248,21 +248,29 @@ create table buoihoc (
 );
 
 create table yeucaulichday (
-    mayeucau char(36) primary key,
+    mayeucau char(36) not null,
     magiangvien char(36) not null,
-    malophoc char(36) not null, 
-    mabuoihoc char(36) null, 
+    malophoc char(36) not null,
+    mabuoihoc char(36) null,
     ngayhocdexuat date not null,
     matietbatdaudexuat int not null,
     matietketthucdexuat int not null,
-    lydo text,
-    trangthaiduyet tinyint default 0, 
-    nguoitao char(36), thoigiantao datetime default current_timestamp, nguoisua char(36), thoigiansua datetime null on update current_timestamp, trangthai tinyint(1) default 1, daxoa tinyint(1) default 0,
-    foreign key (magiangvien) references giangvien(magiangvien),
-    foreign key (malophoc) references lophoc(malophoc),
-    foreign key (mabuoihoc) references buoihoc(mabuoihoc),
-    foreign key (matietbatdaudexuat) references tiethoc(matiet),
-    foreign key (matietketthucdexuat) references tiethoc(matiet)
+    loaiyeucau tinyint null,
+    maphonghocdexuat char(36) null,
+    lydo text null,
+    trangthaiduyet tinyint null,
+    ghichuadmin text null,
+    nguoitao char(36) null,
+    thoigiantao datetime(6) null,
+    nguoisua char(36) null,
+    thoigiansua datetime(6) null,
+    trangthai tinyint(1) null,
+    daxoa tinyint(1) null,
+    primary key (mayeucau),
+    index idx_yeucau_giangvien (magiangvien),
+    index idx_yeucau_lophoc (malophoc),
+    index idx_yeucau_buoihoc (mabuoihoc),
+    index idx_yeucau_phongdecuat (maphonghocdexuat)
 );
 
 create table diemdanh (
@@ -464,6 +472,41 @@ create table nguoinhanthongbao (
 );
 alter table thongbao 
 add column doituong varchar(255) not null default 'tat_ca';
+-- Thêm cột thời gian đăng nhập lần cuối (nếu thiếu)
+ALTER TABLE nguoidung
+ADD COLUMN LanCuoiDangNhap DATETIME NULL;
+create table if not exists dinhkemthongbao (
+    mathongbao char(36) not null,
+    matainguyen char(36) not null,
+    nguoitao char(36) null,
+    thoigiantao datetime(6) null,
+    trangthai tinyint(1) null,
+    daxoa tinyint(1) null,
+    primary key (mathongbao, matainguyen),
+    index idx_dinhkem_thongbao (mathongbao),
+    index idx_dinhkem_tainguyen (matainguyen)
+);
+CREATE TABLE IF NOT EXISTS giangvienkhoahoc (
+    magiangvien char(36) not null,
+    makhoahoc char(36) not null,
+    nguoitao char(36) null,
+    thoigiantao datetime default current_timestamp,
+    primary key (magiangvien, makhoahoc),
+    foreign key (magiangvien) references giangvien(magiangvien),
+    foreign key (makhoahoc) references khoahoc(makhoahoc)
+);
+insert into tiethoc (matiet, tentiet, giobatdau, gioketthuc) values
+(1, 'tiết 1', '07:00:00', '07:45:00'),
+(2, 'tiết 2', '07:50:00', '08:35:00'),
+(3, 'tiết 3', '08:45:00', '09:30:00'),
+(4, 'tiết 4', '09:35:00', '10:20:00'),
+(5, 'tiết 5', '10:25:00', '11:10:00'),
+(6, 'tiết 6', '13:30:00', '14:15:00'),
+(7, 'tiết 7', '14:20:00', '15:05:00'),
+(8, 'tiết 8', '15:15:00', '16:00:00'),
+(9, 'tiết 9', '16:05:00', '16:50:00'),
+(10, 'tiết 10', '17:00:00', '17:45:00')
+on duplicate key update tentiet = values(tentiet);
 create index idx_vaitroquyen_quyen_active on vaitroquyen(maquyen, daxoa, trangthai);
 create index idx_nguoidungvaitro_vaitro_active on nguoidungvaitro(mavaitro, daxoa, trangthai);
 create index idx_hocsinhlophoc_hocsinh_active on hocsinhlophoc(mahocsinh, daxoa, trangthai);

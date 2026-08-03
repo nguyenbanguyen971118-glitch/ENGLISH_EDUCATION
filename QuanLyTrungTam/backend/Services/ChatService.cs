@@ -209,39 +209,63 @@ public class ChatService : IChatService
         }
 
         var uploadFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "uploads", "message-attachments");
-        Directory.CreateDirectory(uploadFolder);
+        
+        try
+        {
+            Directory.CreateDirectory(uploadFolder);
+            Console.WriteLine($"[ChatService] Upload folder: {uploadFolder}");
+            Console.WriteLine($"[ChatService] Folder exists: {Directory.Exists(uploadFolder)}");
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[ChatService] Error creating upload folder: {ex.Message}");
+            return ApiResponseDto<List<string>>.Fail($"Không thể tạo folder lưu trữ: {ex.Message}", "CHAT_FOLDER_CREATE_FAILED");
+        }
 
         var urls = new List<string>();
         foreach (var file in files)
         {
             if (file == null || file.Length == 0)
             {
+                Console.WriteLine($"[ChatService] Skipping empty file");
                 continue;
             }
 
             try
             {
-                var extension = Path.GetExtension(file.FileName);
+                Console.WriteLine($"[ChatService] Processing file: {file.FileName} ({file.Length} bytes)");
+                
+                // Lấy extension từ FileName, xử lý case có dấu ~ hoặc ký tự đặc biệt
+                var originalFileName = Path.GetFileName(file.FileName) ?? string.Empty;
+                var extension = Path.GetExtension(originalFileName).ToLowerInvariant();
+                if (string.IsNullOrEmpty(extension)) extension = ".bin";
+                
                 var storedFileName = $"attachment_{Guid.NewGuid()}{extension}";
                 var filePath = Path.Combine(uploadFolder, storedFileName);
 
+                Console.WriteLine($"[ChatService] Saving to: {filePath}");
+
                 await using var fileStream = File.Create(filePath);
                 await file.CopyToAsync(fileStream);
-
+                
+                Console.WriteLine($"[ChatService] File saved successfully: {storedFileName}");
                 urls.Add($"/uploads/message-attachments/{storedFileName}");
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error saving attachment: {ex.Message}");
+                Console.WriteLine($"[ChatService] Error saving attachment: {ex.Message}");
+                Console.WriteLine($"[ChatService] Stack trace: {ex.StackTrace}");
                 // Continue with other files if one fails
             }
         }
 
         if (!urls.Any())
         {
+            Console.WriteLine($"[ChatService] No URLs generated - all files failed to save");
             return ApiResponseDto<List<string>>.Fail("Không thể lưu tệp đính kèm.", "CHAT_ATTACHMENTS_SAVE_FAILED");
         }
 
+        Console.WriteLine($"[ChatService] Upload successful - {urls.Count} files");
         return ApiResponseDto<List<string>>.Ok(urls, "Tải tệp đính kèm lên thành công.");
     }
 
